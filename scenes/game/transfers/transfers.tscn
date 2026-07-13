@@ -1,0 +1,201 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/transfers/transfers.gd" id="1"]
+
+[node name="Transfers" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.07, 0.09, 0.13, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_constants/separation = 8
+
+[node name="BtnBack" type="Button" parent="VBoxContainer/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+text = "◀"
+theme_override_font_sizes/font_size = 24
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mercado de Fichajes"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="BudgetLabel" type="Label" parent="VBoxContainer/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+vertical_alignment = 1
+text = "Presupuesto: --"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 1)
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="FilterBar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 56)
+theme_override_constants/separation = 8
+
+[node name="FilterLabel" type="Label" parent="VBoxContainer/FilterBar"]
+layout_mode = 2
+text = "  Posición:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 16
+
+[node name="FilterPos" type="OptionButton" parent="VBoxContainer/FilterBar"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(130, 52)
+theme_override_font_sizes/font_size = 16
+
+[node name="FilterLabel2" type="Label" parent="VBoxContainer/FilterBar"]
+layout_mode = 2
+text = "Mostrar:"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 16
+
+[node name="FilterMode" type="OptionButton" parent="VBoxContainer/FilterBar"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(170, 52)
+theme_override_font_sizes/font_size = 16
+
+[node name="HSeparator2" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeaderRow" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 34)
+theme_override_constants/separation = 0
+
+[node name="LblHdrPos" type="Label" parent="VBoxContainer/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(46, 0)
+text = "POS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="LblHdrName" type="Label" parent="VBoxContainer/HeaderRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "NOMBRE"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="LblHdrAge" type="Label" parent="VBoxContainer/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+text = "EDAD"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="LblHdrOvr" type="Label" parent="VBoxContainer/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(40, 0)
+text = "VLR"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="LblHdrVal" type="Label" parent="VBoxContainer/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 0)
+text = "VALOR"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PlayerList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 3
+
+[node name="HSeparator4" type="HSeparator" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 1)
+
+[node name="OfferDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+visible = false
+title = "Hacer Oferta"
+size = Vector2i(480, 260)
+
+[node name="DialogVBox" type="VBoxContainer" parent="OfferDialog"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 16
+
+[node name="PlayerInfoLabel" type="Label" parent="OfferDialog/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Jugador"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="ValueLabel" type="Label" parent="OfferDialog/DialogVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Valor estimado: --"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 15
+
+[node name="OfferHBox" type="HBoxContainer" parent="OfferDialog/DialogVBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="OfferLabel" type="Label" parent="OfferDialog/DialogVBox/OfferHBox"]
+layout_mode = 2
+text = "Oferta (€):"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="OfferInput" type="SpinBox" parent="OfferDialog/DialogVBox/OfferHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(200, 56)
+max_value = 999000000
+step = 50000
+theme_override_font_sizes/font_size = 18

@@ -1,0 +1,311 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/stadium/stadium.gd" id="1"]
+
+[node name="Stadium" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.06, 0.12, 1)
+
+[node name="RootVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 0
+
+[node name="TopBar" type="Control" parent="RootVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 64)
+
+[node name="TopBarBG" type="ColorRect" parent="RootVBox/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.10, 0.20, 1)
+
+[node name="TopBarMargin" type="MarginContainer" parent="RootVBox/TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="TopBarHBox" type="HBoxContainer" parent="RootVBox/TopBar/TopBarMargin"]
+layout_mode = 2
+
+[node name="BtnBack" type="Button" parent="RootVBox/TopBar/TopBarMargin/TopBarHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(64, 0)
+text = "◄"
+theme_override_font_sizes/font_size = 22
+
+[node name="TopTitle" type="Label" parent="RootVBox/TopBar/TopBarMargin/TopBarHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Estadio"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.88, 0.94, 1.0, 1)
+
+[node name="HSep0" type="HSeparator" parent="RootVBox"]
+layout_mode = 2
+
+[node name="ContentHBox" type="HBoxContainer" parent="RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="LeftPanel" type="VBoxContainer" parent="RootVBox/ContentHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="TabBar" type="HBoxContainer" parent="RootVBox/ContentHBox/LeftPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_constants/separation = 2
+
+[node name="TabTribunas" type="Button" parent="RootVBox/ContentHBox/LeftPanel/TabBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 52)
+toggle_mode = true
+text = "Tribunas"
+theme_override_font_sizes/font_size = 16
+
+[node name="TabParking" type="Button" parent="RootVBox/ContentHBox/LeftPanel/TabBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 52)
+toggle_mode = true
+text = "Parking"
+theme_override_font_sizes/font_size = 16
+
+[node name="TabEquipamiento" type="Button" parent="RootVBox/ContentHBox/LeftPanel/TabBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 52)
+toggle_mode = true
+text = "Equipamiento"
+theme_override_font_sizes/font_size = 16
+
+[node name="TabServicios" type="Button" parent="RootVBox/ContentHBox/LeftPanel/TabBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 52)
+toggle_mode = true
+text = "Servicios"
+theme_override_font_sizes/font_size = 16
+
+[node name="HSep1" type="HSeparator" parent="RootVBox/ContentHBox/LeftPanel"]
+layout_mode = 2
+
+[node name="ContentMargin" type="MarginContainer" parent="RootVBox/ContentHBox/LeftPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ContentScroll" type="ScrollContainer" parent="RootVBox/ContentHBox/LeftPanel/ContentMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 2
+
+[node name="ContentVBox" type="VBoxContainer" parent="RootVBox/ContentHBox/LeftPanel/ContentMargin/ContentScroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="VSep" type="VSeparator" parent="RootVBox/ContentHBox"]
+layout_mode = 2
+
+[node name="RightPanel" type="VBoxContainer" parent="RootVBox/ContentHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(360, 0)
+theme_override_constants/separation = 0
+
+[node name="StadiumPhoto" type="TextureRect" parent="RootVBox/ContentHBox/RightPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 180)
+size_flags_horizontal = 3
+expand_mode = 3
+stretch_mode = 5
+unique_name_in_owner = true
+
+[node name="InfoMargin" type="MarginContainer" parent="RootVBox/ContentHBox/RightPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoVBox" type="VBoxContainer" parent="RootVBox/ContentHBox/RightPanel/InfoMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StadiumName" type="Label" parent="RootVBox/ContentHBox/RightPanel/InfoMargin/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.92, 0.96, 1.0, 1)
+
+[node name="StadiumCapacity" type="Label" parent="RootVBox/ContentHBox/RightPanel/InfoMargin/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Capacidad: —"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.65, 0.82, 0.92, 1)
+
+[node name="StadiumParking" type="Label" parent="RootVBox/ContentHBox/RightPanel/InfoMargin/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Parking: —"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.65, 0.82, 0.92, 1)
+
+[node name="ClubCash" type="Label" parent="RootVBox/ContentHBox/RightPanel/InfoMargin/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "💰 Caja del club: —"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.62, 0.88, 0.62, 1)
+
+[node name="ConstructionStatus" type="Label" parent="RootVBox/ContentHBox/RightPanel/InfoMargin/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.95, 0.78, 0.20, 1)
+visible = false
+
+[node name="HSep2" type="HSeparator" parent="RootVBox/ContentHBox/RightPanel"]
+layout_mode = 2
+
+[node name="MatchDayPanel" type="VBoxContainer" parent="RootVBox/ContentHBox/RightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 0
+visible = false
+
+[node name="MatchDayMargin" type="MarginContainer" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="MatchDayVBox" type="VBoxContainer" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MatchDayTitle" type="Label" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox"]
+layout_mode = 2
+text = "🎟️ DÍA DE PARTIDO — Fijar precios"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.40, 0.70, 1.0, 1)
+
+[node name="MatchDayHint" type="Label" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox"]
+layout_mode = 2
+text = "Precio óptimo entrada: 20 €. Subir mucho reduce la asistencia."
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.55, 0.65, 0.75, 1)
+
+[node name="PriceGrid" type="GridContainer" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 6
+
+[node name="LblTicket" type="Label" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox/PriceGrid"]
+layout_mode = 2
+text = "Entrada (€)"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 15
+
+[node name="SpinTicket" type="SpinBox" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox/PriceGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+min_value = 5.0
+max_value = 120.0
+step = 1.0
+value = 20.0
+
+[node name="LblDrink" type="Label" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox/PriceGrid"]
+layout_mode = 2
+text = "Bebida (€)"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 15
+
+[node name="SpinDrink" type="SpinBox" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox/PriceGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+min_value = 1.0
+max_value = 20.0
+step = 1.0
+value = 3.0
+
+[node name="LblMerch" type="Label" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox/PriceGrid"]
+layout_mode = 2
+text = "Merchandising (€)"
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 15
+
+[node name="SpinMerch" type="SpinBox" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox/PriceGrid"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+min_value = 5.0
+max_value = 150.0
+step = 1.0
+value = 15.0
+
+[node name="IncomePreview" type="Label" parent="RootVBox/ContentHBox/RightPanel/MatchDayPanel/MatchDayMargin/MatchDayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Asistencia estimada: —  •  Ingresos: —"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.75, 0.88, 0.75, 1)
+
+[node name="HSep3" type="HSeparator" parent="RootVBox"]
+layout_mode = 2
+
+[node name="StatusMargin" type="MarginContainer" parent="RootVBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="StatusBar" type="Label" parent="RootVBox/StatusMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.65, 0.78, 0.92, 1)

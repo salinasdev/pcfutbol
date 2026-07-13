@@ -1,0 +1,480 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/game/office/office.gd" id="1"]
+
+[node name="Office" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.06, 0.12, 1)
+
+[node name="RootVBox" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 2
+
+[node name="MatchHeader" type="Control" parent="RootVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 140)
+
+[node name="MatchHeaderBG" type="ColorRect" parent="RootVBox/MatchHeader"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.10, 0.20, 1)
+
+[node name="MatchHeaderContent" type="MarginContainer" parent="RootVBox/MatchHeader"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_bottom = 14
+
+[node name="MatchHBox" type="HBoxContainer" parent="RootVBox/MatchHeader/MatchHeaderContent"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="HomeVBox" type="VBoxContainer" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 3
+
+[node name="HomeCrest" type="TextureRect" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/HomeVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(64, 64)
+stretch_mode = 4
+
+[node name="TeamNameLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/HomeVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Mi Equipo"
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.92, 0.96, 1.0, 1)
+
+[node name="HomeManagerLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/HomeVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.55, 0.72, 0.9, 1)
+
+[node name="MatchCenterVBox" type="VBoxContainer" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+size_flags_vertical = 4
+alignment = 1
+theme_override_constants/separation = 6
+
+[node name="MatchTitleLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/MatchCenterVBox"]
+layout_mode = 2
+text = "PRÓXIMO PARTIDO"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.45, 0.65, 0.95, 1)
+
+[node name="DateLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/MatchCenterVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.92, 0.96, 1.0, 1)
+
+[node name="MatchWeekLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/MatchCenterVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.55, 0.72, 0.9, 1)
+
+[node name="BtnPlayMatch" type="Button" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/MatchCenterVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.2, 1.0, 0.4, 1)
+text = "▶  ¡JUGAR PARTIDO!"
+visible = false
+
+[node name="AwayVBox" type="VBoxContainer" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_constants/separation = 3
+
+[node name="AwayCrest" type="TextureRect" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/AwayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(64, 64)
+size_flags_horizontal = 8
+stretch_mode = 4
+
+[node name="AwayTeamLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/AwayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "—"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.92, 0.96, 1.0, 1)
+
+[node name="AwayManagerLabel" type="Label" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox/AwayVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = ""
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.55, 0.72, 0.9, 1)
+
+[node name="TopRow" type="HBoxContainer" parent="RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="QuadTL" type="Control" parent="RootVBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QuadTLBG" type="ColorRect" parent="RootVBox/TopRow/QuadTL"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.08, 0.16, 1)
+
+[node name="QuadTLMargin" type="MarginContainer" parent="RootVBox/TopRow/QuadTL"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="QuadTLVBox" type="VBoxContainer" parent="RootVBox/TopRow/QuadTL/QuadTLMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="QuadTLTitle" type="Label" parent="RootVBox/TopRow/QuadTL/QuadTLMargin/QuadTLVBox"]
+layout_mode = 2
+text = "SEGUIMIENTO"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.4, 0.7, 1.0, 1)
+
+[node name="HSepTL" type="HSeparator" parent="RootVBox/TopRow/QuadTL/QuadTLMargin/QuadTLVBox"]
+layout_mode = 2
+
+[node name="BtnResults" type="Button" parent="RootVBox/TopRow/QuadTL/QuadTLMargin/QuadTLVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Resultados"
+
+[node name="BtnStandings" type="Button" parent="RootVBox/TopRow/QuadTL/QuadTLMargin/QuadTLVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Clasificación"
+
+[node name="BtnCalendar" type="Button" parent="RootVBox/TopRow/QuadTL/QuadTLMargin/QuadTLVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Calendario"
+
+[node name="QuadTR" type="Control" parent="RootVBox/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QuadTRBG" type="ColorRect" parent="RootVBox/TopRow/QuadTR"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.08, 0.16, 1)
+
+[node name="QuadTRMargin" type="MarginContainer" parent="RootVBox/TopRow/QuadTR"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="QuadTRVBox" type="VBoxContainer" parent="RootVBox/TopRow/QuadTR/QuadTRMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="QuadTRTitle" type="Label" parent="RootVBox/TopRow/QuadTR/QuadTRMargin/QuadTRVBox"]
+layout_mode = 2
+text = "ENTRENADOR"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.4, 0.7, 1.0, 1)
+
+[node name="HSepTR" type="HSeparator" parent="RootVBox/TopRow/QuadTR/QuadTRMargin/QuadTRVBox"]
+layout_mode = 2
+
+[node name="BtnAlignment" type="Button" parent="RootVBox/TopRow/QuadTR/QuadTRMargin/QuadTRVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Alineación"
+
+[node name="BtnTactics" type="Button" parent="RootVBox/TopRow/QuadTR/QuadTRMargin/QuadTRVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Tácticas"
+
+[node name="BtnViewRival" type="Button" parent="RootVBox/TopRow/QuadTR/QuadTRMargin/QuadTRVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Ver Rival"
+
+[node name="BottomRow" type="HBoxContainer" parent="RootVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 2
+
+[node name="QuadBL" type="Control" parent="RootVBox/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QuadBLBG" type="ColorRect" parent="RootVBox/BottomRow/QuadBL"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.08, 0.16, 1)
+
+[node name="QuadBLMargin" type="MarginContainer" parent="RootVBox/BottomRow/QuadBL"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="QuadBLVBox" type="VBoxContainer" parent="RootVBox/BottomRow/QuadBL/QuadBLMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="QuadBLTitle" type="Label" parent="RootVBox/BottomRow/QuadBL/QuadBLMargin/QuadBLVBox"]
+layout_mode = 2
+text = "MERCADO"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.4, 0.7, 1.0, 1)
+
+[node name="HSepBL" type="HSeparator" parent="RootVBox/BottomRow/QuadBL/QuadBLMargin/QuadBLVBox"]
+layout_mode = 2
+
+[node name="BtnTransfers" type="Button" parent="RootVBox/BottomRow/QuadBL/QuadBLMargin/QuadBLVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Fichar"
+
+[node name="BtnEmployees" type="Button" parent="RootVBox/BottomRow/QuadBL/QuadBLMargin/QuadBLVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Empleados"
+
+[node name="BtnSquad" type="Button" parent="RootVBox/BottomRow/QuadBL/QuadBLMargin/QuadBLVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Plantilla"
+
+[node name="QuadBR" type="Control" parent="RootVBox/BottomRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="QuadBRBG" type="ColorRect" parent="RootVBox/BottomRow/QuadBR"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.08, 0.16, 1)
+
+[node name="QuadBRMargin" type="MarginContainer" parent="RootVBox/BottomRow/QuadBR"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="QuadBRVBox" type="VBoxContainer" parent="RootVBox/BottomRow/QuadBR/QuadBRMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="QuadBRTitle" type="Label" parent="RootVBox/BottomRow/QuadBR/QuadBRMargin/QuadBRVBox"]
+layout_mode = 2
+text = "CLUB"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.4, 0.7, 1.0, 1)
+
+[node name="HSepBR" type="HSeparator" parent="RootVBox/BottomRow/QuadBR/QuadBRMargin/QuadBRVBox"]
+layout_mode = 2
+
+[node name="BtnCash" type="Button" parent="RootVBox/BottomRow/QuadBR/QuadBRMargin/QuadBRVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Caja"
+
+[node name="BtnDecisions" type="Button" parent="RootVBox/BottomRow/QuadBR/QuadBRMargin/QuadBRVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Decisiones"
+
+[node name="BtnStadium" type="Button" parent="RootVBox/BottomRow/QuadBR/QuadBRMargin/QuadBRVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+theme_override_font_sizes/font_size = 18
+text = "  Estadio"
+
+[node name="NoticeBar" type="Control" parent="RootVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 38)
+visible = false
+
+[node name="NoticeBarBG" type="ColorRect" parent="RootVBox/NoticeBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.40, 0.18, 0.02, 1)
+
+[node name="NoticeTopLine" type="ColorRect" parent="RootVBox/NoticeBar"]
+layout_mode = 1
+anchor_right = 1.0
+offset_bottom = 2.0
+color = Color(1.0, 0.60, 0.10, 1)
+
+[node name="NoticeClip" type="Control" parent="RootVBox/NoticeBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+clip_children = 1
+
+[node name="NoticeLabel" type="Label" parent="RootVBox/NoticeBar/NoticeClip"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_bottom = 38.0
+text = ""
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1.0, 0.82, 0.28, 1)
+
+[node name="Footer" type="Control" parent="RootVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 68)
+
+[node name="FooterBG" type="ColorRect" parent="RootVBox/Footer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.05, 0.10, 1)
+
+[node name="FooterTopLine" type="ColorRect" parent="RootVBox/Footer"]
+layout_mode = 1
+anchor_right = 1.0
+offset_bottom = 2.0
+color = Color(0.18, 0.38, 0.72, 1)
+
+[node name="FooterMargin" type="MarginContainer" parent="RootVBox/Footer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="FooterHBox" type="HBoxContainer" parent="RootVBox/Footer/FooterMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnSalir" type="Button" parent="RootVBox/Footer/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(110, 0)
+theme_override_font_sizes/font_size = 16
+text = "Salir"
+
+[node name="BtnSave" type="Button" parent="RootVBox/Footer/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+theme_override_font_sizes/font_size = 16
+text = "Grabar Liga"
+
+[node name="BtnPress" type="Button" parent="RootVBox/Footer/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(120, 0)
+theme_override_font_sizes/font_size = 16
+text = "Noticias"
+
+[node name="StatusBar" type="Label" parent="RootVBox/Footer/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = ""
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.65, 0.78, 0.92, 1)
+
+[node name="BtnNextWeek" type="Button" parent="RootVBox/Footer/FooterMargin/FooterHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.25, 1.0, 0.5, 1)
+text = "Seguir  ▶"
