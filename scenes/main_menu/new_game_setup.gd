@@ -11,6 +11,8 @@ func _ready() -> void:
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
 	%BtnStart.pressed.connect(_on_start)
 	%InputManager.text_submitted.connect(func(_t: String): _on_start())
+	%InputManager.focus_entered.connect(func(): DisplayServer.virtual_keyboard_show(""))
+	%InputManager.focus_exited.connect(func(): DisplayServer.virtual_keyboard_hide())
 
 	_build_league_picker()
 	%LeaguePicker.item_selected.connect(_on_league_selected)
