@@ -14,6 +14,29 @@ const SECTION_OUT     := "out"
 var _team: Team = null
 var _selected_id: int = -1
 
+## Touch-scroll manual (para Godot Web en móvil)
+const _SCROLL_THRESHOLD := 10.0
+var _touch_start_y: float = 0.0
+var _touch_start_scroll: int = 0
+var _is_touch_scrolling: bool = false
+
+
+func _input(event: InputEvent) -> void:
+	var scroll := $VBoxContainer/ScrollContainer as ScrollContainer
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touch_start_y = event.position.y
+			_touch_start_scroll = scroll.scroll_vertical
+			_is_touch_scrolling = false
+		elif _is_touch_scrolling:
+			get_viewport().set_input_as_handled()
+	elif event is InputEventScreenDrag:
+		var delta: float = event.position.y - _touch_start_y
+		if abs(delta) > _SCROLL_THRESHOLD or _is_touch_scrolling:
+			_is_touch_scrolling = true
+			scroll.scroll_vertical = _touch_start_scroll - int(delta)
+			get_viewport().set_input_as_handled()
+
 
 func _ready() -> void:
 	_team = GameManager.get_player_team()

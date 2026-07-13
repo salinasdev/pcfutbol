@@ -103,6 +103,8 @@ layout_mode = 2
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+follow_focus = false
+scroll_horizontal_enabled = false
 
 [node name="PlayerList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
 unique_name_in_owner = true
