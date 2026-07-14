@@ -60,7 +60,7 @@ func _get_next_fixture() -> Dictionary:
 func _fill_header(rival: Team, fixture: Dictionary, is_home: bool) -> void:
 	%RivalName.text = rival.name
 	var venue := "Partido en casa" if is_home else "Partido fuera"
-	%RivalInfo.text = "%s  •  %s  •  Jornada %d" % [rival.city, venue, fixture.get("matchday", 0)]
+	%RivalInfo.text = "%s  •  %s  •  Jornada %d" % [rival.coach_name if rival.coach_name != "" else rival.city, venue, fixture.get("matchday", 0)]
 
 	var standings_text := _get_standings_text(rival)
 	%RivalStandings.text = standings_text

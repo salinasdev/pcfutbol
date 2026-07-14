@@ -11,6 +11,7 @@ func _ready() -> void:
 	%FilterResults.pressed.connect(func(): _set_filter(NewsManager.Category.RESULTADO))
 	%FilterTransfers.pressed.connect(func(): _set_filter(NewsManager.Category.FICHAJES))
 	%FilterInterview.pressed.connect(func(): _set_filter(NewsManager.Category.ENTREVISTA))
+	%FilterTabloid.pressed.connect(func(): _set_filter(NewsManager.Category.TABLOID))
 
 	_build_feed()
 
@@ -22,6 +23,7 @@ func _set_filter(cat: int) -> void:
 	%FilterResults.button_pressed   = (cat == NewsManager.Category.RESULTADO)
 	%FilterTransfers.button_pressed = (cat == NewsManager.Category.FICHAJES)
 	%FilterInterview.button_pressed = (cat == NewsManager.Category.ENTREVISTA)
+	%FilterTabloid.button_pressed   = (cat == NewsManager.Category.TABLOID)
 	_build_feed()
 
 

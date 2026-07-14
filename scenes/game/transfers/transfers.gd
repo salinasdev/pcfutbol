@@ -20,7 +20,8 @@ func _ready() -> void:
 	%FilterPos.item_selected.connect(func(i: int): _filter_pos = i; _refresh_list())
 	%FilterMode.item_selected.connect(func(i: int): _filter_mode = i; _refresh_list())
 
-	%OfferDialog.confirmed.connect(_on_offer_confirmed)
+	(%OfferDialog as OfferDialog).offer_submitted.connect(_on_offer_submitted)
+	%BtnOfferStatus.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/transfers/offer_status.tscn"))
 
 	TransferManager.transfer_completed.connect(_on_transfer_done)
 	TransferManager.transfer_rejected.connect(_on_transfer_rejected)
@@ -155,25 +156,21 @@ func _make_player_row(p: Player, my_team: Team) -> Control:
 
 func _open_offer_dialog(p: Player) -> void:
 	_offer_player = p
-	var val := TransferManager.calculate_value(p)
-	%PlayerInfoLabel.text = "%s  [%s]  Edad %d  — Valoración %d" % [
-		p.full_name, p.get_position_abbr(), p.age, p.get_overall()
-	]
-	%ValueLabel.text = "Valor estimado: %s €" % _fmt(val)
-	var spin: SpinBox = %OfferInput
-	spin.min_value = 0
-	spin.value = val
-	%OfferDialog.popup_centered()
-
-
-func _on_offer_confirmed() -> void:
-	if _offer_player == null:
-		return
 	var my_team := GameManager.get_player_team()
 	if my_team == null:
 		return
-	var offer: int = int(%OfferInput.value)
-	TransferManager.make_offer(my_team, _offer_player, offer)
+	(%OfferDialog as OfferDialog).open(p, my_team)
+
+
+func _on_offer_submitted(data: Dictionary) -> void:
+	var my_team := GameManager.get_player_team()
+	if my_team == null:
+		return
+	var oid: int = TransferManager.place_offer(my_team, data)
+	if oid >= 0:
+		_set_status("✔ Oferta enviada. El club responderá en breve.", true)
+	else:
+		_set_status("✘ No se pudo enviar la oferta.", false)
 	_offer_player = null
 
 

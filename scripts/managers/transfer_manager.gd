@@ -2,7 +2,38 @@ extends Node
 
 signal transfer_completed(player: Player, from_team: Team, to_team: Team, fee: int)
 signal transfer_rejected(player: Player, reason: String)
+## Emitida cuando la IA responde a una oferta (accepted/rejected/countered)
+signal offer_response_received(offer: Dictionary)
 
+## Ofertas activas del equipo del jugador
+var active_offers: Array[Dictionary] = []
+var _next_offer_id: int = 1
+
+const _REJECT_MSGS: Array = [
+	"El club ha rechazado la oferta. Consideran que no refleja el valor del jugador.",
+	"Propuesta denegada. La directiva no tiene intención de vender.",
+	"El técnico rival ha bloqueado la salida del jugador.",
+	"La directiva rechaza la oferta. Piden una cantidad muy superior.",
+	"No hay acuerdo. El club vendedor quiere bastante más dinero.",
+	"El jugador no quiere abandonar el club en estos momentos.",
+]
+const _ACCEPT_MSGS: Array = [
+	"¡Oferta aceptada! El club ha dado luz verde al traspaso.",
+	"¡Acuerdo alcanzado! El jugador se somete al reconocimiento médico.",
+	"La directiva rival acepta los términos. ¡El fichaje está hecho!",
+	"¡Trato cerrado! El jugador ya es tuyo.",
+	"Tras breves negociaciones, ambos clubes han llegado a un acuerdo.",
+]
+const _COUNTER_MSGS: Array = [
+	"El club hace una contraoferta: quieren %s € por el jugador.",
+	"El equipo no acepta los términos pero propone un acuerdo alternativo: %s €.",
+	"Nueva propuesta del vendedor: valoran al jugador en %s €.",
+	"El jugador está interesado pero su club exige %s € para dejarlo marchar.",
+]
+
+
+# ---------------------------------------------------------------------------
+# API pública
 
 ## Calcula el valor estimado de mercado de un jugador
 func calculate_value(player: Player) -> int:
@@ -15,29 +46,99 @@ func calculate_value(player: Player) -> int:
 	return int(base * base * age_factor * 200.0)
 
 
-## Intenta realizar un fichaje. Devuelve true si se completa.
-func make_offer(buyer: Team, player: Player, offer: int) -> bool:
-	var seller: Team = GameManager.get_team(player.team_id)
+## Coloca una oferta de fichaje (asíncrona). Devuelve el ID de oferta o -1 si la validación falla.
+func place_offer(buyer: Team, data: Dictionary) -> int:
+	var player: Player = data.get("player")
+	if player == null:
+		return -1
+	var money: int = data.get("money", 0)
 
+	var seller: Team = GameManager.get_team(player.team_id)
 	if seller == null:
 		emit_signal("transfer_rejected", player, "El jugador no tiene equipo asignado")
-		return false
+		return -1
 	if buyer.id == seller.id:
 		emit_signal("transfer_rejected", player, "El jugador ya pertenece a tu equipo")
-		return false
-
-	var min_acceptable := int(calculate_value(player) * 0.85)
-	if offer < min_acceptable:
-		emit_signal("transfer_rejected", player,
-			"Oferta rechazada. Valor mínimo aceptable: %s €" % _format_money(min_acceptable))
-		return false
-	if buyer.budget < offer:
+		return -1
+	if buyer.budget < money:
 		emit_signal("transfer_rejected", player,
 			"Presupuesto insuficiente (disponible: %s €)" % _format_money(buyer.budget))
-		return false
+		return -1
 
-	_complete_transfer(buyer, seller, player, offer)
-	return true
+	# Construir oferta (sin guardar la referencia al objeto Player)
+	var clean_data := data.duplicate(true)
+	clean_data.erase("player")  # no serializable; usamos player_id
+
+	var offer: Dictionary = {
+		"id":               _next_offer_id,
+		"player_id":        player.id,
+		"buyer_id":         buyer.id,
+		"week_submitted":   GameManager.current_week,
+		"status":           "pending",
+		"offer_data":       clean_data,
+		"response_message": "Esperando respuesta del club...",
+		"counter_data":     {},
+	}
+	_next_offer_id += 1
+	active_offers.append(offer)
+
+	# Posible filtración a la prensa (30 % de probabilidad)
+	if randf() < 0.30:
+		NewsManager.add_offer_leak_news(player, buyer)
+
+	return offer["id"]
+
+
+## El jugador acepta la contraoferta recibida — el traspaso se completa de inmediato.
+func accept_counter(offer_id: int) -> void:
+	for offer: Dictionary in active_offers:
+		if offer["id"] != offer_id or offer["status"] != "countered":
+			continue
+		var cd: Dictionary = offer["counter_data"]
+		# Sobrescribir términos con la contraoferta
+		offer["offer_data"]["money"]          = cd.get("money",          offer["offer_data"].get("money", 0))
+		offer["offer_data"]["contract_years"] = cd.get("contract_years", offer["offer_data"].get("contract_years", 2))
+		offer["offer_data"]["annual_bonus"]   = cd.get("annual_bonus",   offer["offer_data"].get("annual_bonus", 0))
+
+		var player: Player = GameManager.get_player(offer["player_id"])
+		var buyer: Team    = GameManager.get_team(offer["buyer_id"])
+		if player == null or buyer == null:
+			offer["status"] = "rejected"
+			offer["response_message"] = "El jugador ya no está disponible."
+			return
+		if buyer.budget < offer["offer_data"]["money"]:
+			offer["status"] = "rejected"
+			offer["response_message"] = "Presupuesto insuficiente para la contraoferta."
+			return
+
+		offer["status"]           = "accepted"
+		offer["response_message"] = "Contraoferta aceptada. ¡Fichaje completado!"
+		_complete_offer(offer, player, buyer)
+		return
+
+
+## Retira (elimina) una oferta, sea cual sea su estado.
+func withdraw_offer(offer_id: int) -> void:
+	for i in range(active_offers.size()):
+		if active_offers[i]["id"] == offer_id:
+			active_offers.remove_at(i)
+			return
+
+
+## Procesa la respuesta de la IA a todas las ofertas pendientes.
+## Llamar desde GameManager.advance_week().
+func process_weekly_offers() -> void:
+	for offer: Dictionary in active_offers:
+		if offer["status"] != "pending":
+			continue
+		var player: Player = GameManager.get_player(offer["player_id"])
+		if player == null:
+			offer["status"]           = "rejected"
+			offer["response_message"] = "El jugador ya no está disponible."
+			emit_signal("offer_response_received", offer)
+			continue
+		_evaluate_offer(offer, player)
+		emit_signal("offer_response_received", offer)
 
 
 ## Pone a un jugador en el mercado de traspasos
@@ -57,6 +158,100 @@ func get_listed_players() -> Array:
 		if p.transfer_listed:
 			listed.append(p)
 	return listed
+
+
+# ---------------------------------------------------------------------------
+# Lógica de negociación IA
+
+func _evaluate_offer(offer: Dictionary, player: Player) -> void:
+	var money: int  = offer["offer_data"].get("money", 0)
+	var value: int  = calculate_value(player)
+	var ratio: float = float(money) / float(maxi(value, 1))
+	var bias: float  = 0.15 if player.transfer_listed else 0.0
+
+	var r := randf()
+	var at: float  # umbral de aceptación
+	var ct: float  # umbral de contraoferta (arriba → rechazo)
+
+	if ratio >= 1.15:
+		at = 0.90; ct = 0.97
+	elif ratio >= 0.95:
+		at = 0.70; ct = 0.90
+	elif ratio >= 0.80:
+		at = 0.35; ct = 0.72
+	elif ratio >= 0.65:
+		at = 0.10; ct = 0.42
+	else:
+		at = 0.03; ct = 0.18
+
+	at = clampf(at + bias, 0.0, 0.98)
+	ct = clampf(ct + bias, 0.0, 0.99)
+
+	if r < at:
+		_do_accept(offer, player)
+	elif r < ct:
+		_do_counter(offer, player, value)
+	else:
+		_do_reject(offer)
+
+
+func _do_accept(offer: Dictionary, player: Player) -> void:
+	offer["status"]           = "accepted"
+	offer["response_message"] = _ACCEPT_MSGS.pick_random()
+	var buyer: Team = GameManager.get_team(offer["buyer_id"])
+	if buyer != null:
+		_complete_offer(offer, player, buyer)
+
+
+func _do_counter(offer: Dictionary, _player: Player, value: int) -> void:
+	var counter_money: int = int(value * randf_range(1.05, 1.28))
+	counter_money = int(counter_money / 50_000.0) * 50_000  # redondeo a 50 K
+	var orig_years:  int = offer["offer_data"].get("contract_years", 2)
+	var orig_bonus:  int = offer["offer_data"].get("annual_bonus", 0)
+
+	offer["status"]       = "countered"
+	offer["counter_data"] = {
+		"money":          counter_money,
+		"contract_years": clampi(orig_years + (randi() % 2), orig_years, 5),
+		"annual_bonus":   int(orig_bonus * randf_range(1.0, 1.30)),
+	}
+	offer["response_message"] = (_COUNTER_MSGS.pick_random()) % _format_money(counter_money)
+
+
+func _do_reject(offer: Dictionary) -> void:
+	offer["status"]           = "rejected"
+	offer["response_message"] = _REJECT_MSGS.pick_random()
+
+
+func _complete_offer(offer: Dictionary, player: Player, buyer: Team) -> void:
+	var seller: Team = GameManager.get_team(player.team_id)
+	if seller == null:
+		return
+	var data: Dictionary = offer["offer_data"]
+	var money: int = data.get("money", 0)
+
+	# Condiciones del contrato
+	player.contract_years        = data.get("contract_years", 2)
+	player.release_clause        = data.get("release_clause", 0)
+	player.annual_bonus          = data.get("annual_bonus", 0)
+	player.join_when             = data.get("join_when", 0)
+	player.relegation_freedom    = data.get("relegation_freedom", false)
+	player.matches_renewal       = data.get("matches_renewal", false)
+	player.matches_renewal_count = data.get("matches_renewal_count", 0)
+	player.goal_bonus_active     = data.get("goal_bonus_active", false)
+	player.goal_bonus_amount     = data.get("goal_bonus_amount", 0)
+	player.house_car             = data.get("house_car", false)
+
+	# Jugadores incluidos en el traspaso
+	for pid: int in data.get("player_offer_ids", []):
+		var offered: Player = GameManager.get_player(pid)
+		if offered and offered.team_id == buyer.id:
+			buyer.player_ids.erase(offered.id)
+			seller.player_ids.append(offered.id)
+			offered.team_id = seller.id
+
+	_complete_transfer(buyer, seller, player, money)
+	NewsManager.add_transfer_done_news(player, seller, buyer, money)
 
 
 func _complete_transfer(buyer: Team, seller: Team, player: Player, fee: int) -> void:

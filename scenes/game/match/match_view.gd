@@ -169,6 +169,11 @@ func _on_match_finished() -> void:
 		fixture["away_goals"] = ft.get("away_goals", _away_goals)
 		fixture["played"]     = true
 		LeagueManager._apply_result(fixture)
+		# Actualizar métricas de la Junta Directiva
+		var _is_home: bool = fixture.get("home_id", -1) == GameManager.player_team_id
+		var _pgf: int = fixture["home_goals"] if _is_home else fixture["away_goals"]
+		var _pga: int = fixture["away_goals"] if _is_home else fixture["home_goals"]
+		GameManager.update_board_metrics(_pgf, _pga)
 		# Primero liberar a los que cumplieron sanción, luego aplicar las nuevas
 		var pt: Team = GameManager.get_player_team()
 		if pt != null:
@@ -190,6 +195,10 @@ func _on_match_finished() -> void:
 		var _md_income := _local.calculate_matchday_income()
 		_local.club_cash              += _md_income
 		_local.season_matchday_income += _md_income
+		# Registrar en la última entrada del historial financiero de esta semana
+		if _local.finance_history.size() > 0:
+			_local.finance_history[_local.finance_history.size() - 1]["matchday"] = _md_income
+			_local.finance_history[_local.finance_history.size() - 1]["balance"]  = _local.club_cash
 
 	GameManager.active_fixture = {}
 

@@ -62,6 +62,7 @@ func _ready() -> void:
 	%BtnFormation442.pressed.connect(func(): _set_formation("4-4-2"))
 	%BtnFormation433.pressed.connect(func(): _set_formation("4-3-3"))
 	%BtnFormation532.pressed.connect(func(): _set_formation("5-3-2"))
+	%BtnTeamTactics.pressed.connect(func(): (%TeamTacticsDialog as TeamTacticsDialog).open(_team))
 
 	_build_field()
 	_build_bench()

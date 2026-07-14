@@ -18,11 +18,30 @@ extends Resource
 @export var stadium_name: String = ""
 @export var stadium_capacity: int = 20_000
 
+# Cuerpo técnico
+@export var coach_name: String = ""
+
 # Plantilla
 @export var player_ids: Array[int] = []
 @export var starting_eleven: Array[int] = [] ## IDs ordenados de titular (POR→DEL)
 @export var bench: Array[int] = []           ## 5 suplentes convocados
 @export var formation: String = "4-4-2"
+
+# Tácticas de equipo
+## Ataque: 0=Ofensivo  1=Mixto  2=Especulativo
+@export var tactic_attack_style: int = 1
+## Porcentaje de juego al toque (0–100); el resto es balón largo
+@export var tactic_toque_pct: int = 50
+## Porcentaje de contragolpe (0–100)
+@export var tactic_counter_pct: int = 20
+## Defensa — tipo de entradas: 0=Suave  1=Media  2=Agresiva
+@export var tactic_tackle_style: int = 1
+## Defensa — marcaje: 0=Zonal  1=Al hombre
+@export var tactic_marking: int = 0
+## Defensa — despejes: 0=Balón jugado  1=Balón largo
+@export var tactic_clearance: int = 0
+## Defensa — línea de presión: 0=Campo propio  1=Campo medio  2=Campo rival
+@export var tactic_press_line: int = 1
 
 # Estadísticas de temporada (se resetean cada temporada)
 @export var wins: int = 0
@@ -58,6 +77,39 @@ extends Resource
 # Finanzas del club
 @export var club_cash: int = 5_000_000
 @export var season_matchday_income: int = 0
+## Préstamo bancario activo
+@export var loan_amount: int = 0        ## Capital pendiente de devolver
+@export var loan_weekly_payment: int = 0 ## Cuota semanal (capital + intereses)
+@export var loan_weeks_left: int = 0    ## Semanas restantes
+## Histórico financiero semanal (últimas 20 entradas)
+@export var finance_history: Array[Dictionary] = []
+
+# Ingresos comerciales
+## Oferta TV activa: 0=sin contrato, id del contrato activo
+@export var tv_deal_tier: int = 0         ## 0=sin contrato 1-4=tier
+@export var tv_deal_weeks_left: int = 0   ## Semanas restantes del contrato TV
+@export var tv_weekly_income: int = 0     ## Ingreso semanal del contrato TV
+## Patrocinio de camiseta
+@export var sponsor_id: int = 0           ## 0=sin patrocinador, 1-8=patrocinador
+@export var sponsor_weeks_left: int = 0
+@export var sponsor_weekly_income: int = 0
+## Tiendas de merchandising (además de la del estadio)
+@export var merch_stores: int = 0         ## Tiendas adicionales (0-3)
+
+# Personal del club (0 = sin contratar, 1-5 = nivel)
+@export var staff_gk_coach: int = 0        ## Entrenador de porteros
+@export var staff_passing_coach: int = 0   ## Entrenador de pase
+@export var staff_dribbling_coach: int = 0 ## Entrenador de regate
+@export var staff_shooting_coach: int = 0  ## Entrenador de remate
+@export var staff_tackling_coach: int = 0  ## Entrenador de entradas
+@export var staff_physical_coach: int = 0  ## Entrenador físico
+@export var staff_physio: int = 0          ## Fisioterapeuta
+@export var staff_psychologist: int = 0    ## Psícolog
+@export var staff_scout: int = 0           ## Observador
+@export var staff_tech_secretary: int = 0  ## Secretario técnico
+@export var staff_youth_coach: int = 0     ## Entrenador de juveniles
+@export var staff_talent_scout: int = 0    ## Ojeador
+@export var staff_groundskeeper: int = 0   ## Encargado del campo
 
 
 func get_points() -> int:

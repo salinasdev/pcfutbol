@@ -25,6 +25,17 @@ enum Position { GK, DEF, MID, FWD }
 @export var market_value: int = 100000  ## Valor de mercado en €
 @export var transfer_listed: bool = false
 
+# Condiciones contractuales extendidas
+@export var release_clause: int = 0           ## Cláusula de rescisión en €
+@export var annual_bonus: int = 0             ## Prima anual en €
+@export var join_when: int = 0                ## 0 = inmediata, 1 = fin de temporada
+@export var relegation_freedom: bool = false  ## Rescisión automática si hay descenso
+@export var matches_renewal: bool = false     ## Renovación automática al alcanzar partidos
+@export var matches_renewal_count: int = 0    ## Nº de partidos que activa la renovación
+@export var goal_bonus_active: bool = false   ## Prima económica por gol marcado
+@export var goal_bonus_amount: int = 0        ## € por gol
+@export var house_car: bool = false           ## El club cubre casa y coche
+
 # Estado
 @export var morale: int = 70            ## 0–100
 @export var fitness: int = 100          ## 0–100

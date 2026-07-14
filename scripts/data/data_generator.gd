@@ -17,6 +17,40 @@ const LAST_NAMES: Array[String] = [
 	"Ortega", "Molina", "Delgado", "Herrera", "Suárez", "Vega"
 ]
 
+## Entrenadores iniciales por equipo.
+const TEAM_COACHES: Dictionary = {
+	"Real Madrid":            "Carlo Ancelotti",
+	"FC Barcelona":           "Hansi Flick",
+	"Atlético de Madrid":     "Diego Simeone",
+	"Sevilla FC":             "García Pimienta",
+	"Valencia CF":            "Rubén Baraja",
+	"Real Sociedad":          "Imanol Alguacil",
+	"Athletic Club":          "Ernesto Valverde",
+	"Real Betis":             "Manuel Pellegrini",
+	"Villarreal CF":          "Marcelino García Toral",
+	"RC Celta":               "Claudio Giráldez",
+	"RCD Espanyol":           "Manolo González",
+	"CA Osasuna":             "Vicente Moreno",
+	"Rayo Vallecano":         "Íñigo Pérez",
+	"Getafe CF":              "José Bordalás",
+	"Deportivo de La Coruña": "Imanol Idiakez",
+	"Deportivo Alavés":       "Luis García Plaza",
+	"Málaga CF":              "Sergio Pellicer",
+	"Elche CF":               "Eder Sarabia",
+	"Levante UD":             "Julián Calero",
+	"Racing de Santander":    "José Alberto López",
+}
+
+## Bolsa de entrenadores libres disponibles para contratar.
+const FREE_COACHES: Array[String] = [
+	"Rafael Benítez", "Quique Setién", "Michel", "Víctor Fernández",
+	"Javi Gracia", "Eduardo Coudet", "Natxo González", "Paco Jémez",
+	"Quique Flores", "Diego Martínez", "José Luis Mendilibar",
+	"Antonio Mohamed", "Míchel Sánchez", "Juan Carlos Unzué",
+	"Pablo Machín", "Pepe Mel", "Álvaro Cervera", "José Rojo Martín",
+	"Fernando Vázquez", "Robert Moreno",
+]
+
 ## Mapa nombre de equipo → ruta de escudo.
 ## Usado como fallback al cargar partidas antiguas sin el campo crest.
 const TEAM_CRESTS: Dictionary = {
@@ -123,6 +157,8 @@ const LEAGUE_DEFINITIONS: Array = [
 func generate_all() -> void:
 	for def: Dictionary in LEAGUE_DEFINITIONS:
 		_generate_league(def)
+	# Poblar la cartera de entrenadores libres
+	GameManager.free_coaches.assign(FREE_COACHES.duplicate())
 
 
 func _generate_league(def: Dictionary) -> void:
@@ -142,6 +178,7 @@ func _generate_league(def: Dictionary) -> void:
 		t.stadium_capacity = td[5]
 		t.crest            = td[6] if td.size() > 6 else ""
 		t.stadium_image    = DataGenerator.TEAM_STADIUMS.get(t.name, "")
+		t.coach_name       = DataGenerator.TEAM_COACHES.get(t.name, "")
 		t.budget           = td[3] * 80_000
 		t.weekly_wage_budget = td[3] * 5_000
 		t.league_id        = league.id

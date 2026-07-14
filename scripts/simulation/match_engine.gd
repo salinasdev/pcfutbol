@@ -117,10 +117,13 @@ func generate_events(home: Team, away: Team) -> Array[Dictionary]:
 				"🚩 Córner para %s" % team.short_name))
 
 		# Lesión: probabilidad base + extra si hay jugadores con baja energía
+		# El fisio del equipo del jugador reduce la probabilidad
 		for side: Team in [home, away]:
 			var low_pid := _pick_low_energy_player(side)
-			var inj_chance := 0.006 if low_pid != -1 else 0.004
-			if randf() < inj_chance:
+			var base_chance := 0.006 if low_pid != -1 else 0.004
+			if side.id == GameManager.player_team_id:
+				base_chance *= maxf(0.3, 1.0 - side.staff_physio * 0.12)
+			if randf() < base_chance:
 				var pid := low_pid if low_pid != -1 else _pick_any_player(side)
 				if pid != -1 and not injured_ids.has(pid):
 					var weeks: int = randi_range(1, 4)

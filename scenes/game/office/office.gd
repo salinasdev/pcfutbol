@@ -35,9 +35,9 @@ func _ready() -> void:
 	%BtnSalir.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
 	%BtnSave.pressed.connect(func(): SaveManager.save_game(); _set_status("Partida guardada."))
 	%BtnViewRival.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/rival/rival.tscn"))
-	%BtnEmployees.pressed.connect(func(): _set_status("Empleados — próximamente."))
-	%BtnCash.pressed.connect(func(): _set_status("Caja — próximamente."))
-	%BtnDecisions.pressed.connect(func(): _set_status("Decisiones — próximamente."))
+	%BtnEmployees.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/employees/employees.tscn"))
+	%BtnCash.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/cash/cash.tscn"))
+	%BtnDecisions.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/decisions/decisions_hub.tscn"))
 	%BtnStadium.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/stadium/stadium.tscn"))
 	%BtnNextWeek.pressed.connect(_on_next_week)
 	btn_play_match.pressed.connect(_on_play_match)
@@ -73,9 +73,9 @@ func _refresh_header() -> void:
 		away_team_label.text = away.name if away else "—"
 		if player_is_home:
 			home_manager_label.text = GameManager.manager_name
-			away_manager_label.text = away.city if away else ""
+			away_manager_label.text = (away.coach_name if away.coach_name != "" else away.city) if away else ""
 		else:
-			home_manager_label.text = home.city if home else ""
+			home_manager_label.text = (home.coach_name if home.coach_name != "" else home.city) if home else ""
 			away_manager_label.text = GameManager.manager_name
 		_set_crest(home_crest, home)
 		_set_crest(away_crest, away)
@@ -114,7 +114,7 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 	var away: Team = GameManager.get_team(fixture.get("away_id", -1))
 	team_name_label.text = home.name if home else "Mi Equipo"
 	away_team_label.text = away.name if away else "Rival"
-	away_manager_label.text = away.city if away else ""
+	away_manager_label.text = (away.coach_name if away.coach_name != "" else away.city) if away else ""
 	_set_crest(home_crest, home)
 	_set_crest(away_crest, away)
 	%BtnNextWeek.text = "⚽ Jugar Partido"

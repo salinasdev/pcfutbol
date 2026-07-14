@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scenes/game/transfers/transfers.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/game/transfers/offer_dialog.tscn" id="2"]
 
 [node name="Transfers" type="Control"]
 layout_mode = 3
@@ -49,6 +50,13 @@ vertical_alignment = 1
 text = "Presupuesto: --"
 theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 1)
+
+[node name="BtnOfferStatus" type="Button" parent="VBoxContainer/TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 54)
+text = "📋 Mis Ofertas"
+theme_override_font_sizes/font_size = 15
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
 layout_mode = 2
@@ -154,48 +162,5 @@ horizontal_alignment = 1
 theme_override_font_sizes/font_size = 16
 theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 1)
 
-[node name="OfferDialog" type="AcceptDialog" parent="."]
+[node name="OfferDialog" parent="." instance=ExtResource("2")]
 unique_name_in_owner = true
-visible = false
-title = "Hacer Oferta"
-size = Vector2i(480, 260)
-
-[node name="DialogVBox" type="VBoxContainer" parent="OfferDialog"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-theme_override_constants/separation = 16
-
-[node name="PlayerInfoLabel" type="Label" parent="OfferDialog/DialogVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Jugador"
-horizontal_alignment = 1
-theme_override_font_sizes/font_size = 18
-
-[node name="ValueLabel" type="Label" parent="OfferDialog/DialogVBox"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Valor estimado: --"
-horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 15
-
-[node name="OfferHBox" type="HBoxContainer" parent="OfferDialog/DialogVBox"]
-layout_mode = 2
-alignment = 1
-
-[node name="OfferLabel" type="Label" parent="OfferDialog/DialogVBox/OfferHBox"]
-layout_mode = 2
-text = "Oferta (€):"
-vertical_alignment = 1
-theme_override_font_sizes/font_size = 18
-
-[node name="OfferInput" type="SpinBox" parent="OfferDialog/DialogVBox/OfferHBox"]
-unique_name_in_owner = true
-layout_mode = 2
-custom_minimum_size = Vector2(200, 56)
-max_value = 999000000
-step = 50000
-theme_override_font_sizes/font_size = 18
