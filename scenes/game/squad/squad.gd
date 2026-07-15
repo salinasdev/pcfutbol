@@ -14,7 +14,7 @@ const SECTION_OUT     := "out"
 var _team: Team = null
 var _selected_id: int = -1
 
-## Touch-scroll manual (para Godot Web en móvil)
+## Touch-scroll manual (para Godot Web en mÃ³vil)
 const _SCROLL_THRESHOLD := 10.0
 var _touch_start_y: float = 0.0
 var _touch_start_scroll: int = 0
@@ -41,8 +41,6 @@ func _input(event: InputEvent) -> void:
 func _ready() -> void:
 	_team = GameManager.get_player_team()
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
-	$VBoxContainer/HeaderRow.visible = false
-	$VBoxContainer/HSeparator2.visible = false
 	_ensure_bench()
 	_sanitize_lists()
 	_build_list()
@@ -51,7 +49,7 @@ func _ready() -> void:
 func _ensure_bench() -> void:
 	if _team == null:
 		return
-	# Rellenar banco hasta 5 con jugadores que no estén ya en once ni banco
+	# Rellenar banco hasta 5 con jugadores que no estÃ©n ya en once ni banco
 	for pid: int in _team.player_ids:
 		if _team.bench.size() >= 5:
 			break
@@ -84,13 +82,13 @@ func _swap_players(id_a: int, id_b: int) -> void:
 		_team.starting_eleven[a_si] = id_b
 	elif a_bi >= 0:
 		_team.bench[a_bi] = id_b
-	# si a era "out", id_b pasa a "out" (su hueco ya se sobreescribió en paso 1)
+	# si a era "out", id_b pasa a "out" (su hueco ya se sobreescribiÃ³ en paso 1)
 
 	# Sanear duplicates por si hubiera datos corruptos previos
 	_sanitize_lists()
 
 
-## Elimina IDs duplicados o inválidos de starting_eleven y bench
+## Elimina IDs duplicados o invÃ¡lidos de starting_eleven y bench
 func _sanitize_lists() -> void:
 	var seen: Dictionary = {}
 	var clean_si: Array[int] = []
@@ -112,7 +110,7 @@ func _on_player_clicked(pid: int) -> void:
 	var section := _get_player_section(pid)
 
 	if _selected_id == -1:
-		# Añadir directamente al banco si hay hueco y viene de no convocados
+		# AÃ±adir directamente al banco si hay hueco y viene de no convocados
 		if section == SECTION_OUT and _team.bench.size() < 5:
 			_team.bench.append(pid)
 			_build_list()
@@ -130,35 +128,35 @@ func _build_list() -> void:
 	if _team == null:
 		return
 
-	%TitleLabel.text = _team.name + " — Alineación"
+	%TitleLabel.text = _team.name + " â€” AlineaciÃ³n"
 	%CountLabel.text = "%d jugadores" % _team.player_ids.size()
 
 	var list: VBoxContainer = %PlayerList
 	for child in list.get_children():
 		child.queue_free()
 
-	# —— MEDIA DEL EQUIPO ——
+	# â€”â€” MEDIA DEL EQUIPO â€”â€”
 	list.add_child(_make_team_average_bar())
 
-	# —— 11 INICIAL ——
-	list.add_child(_make_section_header("⚽  11 INICIAL", Color(0.10, 0.22, 0.10, 1), Color(0.4, 0.95, 0.5, 1)))
+	# â€”â€” 11 INICIAL â€”â€”
+	list.add_child(_make_section_header("âš½  11 INICIAL", Color(0.10, 0.22, 0.10, 1), Color(0.4, 0.95, 0.5, 1)))
 	list.add_child(_make_col_header(true))
 	for i in range(_team.starting_eleven.size()):
 		var p: Player = GameManager.get_player(_team.starting_eleven[i])
 		if p:
 			list.add_child(_make_row(p, SECTION_STARTER, i))
 
-	# —— SUPLENTES ——
-	# Mostrar hint de selección en curso en la sección Suplentes
-	var bench_hint := "" if _selected_id == -1 else " — toca aquí para intercambiar"
-	list.add_child(_make_section_header("🔄  SUPLENTES" + bench_hint, Color(0.08, 0.12, 0.24, 1), Color(0.5, 0.72, 1.0, 1)))
+	# â€”â€” SUPLENTES â€”â€”
+	# Mostrar hint de selecciÃ³n en curso en la secciÃ³n Suplentes
+	var bench_hint := "" if _selected_id == -1 else " â€” toca aquÃ­ para intercambiar"
+	list.add_child(_make_section_header("ðŸ”„  SUPLENTES" + bench_hint, Color(0.08, 0.12, 0.24, 1), Color(0.5, 0.72, 1.0, 1)))
 	list.add_child(_make_col_header(false))
 	for i in range(_team.bench.size()):
 		var p: Player = GameManager.get_player(_team.bench[i])
 		if p:
 			list.add_child(_make_row(p, SECTION_BENCH, i))
 
-	# —— NO CONVOCADOS ——
+	# â€”â€” NO CONVOCADOS â€”â€”
 	var out_ids: Array[int] = []
 	for pid: int in _team.player_ids:
 		if not _team.starting_eleven.has(pid) and not _team.bench.has(pid):
@@ -170,8 +168,8 @@ func _build_list() -> void:
 		return int(pa.position) < int(pb.position)
 	)
 	var bench_full := _team.bench.size() >= 5
-	var out_hint := " — toca para convocar" if not bench_full else " — toca otro para intercambiar"
-	list.add_child(_make_section_header("❌  NO CONVOCADOS" + out_hint, Color(0.18, 0.10, 0.10, 1), Color(0.85, 0.45, 0.45, 1)))
+	var out_hint := " â€” toca para convocar" if not bench_full else " â€” toca otro para intercambiar"
+	list.add_child(_make_section_header("âŒ  NO CONVOCADOS" + out_hint, Color(0.18, 0.10, 0.10, 1), Color(0.85, 0.45, 0.45, 1)))
 	list.add_child(_make_col_header(false))
 	for pid: int in out_ids:
 		var p: Player = GameManager.get_player(pid)
@@ -230,7 +228,7 @@ func _make_team_average_bar() -> Control:
 	return panel
 
 
-## Cabecera de sección coloreada
+## Cabecera de secciÃ³n coloreada
 func _make_section_header(title: String, bg: Color, fg: Color) -> Control:
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(0, 40)
@@ -288,7 +286,7 @@ func _make_col_header(with_slot: bool) -> Control:
 	return root
 
 
-## Etiqueta del puesto en el once según formación
+## Etiqueta del puesto en el once segÃºn formaciÃ³n
 func _get_slot_label(slot_idx: int) -> String:
 	var parts := _team.formation.split("-")
 	var defs := int(parts[0]) if parts.size() > 0 else 4
@@ -299,7 +297,7 @@ func _get_slot_label(slot_idx: int) -> String:
 	return "DEL %d" % (slot_idx - defs - mids)
 
 
-## Color base de fila según sección y posición del jugador
+## Color base de fila segÃºn secciÃ³n y posiciÃ³n del jugador
 func _row_base_color(p: Player, section: String) -> Color:
 	if p.injured:   return Color(0.95, 0.70, 0.35, 1)
 	if p.suspended: return Color(0.95, 0.55, 0.55, 1)
@@ -350,7 +348,7 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 	btn.add_child(hbox)
 	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
-	# Primera columna: puesto en formación (titulares) o número de camiseta
+	# Primera columna: puesto en formaciÃ³n (titulares) o nÃºmero de camiseta
 	var sep_c := Color(0.0, 0.0, 0.0, 0.28)
 	if section == SECTION_STARTER:
 		var lbl := Label.new()
@@ -375,7 +373,7 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 
 	hbox.add_child(_vsep(sep_c))
 
-	# Posición natural
+	# PosiciÃ³n natural
 	var lbl_pos := Label.new()
 	lbl_pos.custom_minimum_size = Vector2(40, 0)
 	lbl_pos.text = p.get_position_abbr()
@@ -409,7 +407,7 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 
 	if p.injured:
 		var b := Label.new()
-		b.text = "🩹×%d" % p.injury_weeks
+		b.text = "ðŸ©¹Ã—%d" % p.injury_weeks
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		b.add_theme_font_size_override("font_size", 12)
 		b.add_theme_color_override("font_color", Color(0.55, 0.22, 0.0, 1))
@@ -417,14 +415,14 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 		name_hbox.add_child(b)
 	elif p.suspended:
 		var b := Label.new()
-		b.text = "🚫"
+		b.text = "ðŸš«"
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		b.add_theme_font_size_override("font_size", 15)
 		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_hbox.add_child(b)
 	elif p.yellow_cards > 0:
 		var b := Label.new()
-		b.text = "🟨×%d" % p.yellow_cards
+		b.text = "ðŸŸ¨Ã—%d" % p.yellow_cards
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		b.add_theme_font_size_override("font_size", 12)
 		b.add_theme_color_override("font_color",

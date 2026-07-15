@@ -1,6 +1,8 @@
 extends Node
 
-## Genera el calendario completo de una liga (ida y vuelta) usando round-robin
+## Genera el calendario completo de una liga (ida y vuelta) usando round-robin.
+## Asigna local/visitante de forma greedy para maximizar la alternancia
+## casa-fuera en jornadas consecutivas para todos los equipos.
 func generate_fixtures(league: League) -> void:
 	league.fixtures.clear()
 	league.current_matchday = 0
@@ -16,24 +18,57 @@ func generate_fixtures(league: League) -> void:
 	var half := n / 2
 	var rounds := n - 1
 
+	# last_venue[team_id] = 1 (jugó en casa) ó -1 (jugó fuera) en la jornada anterior
+	var last_venue: Dictionary = {}
+
 	for round_idx in range(rounds):
+		var round_venues: Dictionary = {}
+
 		for i in range(half):
-			var home: int = ids[i]
-			var away: int = ids[n - 1 - i]
-			if home != -1 and away != -1:
-				league.fixtures.append({
-					"matchday":   round_idx + 1,
-					"home_id":    home,
-					"away_id":    away,
-					"home_goals": -1,
-					"away_goals": -1,
-					"played":     false
-				})
+			var t1: int = ids[i]
+			var t2: int = ids[n - 1 - i]
+			if t1 == -1 or t2 == -1:
+				continue
+
+			var v1: int = last_venue.get(t1, 0)
+			var v2: int = last_venue.get(t2, 0)
+
+			# Puntuar cada opción: +1 por alternar, -1 por repetir
+			var s1: int = 0
+			if v1 == -1: s1 += 1
+			elif v1 == 1: s1 -= 1
+			if v2 == 1: s1 += 1
+			elif v2 == -1: s1 -= 1
+
+			var s2: int = 0
+			if v2 == -1: s2 += 1
+			elif v2 == 1: s2 -= 1
+			if v1 == 1: s2 += 1
+			elif v1 == -1: s2 -= 1
+
+			var home: int = t1 if s1 >= s2 else t2
+			var away: int = t2 if s1 >= s2 else t1
+
+			round_venues[home] = 1
+			round_venues[away] = -1
+
+			league.fixtures.append({
+				"matchday":   round_idx + 1,
+				"home_id":    home,
+				"away_id":    away,
+				"home_goals": -1,
+				"away_goals": -1,
+				"played":     false
+			})
+
 		# Rotar manteniendo ids[0] fijo
 		var last: int = ids[n - 1]
 		for i in range(n - 1, 1, -1):
 			ids[i] = ids[i - 1]
 		ids[1] = last
+
+		# Actualizar historial de localía
+		last_venue.merge(round_venues, true)
 
 	# Generar vuelta (intercambiar local/visitante, desplazar jornada)
 	var first_leg := league.fixtures.duplicate()
@@ -111,6 +146,7 @@ func apply_match_sanctions(ft_event: Dictionary) -> void:
 		var p: Player = GameManager.get_player(pid)
 		if p:
 			p.suspended = true
+			p.season_reds += 1
 
 	# Amonestados: sumar tarjeta amarilla; sanción al llegar a 5
 	for pid: int in ft_event.get("yellow_ids", []):
@@ -148,38 +184,6 @@ func consume_suspensions(team: Team) -> void:
 			## Si sigue lesionado, suspended permanece true
 		elif p.suspended:
 			p.suspended = false  ## Cumplió sanción de tarjetas/roja
-
-
-## Genera sanciones ficticias para partidos de IA (sin eventos reales)
-func simulate_sanctions_for_ia(home: Team, away: Team) -> void:
-	for team: Team in [home, away]:
-		if team == null:
-			continue
-		# Descontar partido de baja a lesionados de IA
-		for pid: int in team.player_ids:
-			var p: Player = GameManager.get_player(pid)
-			if p and p.injured:
-				p.injury_weeks -= 1
-				if p.injury_weeks <= 0:
-					p.injured      = false
-					p.injury_weeks = 0
-					p.suspended    = false
-		# ~40% de probabilidad de que algún jugador reciba amarilla
-		if randf() < 0.4:
-			var pid: int = _pick_random_player(team)
-			if pid != -1:
-				var p: Player = GameManager.get_player(pid)
-				if p:
-					p.yellow_cards += 1
-					if p.yellow_cards > 0 and p.yellow_cards % 5 == 0:
-						p.suspended = true
-		# ~8% de probabilidad de roja
-		if randf() < 0.08:
-			var pid: int = _pick_random_player(team)
-			if pid != -1:
-				var p: Player = GameManager.get_player(pid)
-				if p:
-					p.suspended = true
 
 
 func _pick_random_player(team: Team) -> int:

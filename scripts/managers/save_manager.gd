@@ -25,6 +25,8 @@ func save_game() -> void:
 		"news_feed": NewsManager.news_feed,
 		"active_offers":    TransferManager.active_offers,
 		"_next_offer_id":   TransferManager._next_offer_id,
+		"incoming_offers":  TransferManager.incoming_offers,
+		"_next_incoming_id": TransferManager._next_incoming_id,
 		"_last_reported_player_matchday": NewsManager._last_reported_player_matchday,
 		"free_coaches":     GameManager.free_coaches,
 		"manager_rating":    GameManager.manager_rating,
@@ -79,6 +81,8 @@ func load_game() -> bool:
 	NewsManager.news_feed.assign(data.get("news_feed", []))
 	TransferManager.active_offers.assign(data.get("active_offers", []))
 	TransferManager._next_offer_id = data.get("_next_offer_id", 1)
+	TransferManager.incoming_offers.assign(data.get("incoming_offers", []))
+	TransferManager._next_incoming_id = data.get("_next_incoming_id", 1)
 	NewsManager._last_reported_player_matchday = data.get("_last_reported_player_matchday", 0)
 	GameManager.free_coaches.assign(data.get("free_coaches", []))
 	GameManager.manager_rating    = data.get("manager_rating",    5.0)
@@ -127,6 +131,7 @@ func _serialize_players() -> Dictionary:
 			"team_id": p.team_id,
 			"yellow_cards": p.yellow_cards, "suspended": p.suspended,
 			"red_carded": p.red_carded,
+			"season_goals": p.season_goals, "season_reds": p.season_reds,
 		}
 	return out
 
@@ -170,6 +175,8 @@ func _deserialize_players(raw: Dictionary) -> void:
 		p.yellow_cards   = d.get("yellow_cards", 0)
 		p.suspended      = d.get("suspended", false)
 		p.red_carded     = d.get("red_carded", false)
+		p.season_goals   = d.get("season_goals", 0)
+		p.season_reds    = d.get("season_reds", 0)
 		GameManager.players[p.id] = p
 
 

@@ -251,6 +251,9 @@ func _create_player(pos: Player.Position, team_rep: int) -> Player:
 	p.salary        = p.get_overall() * randi_range(800, 1_400)
 	p.market_value  = TransferManager.calculate_value(p)
 	p.contract_years = randi_range(1, 5)
+	# Cláusula de rescisión para jugadores con cierta calidad
+	if p.get_overall() >= 62:
+		p.release_clause = int(p.market_value * randf_range(1.5, 2.5) / 100_000.0) * 100_000
 	p.morale     = randi_range(55, 95)
 	p.fitness    = randi_range(70, 100)
 	return p

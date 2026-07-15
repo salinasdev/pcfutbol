@@ -14,6 +14,7 @@ var _lbl_loan:       Label
 var _lbl_loan_info:  Label
 var _history_list:   VBoxContainer
 var _loan_overlay:   Control = null
+var _detail_overlay: Control = null
 
 
 func _ready() -> void:
@@ -64,70 +65,90 @@ func _build_ui() -> void:
 
 	root.add_child(HSeparator.new())
 
-	# ── Contenido (dos columnas) ──────────────────────────────────────────────
-	var hbox := HBoxContainer.new()
-	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hbox.add_theme_constant_override("separation", 0)
-	root.add_child(hbox)
+	# ── Resumen: fila horizontal con saldo + gastos + préstamo ────────────────
+	var summary_scroll := ScrollContainer.new()
+	summary_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	summary_scroll.custom_minimum_size = Vector2(0, 280)
+	summary_scroll.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	root.add_child(summary_scroll)
 
-	# ── IZQUIERDA: Resumen ────────────────────────────────────────────────────
-	var lm := MarginContainer.new()
-	lm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lm.size_flags_stretch_ratio = 2.5
-	lm.add_theme_constant_override("margin_left",   24)
-	lm.add_theme_constant_override("margin_right",  24)
-	lm.add_theme_constant_override("margin_top",    20)
-	lm.add_theme_constant_override("margin_bottom", 20)
-	hbox.add_child(lm)
+	var sm := MarginContainer.new()
+	sm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sm.add_theme_constant_override("margin_left",   24)
+	sm.add_theme_constant_override("margin_right",  24)
+	sm.add_theme_constant_override("margin_top",    16)
+	sm.add_theme_constant_override("margin_bottom", 16)
+	summary_scroll.add_child(sm)
 
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 14)
-	lm.add_child(left)
+	var summary_hbox := HBoxContainer.new()
+	summary_hbox.add_theme_constant_override("separation", 0)
+	sm.add_child(summary_hbox)
 
-	# Saldo disponible
-	left.add_child(_sub("Saldo operativo del club"))
+	# ── Bloque saldo + presupuesto ────────────────────────────────────────────
+	var col_cash := VBoxContainer.new()
+	col_cash.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_cash.add_theme_constant_override("separation", 10)
+	summary_hbox.add_child(col_cash)
+
+	col_cash.add_child(_sub("Saldo operativo del club"))
 	_lbl_cash = Label.new()
 	_lbl_cash.add_theme_font_size_override("font_size", 30)
-	left.add_child(_lbl_cash)
+	col_cash.add_child(_lbl_cash)
 
-	# Presupuesto de fichajes
-	left.add_child(_sub("Presupuesto de fichajes"))
+	col_cash.add_child(_sub("Presupuesto de fichajes"))
 	_lbl_budget = Label.new()
 	_lbl_budget.add_theme_font_size_override("font_size", 22)
 	_lbl_budget.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0, 1))
-	left.add_child(_lbl_budget)
+	col_cash.add_child(_lbl_budget)
 
-	left.add_child(HSeparator.new())
+	summary_hbox.add_child(VSeparator.new())
 
-	# Gastos semanales estimados
-	left.add_child(_section_title("📤  Gastos semanales estimados"))
+	# ── Bloque gastos semanales ───────────────────────────────────────────────
+	var col_exp := VBoxContainer.new()
+	col_exp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_exp.add_theme_constant_override("separation", 8)
+	var col_exp_m := MarginContainer.new()
+	col_exp_m.add_theme_constant_override("margin_left", 16)
+	col_exp_m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_exp_m.add_child(col_exp)
+	summary_hbox.add_child(col_exp_m)
 
-	left.add_child(_sub("Masa salarial de la plantilla"))
+	col_exp.add_child(_section_title("📤  Gastos semanales estimados"))
+	col_exp.add_child(_sub("Masa salarial de la plantilla"))
 	_lbl_wages = Label.new()
 	_lbl_wages.add_theme_font_size_override("font_size", 17)
 	_lbl_wages.add_theme_color_override("font_color", Color(0.95, 0.45, 0.35, 1))
-	left.add_child(_lbl_wages)
+	col_exp.add_child(_lbl_wages)
 
-	left.add_child(_sub("Personal del club"))
+	col_exp.add_child(_sub("Personal del club"))
 	_lbl_staff = Label.new()
 	_lbl_staff.add_theme_font_size_override("font_size", 17)
 	_lbl_staff.add_theme_color_override("font_color", Color(0.95, 0.45, 0.35, 1))
-	left.add_child(_lbl_staff)
+	col_exp.add_child(_lbl_staff)
 
-	left.add_child(_sub("Cuota préstamo bancario"))
+	col_exp.add_child(_sub("Cuota préstamo bancario"))
 	_lbl_loan = Label.new()
 	_lbl_loan.add_theme_font_size_override("font_size", 17)
 	_lbl_loan.add_theme_color_override("font_color", Color(0.95, 0.45, 0.35, 1))
-	left.add_child(_lbl_loan)
+	col_exp.add_child(_lbl_loan)
 
-	left.add_child(HSeparator.new())
+	summary_hbox.add_child(VSeparator.new())
 
-	# Préstamo activo
-	left.add_child(_section_title("🏦  Préstamo bancario"))
+	# ── Bloque préstamo bancario ──────────────────────────────────────────────
+	var col_loan := VBoxContainer.new()
+	col_loan.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_loan.add_theme_constant_override("separation", 8)
+	var col_loan_m := MarginContainer.new()
+	col_loan_m.add_theme_constant_override("margin_left", 16)
+	col_loan_m.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col_loan_m.add_child(col_loan)
+	summary_hbox.add_child(col_loan_m)
+
+	col_loan.add_child(_section_title("🏦  Préstamo bancario"))
 	_lbl_loan_info = Label.new()
 	_lbl_loan_info.add_theme_font_size_override("font_size", 15)
 	_lbl_loan_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	left.add_child(_lbl_loan_info)
+	col_loan.add_child(_lbl_loan_info)
 
 	var btn_loan := Button.new()
 	btn_loan.text = "Solicitar préstamo"
@@ -135,33 +156,28 @@ func _build_ui() -> void:
 	btn_loan.add_theme_font_size_override("font_size", 16)
 	btn_loan.add_theme_color_override("font_color", Color(0.90, 0.80, 0.25, 1))
 	btn_loan.pressed.connect(_open_loan_dialog)
-	left.add_child(btn_loan)
+	col_loan.add_child(btn_loan)
 
-	# ── Separador ─────────────────────────────────────────────────────────────
-	hbox.add_child(VSeparator.new())
+	# ── Historial financiero (abajo, ancho completo) ──────────────────────────
+	root.add_child(HSeparator.new())
 
-	# ── DERECHA: Historial ────────────────────────────────────────────────────
-	var rm := MarginContainer.new()
-	rm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rm.size_flags_stretch_ratio = 1.8
-	rm.add_theme_constant_override("margin_left",   20)
-	rm.add_theme_constant_override("margin_right",  20)
-	rm.add_theme_constant_override("margin_top",    20)
-	rm.add_theme_constant_override("margin_bottom", 20)
-	hbox.add_child(rm)
+	var hist_m := MarginContainer.new()
+	hist_m.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hist_m.add_theme_constant_override("margin_left",   24)
+	hist_m.add_theme_constant_override("margin_right",  24)
+	hist_m.add_theme_constant_override("margin_top",    12)
+	hist_m.add_theme_constant_override("margin_bottom", 12)
+	root.add_child(hist_m)
 
-	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 10)
-	rm.add_child(right)
+	var hist_vbox := VBoxContainer.new()
+	hist_vbox.add_theme_constant_override("separation", 6)
+	hist_m.add_child(hist_vbox)
 
-	right.add_child(_section_title("📊  Historial financiero"))
-
-	# Cabecera tabla
-	right.add_child(_hist_header())
+	hist_vbox.add_child(_section_title("📊  Historial financiero"))
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(scroll)
+	hist_vbox.add_child(scroll)
 
 	_history_list = VBoxContainer.new()
 	_history_list.add_theme_constant_override("separation", 4)
@@ -219,9 +235,13 @@ func _refresh() -> void:
 	# Historial
 	for child in _history_list.get_children():
 		child.queue_free()
-	var history: Array = _team.finance_history
-	for i: int in range(history.size() - 1, -1, -1):
-		_history_list.add_child(_hist_row(history[i]))
+	var history: Array = _team.finance_history.duplicate()
+	history.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return a.get("week", 0) > b.get("week", 0)
+	)
+	_history_list.add_child(_hist_header())
+	for entry: Dictionary in history:
+		_history_list.add_child(_hist_row(entry))
 
 
 # ---------------------------------------------------------------------------
@@ -416,7 +436,7 @@ func _sub(text: String) -> Label:
 func _hist_header() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
-	for txt: String in ["Sem.", "Ingresos", "Salarios", "Préstamo", "Saldo"]:
+	for txt: String in ["Sem.", "Ingresos", "Gastos", "Saldo", ""]:
 		var l := Label.new()
 		l.text = txt
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -427,19 +447,28 @@ func _hist_header() -> HBoxContainer:
 	return row
 
 
-func _hist_row(entry: Dictionary) -> HBoxContainer:
+func _hist_row(entry: Dictionary) -> Control:
+	var container := PanelContainer.new()
+	container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.10, 0.12, 0.17, 0.6)
+	sb.set_corner_radius_all(3)
+	sb.set_content_margin_all(3)
+	container.add_theme_stylebox_override("panel", sb)
+
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 4)
+	container.add_child(row)
 
 	var lbl_week := Label.new()
-	lbl_week.text = str(entry.get("week", 0))
+	lbl_week.text = "Sem. %d" % entry.get("week", 0)
 	lbl_week.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl_week.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_week.add_theme_font_size_override("font_size", 13)
 	row.add_child(lbl_week)
 
 	var total_income: int = entry.get("tv_income", 0) + entry.get("sponsor_income", 0) \
-		+ entry.get("merch_income", 0) + entry.get("matchday", 0)
+		+ entry.get("merch_income", 0) + entry.get("matchday", 0) + entry.get("transfer_income", 0)
 	var lbl_income := Label.new()
 	lbl_income.text = "+%s" % _fmt(total_income) if total_income > 0 else "—"
 	lbl_income.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -448,22 +477,14 @@ func _hist_row(entry: Dictionary) -> HBoxContainer:
 	lbl_income.add_theme_color_override("font_color", Color(0.35, 0.85, 0.50, 1))
 	row.add_child(lbl_income)
 
-	var lbl_wages := Label.new()
-	lbl_wages.text = "−%s" % _fmt(entry.get("wages", 0))
-	lbl_wages.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_wages.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_wages.add_theme_font_size_override("font_size", 13)
-	lbl_wages.add_theme_color_override("font_color", Color(0.90, 0.40, 0.30, 1))
-	row.add_child(lbl_wages)
-
-	var lbl_loan := Label.new()
-	var loan_val: int = entry.get("loan_payment", 0)
-	lbl_loan.text = ("−%s" % _fmt(loan_val)) if loan_val > 0 else "—"
-	lbl_loan.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_loan.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl_loan.add_theme_font_size_override("font_size", 13)
-	lbl_loan.add_theme_color_override("font_color", Color(0.90, 0.65, 0.20, 1))
-	row.add_child(lbl_loan)
+	var total_expenses: int = entry.get("wages", 0) + entry.get("staff_cost", 0) + entry.get("loan_payment", 0)
+	var lbl_exp := Label.new()
+	lbl_exp.text = "−%s" % _fmt(total_expenses)
+	lbl_exp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_exp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_exp.add_theme_font_size_override("font_size", 13)
+	lbl_exp.add_theme_color_override("font_color", Color(0.90, 0.40, 0.30, 1))
+	row.add_child(lbl_exp)
 
 	var bal: int = entry.get("balance", 0)
 	var lbl_bal := Label.new()
@@ -474,7 +495,189 @@ func _hist_row(entry: Dictionary) -> HBoxContainer:
 	lbl_bal.add_theme_color_override("font_color", Color(0.25, 0.90, 0.40, 1) if bal >= 0 else Color(0.90, 0.25, 0.20, 1))
 	row.add_child(lbl_bal)
 
+	# Botón detalle
+	var btn_detail := Button.new()
+	btn_detail.text = "🔍"
+	btn_detail.flat = true
+	btn_detail.custom_minimum_size = Vector2(32, 0)
+	btn_detail.add_theme_font_size_override("font_size", 14)
+	btn_detail.pressed.connect(func(): _show_entry_detail(entry))
+	row.add_child(btn_detail)
+
+	return container
+
+
+# ---------------------------------------------------------------------------
+# Popup de desglose detallado
+
+func _show_entry_detail(entry: Dictionary) -> void:
+	if _detail_overlay != null:
+		_detail_overlay.queue_free()
+	_detail_overlay = _make_overlay()
+	add_child(_detail_overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_detail_overlay.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(480, 0)
+	var pst := StyleBoxFlat.new()
+	pst.bg_color = Color(0.08, 0.10, 0.16, 0.98)
+	pst.set_corner_radius_all(8)
+	pst.set_content_margin_all(28)
+	panel.add_theme_stylebox_override("panel", pst)
+	center.add_child(panel)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	panel.add_child(vb)
+
+	# Título
+	var ttl := Label.new()
+	ttl.text = "📊  Semana %d — Desglose financiero" % entry.get("week", 0)
+	ttl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ttl.add_theme_font_size_override("font_size", 19)
+	ttl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
+	vb.add_child(ttl)
+	vb.add_child(HSeparator.new())
+
+	# ── INGRESOS ──
+	var inc_title := Label.new()
+	inc_title.text = "📥  INGRESOS"
+	inc_title.add_theme_font_size_override("font_size", 15)
+	inc_title.add_theme_color_override("font_color", Color(0.35, 0.90, 0.50, 1))
+	vb.add_child(inc_title)
+
+	var tv: int = entry.get("tv_income", 0)
+	var sp: int = entry.get("sponsor_income", 0)
+	var me: int = entry.get("merch_income", 0)
+	var md: int = entry.get("matchday", 0)
+	var tr: int = entry.get("transfer_income", 0)
+	var total_income: int = tv + sp + me + md + tr
+
+	var income_lines: Array = [
+		["Derechos de televisión",   tv],
+		["Patrocinador",              sp],
+		["Merchandising",             me],
+		["Taquilla (partido)",         md],
+		["Traspaso de jugador",        tr],
+	]
+	for line: Array in income_lines:
+		var val: int = line[1] as int
+		vb.add_child(_detail_line(line[0] as String, val, true))
+
+	vb.add_child(_detail_separator())
+	vb.add_child(_detail_total("Total ingresos", total_income, true))
+	vb.add_child(HSeparator.new())
+
+	# ── GASTOS ──
+	var exp_title := Label.new()
+	exp_title.text = "📤  GASTOS"
+	exp_title.add_theme_font_size_override("font_size", 15)
+	exp_title.add_theme_color_override("font_color", Color(0.90, 0.40, 0.30, 1))
+	vb.add_child(exp_title)
+
+	var wa: int = entry.get("wages", 0)
+	var sc: int = entry.get("staff_cost", 0)
+	var lp: int = entry.get("loan_payment", 0)
+	var total_expenses: int = wa + sc + lp
+
+	var expense_lines: Array = [
+		["Salarios de la plantilla", wa],
+		["Personal del club",         sc],
+		["Cuota préstamo bancario",   lp],
+	]
+	for line: Array in expense_lines:
+		var val: int = line[1] as int
+		if val > 0:
+			vb.add_child(_detail_line(line[0] as String, val, false))
+
+	vb.add_child(_detail_separator())
+	vb.add_child(_detail_total("Total gastos", total_expenses, false))
+	vb.add_child(HSeparator.new())
+
+	# ── SALDO ──
+	var bal: int = entry.get("balance", 0)
+	var net: int = total_income - total_expenses
+	var saldo_row := HBoxContainer.new()
+	var saldo_lbl := Label.new()
+	saldo_lbl.text = "💰  Saldo al final de la semana"
+	saldo_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	saldo_lbl.add_theme_font_size_override("font_size", 15)
+	saldo_row.add_child(saldo_lbl)
+	var saldo_val := Label.new()
+	saldo_val.text = "%s €" % _fmt(bal)
+	saldo_val.add_theme_font_size_override("font_size", 16)
+	saldo_val.add_theme_color_override("font_color", Color(0.25, 0.90, 0.40, 1) if bal >= 0 else Color(0.90, 0.25, 0.20, 1))
+	saldo_row.add_child(saldo_val)
+	vb.add_child(saldo_row)
+
+	var net_row := HBoxContainer.new()
+	var net_lbl := Label.new()
+	net_lbl.text = "Balance neto de la semana"
+	net_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	net_lbl.add_theme_font_size_override("font_size", 13)
+	net_lbl.add_theme_color_override("font_color", Color(0.55, 0.60, 0.65, 1))
+	net_row.add_child(net_lbl)
+	var net_val := Label.new()
+	net_val.text = ("+%s" if net >= 0 else "%s") % _fmt(net) + " €"
+	net_val.add_theme_font_size_override("font_size", 13)
+	net_val.add_theme_color_override("font_color", Color(0.35, 0.85, 0.50, 1) if net >= 0 else Color(0.90, 0.40, 0.30, 1))
+	net_row.add_child(net_val)
+	vb.add_child(net_row)
+
+	vb.add_child(HSeparator.new())
+
+	var btn_close := Button.new()
+	btn_close.text = "Cerrar"
+	btn_close.custom_minimum_size = Vector2(120, 44)
+	btn_close.pressed.connect(func(): _detail_overlay.queue_free(); _detail_overlay = null)
+	var btn_wrap := CenterContainer.new()
+	btn_wrap.add_child(btn_close)
+	vb.add_child(btn_wrap)
+
+
+# Detail helpers
+
+func _detail_line(label: String, amount: int, is_income: bool) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var lbl := Label.new()
+	lbl.text = "    " + label
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_font_size_override("font_size", 14)
+	row.add_child(lbl)
+	var val := Label.new()
+	val.text = ("+%s" if is_income else "−%s") % _fmt(amount) + " €"
+	val.add_theme_font_size_override("font_size", 14)
+	val.add_theme_color_override("font_color",
+		Color(0.35, 0.85, 0.50, 1) if is_income else Color(0.90, 0.40, 0.30, 1))
+	row.add_child(val)
 	return row
+
+
+func _detail_total(label: String, amount: int, is_income: bool) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var lbl := Label.new()
+	lbl.text = label
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_color_override("font_color",
+		Color(0.35, 0.85, 0.50, 1) if is_income else Color(0.90, 0.40, 0.30, 1))
+	row.add_child(lbl)
+	var val := Label.new()
+	val.text = ("+%s" if is_income else "−%s") % _fmt(amount) + " €"
+	val.add_theme_font_size_override("font_size", 15)
+	val.add_theme_color_override("font_color",
+		Color(0.35, 0.85, 0.50, 1) if is_income else Color(0.90, 0.40, 0.30, 1))
+	row.add_child(val)
+	return row
+
+
+func _detail_separator() -> HSeparator:
+	var sep := HSeparator.new()
+	return sep
 
 
 func _fmt(n: int) -> String:

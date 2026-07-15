@@ -59,6 +59,146 @@ func _build_table(league: League) -> void:
 		var t: Team = standings[i]
 		list.add_child(_make_row(i + 1, t, n, player_tid))
 
+	# ── Rankings de jugadores ──────────────────────────────────────────────────
+	list.add_child(_make_spacer(12))
+	list.add_child(_make_stats_block(league))
+
+
+func _make_spacer(height: int) -> Control:
+	var c := Control.new()
+	c.custom_minimum_size = Vector2(0, height)
+	return c
+
+
+## Recoge todos los jugadores de la liga y devuelve los tres rankings
+func _make_stats_block(league: League) -> Control:
+	# Recopilar jugadores de la liga
+	var players: Array[Player] = []
+	for tid: int in league.team_ids:
+		var t: Team = GameManager.get_team(tid)
+		if t == null:
+			continue
+		for pid: int in t.player_ids:
+			var p: Player = GameManager.get_player(pid)
+			if p:
+				players.append(p)
+
+	# Top goleadores
+	var scorers := players.duplicate()
+	scorers.sort_custom(func(a: Player, b: Player) -> bool: return a.season_goals > b.season_goals)
+	scorers = scorers.slice(0, 10)
+
+	# Top amarillas
+	var yellows := players.duplicate()
+	yellows.sort_custom(func(a: Player, b: Player) -> bool: return a.yellow_cards > b.yellow_cards)
+	yellows = yellows.slice(0, 10)
+
+	# Top rojas
+	var reds := players.duplicate()
+	reds.sort_custom(func(a: Player, b: Player) -> bool: return a.season_reds > b.season_reds)
+	reds = reds.slice(0, 10)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+
+	hbox.add_child(_make_ranking_panel("⚽  Goleadores", scorers,
+		func(p: Player) -> String: return str(p.season_goals),
+		Color(0.30, 0.80, 0.35, 1)))
+
+	hbox.add_child(_make_ranking_panel("🟨  Tarjetas amarillas", yellows,
+		func(p: Player) -> String: return str(p.yellow_cards),
+		Color(0.92, 0.80, 0.10, 1)))
+
+	hbox.add_child(_make_ranking_panel("🟥  Tarjetas rojas", reds,
+		func(p: Player) -> String: return str(p.season_reds),
+		Color(0.88, 0.20, 0.20, 1)))
+
+	return hbox
+
+
+func _make_ranking_panel(title: String, players: Array, value_fn: Callable, accent: Color) -> Control:
+	var panel := PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.08, 0.10, 0.15, 1)
+	sb.set_corner_radius_all(4)
+	sb.border_width_left = 3
+	sb.border_color = accent
+	sb.set_content_margin_all(6)
+	panel.add_theme_stylebox_override("panel", sb)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 3)
+	panel.add_child(vbox)
+
+	# Título
+	var lbl_title := Label.new()
+	lbl_title.text = title
+	lbl_title.add_theme_font_size_override("font_size", 13)
+	lbl_title.add_theme_color_override("font_color", accent)
+	vbox.add_child(lbl_title)
+
+	vbox.add_child(HSeparator.new())
+
+	var pid_player := GameManager.player_team_id
+	var rank := 1
+	for p: Player in players:
+		var val: String = value_fn.call(p)
+		if int(val) == 0 or rank > 7:
+			break
+		var t: Team = GameManager.get_team(p.team_id)
+		var is_mine: bool = (p.team_id == pid_player)
+
+		# Usar solo el apellido para ahorrar espacio
+		var parts := p.full_name.split(" ")
+		var display_name: String = parts[parts.size() - 1]
+
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 3)
+
+		var lbl_rank := Label.new()
+		lbl_rank.text = str(rank)
+		lbl_rank.custom_minimum_size = Vector2(18, 0)
+		lbl_rank.add_theme_font_size_override("font_size", 11)
+		lbl_rank.add_theme_color_override("font_color", Color(0.55, 0.60, 0.65, 1))
+		row.add_child(lbl_rank)
+
+		var lbl_name := Label.new()
+		lbl_name.text = display_name
+		lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lbl_name.clip_contents = true
+		lbl_name.add_theme_font_size_override("font_size", 12)
+		lbl_name.add_theme_color_override("font_color",
+			Color(1.0, 0.92, 0.30, 1) if is_mine else Color(0.85, 0.88, 0.92, 1))
+		row.add_child(lbl_name)
+
+		var lbl_team := Label.new()
+		lbl_team.text = (t.short_name if t else "?")
+		lbl_team.custom_minimum_size = Vector2(44, 0)
+		lbl_team.add_theme_font_size_override("font_size", 11)
+		lbl_team.add_theme_color_override("font_color", Color(0.55, 0.70, 0.85, 1))
+		row.add_child(lbl_team)
+
+		var lbl_val := Label.new()
+		lbl_val.text = val
+		lbl_val.custom_minimum_size = Vector2(26, 0)
+		lbl_val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		lbl_val.add_theme_font_size_override("font_size", 13)
+		lbl_val.add_theme_color_override("font_color", accent)
+		row.add_child(lbl_val)
+
+		vbox.add_child(row)
+		rank += 1
+
+	if rank == 1:
+		var empty := Label.new()
+		empty.text = "Sin datos aún"
+		empty.add_theme_font_size_override("font_size", 12)
+		empty.add_theme_color_override("font_color", Color(0.45, 0.48, 0.52, 1))
+		vbox.add_child(empty)
+
+	return panel
+
 
 func _make_header() -> Control:
 	var hbox := HBoxContainer.new()

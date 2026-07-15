@@ -11,6 +11,7 @@ var _filter_mode: int = 0   # 0 = todos, 1 = en venta
 
 func _ready() -> void:
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
+	TransferManager.acknowledge_active_offers()
 
 	for lbl: String in POS_LABELS:
 		%FilterPos.add_item(lbl)

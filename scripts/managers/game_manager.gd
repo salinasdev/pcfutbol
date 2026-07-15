@@ -36,6 +36,9 @@ var bonus_win:   int = 0
 var bonus_title: int = 0
 var bonus_history: Array[Dictionary] = []
 
+## Punto rojo en el botón Tácticas cuando hay lesionados/sancionados
+var tactics_badge_active: bool = false
+
 # ---------------------------------------------------------------------------
 
 ## Paso 1: Resetea el estado y genera todas las ligas/equipos.
@@ -87,12 +90,7 @@ func advance_week() -> void:
 			else:
 				var ht: Team = get_team(f["home_id"])
 				var at: Team = get_team(f["away_id"])
-				var res: Dictionary = MatchSimulator.simulate_match(ht, at)
-				f["home_goals"] = res["home_goals"]
-				f["away_goals"] = res["away_goals"]
-				f["played"]     = true
-				LeagueManager._apply_result(f)
-				LeagueManager.simulate_sanctions_for_ia(ht, at)
+				_simulate_ai_match(f, ht, at)
 
 		if not player_fixture.is_empty():
 			active_fixture = player_fixture
@@ -102,6 +100,7 @@ func advance_week() -> void:
 			emit_signal("matchday_done", next_md)
 
 	TransferManager.process_weekly_offers()
+	TransferManager.generate_incoming_offers()
 	_check_coach_sackings()
 	NewsManager.generate_weekly_news()
 
@@ -137,6 +136,15 @@ func advance_week() -> void:
 			break
 	if all_done and not leagues.is_empty():
 		emit_signal("season_ended")
+
+	# Activar badge de tácticas si hay lesionados/sancionados en el equipo
+	var badge_team: Team = get_player_team()
+	if badge_team != null:
+		for bid: int in badge_team.player_ids:
+			var bp: Player = get_player(bid)
+			if bp != null and (bp.injured or bp.suspended):
+				tactics_badge_active = true
+				break
 
 # ---------------------------------------------------------------------------
 
@@ -280,6 +288,47 @@ func _deduct_staff_wages(team: Team) -> void:
 	team.club_cash -= total
 
 
+## Simula un partido de IA usando el motor completo de eventos.
+## Actualiza el fixture, aplica resultados, estadísticas y sanciones reales.
+func _simulate_ai_match(f: Dictionary, home: Team, away: Team) -> void:
+	var events: Array[Dictionary] = MatchEngine.generate_events(home, away)
+
+	# Buscar el evento FULL_TIME para obtener resultado y listas de tarjetas/lesiones
+	var ft: Dictionary = {}
+	for ev: Dictionary in events:
+		if ev.get("type") == MatchEngine.EventType.FULL_TIME:
+			ft = ev
+			break
+
+	if ft.is_empty():
+		# Fallback de seguridad
+		var res := MatchSimulator.simulate_match(home, away)
+		f["home_goals"] = res["home_goals"]
+		f["away_goals"] = res["away_goals"]
+	else:
+		f["home_goals"] = ft["home_goals"]
+		f["away_goals"] = ft["away_goals"]
+
+	f["played"] = true
+	LeagueManager._apply_result(f)
+
+	if not ft.is_empty():
+		# Aplicar sanciones (amarillas, rojas, lesiones) a ambos equipos
+		LeagueManager.apply_match_sanctions(ft)
+		# Descontar partido de baja a lesionados IA y liberar sancionados cumplidos
+		LeagueManager.consume_suspensions(home)
+		LeagueManager.consume_suspensions(away)
+
+	# Aplicar estadísticas de goles a cada jugador goleador
+	for ev: Dictionary in events:
+		if ev.get("type") == MatchEngine.EventType.GOAL:
+			var scorer_id: int = ev.get("player_id", -1)
+			if scorer_id != -1:
+				var sp: Player = get_player(scorer_id)
+				if sp:
+					sp.season_goals += 1
+
+
 func _process_weekly_finances() -> void:
 	var team: Team = get_player_team()
 	if team == null:
@@ -331,10 +380,24 @@ func _process_weekly_finances() -> void:
 	merch_income = base_merch + team.merch_stores * 25_000
 	team.club_cash += merch_income
 
+	# Calcular coste de personal (ya descontado antes, solo para registrarlo)
+	const _STAFF_WEEKLY: Array[int] = [0, 500, 1_500, 4_000, 9_000, 20_000]
+	const _STAFF_IDS: Array[String] = [
+		"staff_gk_coach", "staff_passing_coach", "staff_dribbling_coach",
+		"staff_shooting_coach", "staff_tackling_coach", "staff_physical_coach",
+		"staff_physio", "staff_psychologist", "staff_scout",
+		"staff_tech_secretary", "staff_youth_coach", "staff_talent_scout",
+		"staff_groundskeeper",
+	]
+	var staff_cost: int = 0
+	for _sid: String in _STAFF_IDS:
+		staff_cost += _STAFF_WEEKLY[team.get(_sid)]
+
 	# Registrar en historial financiero (máx 20 entradas)
 	var entry: Dictionary = {
 		"week":           current_week,
 		"wages":          wage_bill,
+		"staff_cost":     staff_cost,
 		"loan_payment":   loan_payment,
 		"tv_income":      tv_income,
 		"sponsor_income": sponsor_income,

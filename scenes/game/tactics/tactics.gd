@@ -37,6 +37,7 @@ var _slot_buttons: Array[Button] = []
 
 func _ready() -> void:
 	_team = GameManager.get_player_team()
+	GameManager.tactics_badge_active = false
 	if _team:
 		_formation = _team.formation
 		_slots.assign(_team.starting_eleven.duplicate())

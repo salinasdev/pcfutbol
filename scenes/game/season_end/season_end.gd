@@ -180,6 +180,8 @@ func _start_new_season() -> void:
 		p.yellow_cards = 0
 		p.suspended    = false
 		p.red_carded   = false
+		p.season_goals = 0
+		p.season_reds  = 0
 		p.age         += 1   # Cumplir años
 
 	# Regenerar calendario de todas las ligas

@@ -179,6 +179,14 @@ func _on_match_finished() -> void:
 		if pt != null:
 			LeagueManager.consume_suspensions(pt)
 		LeagueManager.apply_match_sanctions(ft)
+		# Registrar goles de temporada para todos los goleadores del partido
+		for ev: Dictionary in _events:
+			if ev.get("type") == MatchEngine.EventType.GOAL:
+				var scorer_id: int = ev.get("player_id", -1)
+				if scorer_id != -1:
+					var _sp: Player = GameManager.get_player(scorer_id)
+					if _sp:
+						_sp.season_goals += 1
 		var league: League = _get_fixture_league()
 		if league:
 			var md: int = fixture.get("matchday", 1)

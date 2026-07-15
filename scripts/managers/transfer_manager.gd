@@ -4,10 +4,16 @@ signal transfer_completed(player: Player, from_team: Team, to_team: Team, fee: i
 signal transfer_rejected(player: Player, reason: String)
 ## Emitida cuando la IA responde a una oferta (accepted/rejected/countered)
 signal offer_response_received(offer: Dictionary)
+## Emitida cuando llega una nueva oferta de la IA por un jugador nuestro
+signal incoming_offer_received(offer: Dictionary)
 
-## Ofertas activas del equipo del jugador
+## Ofertas activas del equipo del jugador (hacia equipos IA)
 var active_offers: Array[Dictionary] = []
 var _next_offer_id: int = 1
+
+## Ofertas que equipos IA han hecho por jugadores del equipo del jugador
+var incoming_offers: Array[Dictionary] = []
+var _next_incoming_id: int = 1
 
 const _REJECT_MSGS: Array = [
 	"El club ha rechazado la oferta. Consideran que no refleja el valor del jugador.",
@@ -125,6 +131,19 @@ func withdraw_offer(offer_id: int) -> void:
 			return
 
 
+## Marca como vistas todas las respuestas de ofertas activas (quita badge Fichajes).
+func acknowledge_active_offers() -> void:
+	for offer: Dictionary in active_offers:
+		offer["acknowledged"] = true
+
+
+## Marca como vistas todas las ofertas entrantes pendientes (quita badge Plantilla).
+func acknowledge_incoming_offers() -> void:
+	for offer: Dictionary in incoming_offers:
+		if offer["status"] == "pending":
+			offer["acknowledged"] = true
+
+
 ## Procesa la respuesta de la IA a todas las ofertas pendientes.
 ## Llamar desde GameManager.advance_week().
 func process_weekly_offers() -> void:
@@ -135,9 +154,11 @@ func process_weekly_offers() -> void:
 		if player == null:
 			offer["status"]           = "rejected"
 			offer["response_message"] = "El jugador ya no está disponible."
+			offer["acknowledged"]     = false
 			emit_signal("offer_response_received", offer)
 			continue
 		_evaluate_offer(offer, player)
+		offer["acknowledged"] = false
 		emit_signal("offer_response_received", offer)
 
 
@@ -158,6 +179,132 @@ func get_listed_players() -> Array:
 		if p.transfer_listed:
 			listed.append(p)
 	return listed
+
+
+# ---------------------------------------------------------------------------
+# Ofertas entrantes (IA → equipo del jugador)
+
+## Genera ofertas entrantes aleatorias de la IA. Llamar desde advance_week().
+func generate_incoming_offers() -> void:
+	var player_team: Team = GameManager.get_player_team()
+	if player_team == null:
+		return
+
+	# Limpiar ofertas caducadas (más de 4 semanas sin respuesta)
+	var current_week: int = GameManager.current_week
+	incoming_offers = incoming_offers.filter(func(o: Dictionary) -> bool:
+		return o["status"] != "pending" or (current_week - o.get("week_submitted", current_week)) < 4
+	)
+
+	# ~35 % de probabilidad semanal
+	if randf() > 0.35:
+		return
+
+	# Candidatos: jugadores en venta (oferta normal) y jugadores con cláusula activable
+	var listed_cands: Array[Player] = []
+	var clause_cands: Array[Player] = []
+
+	for pid: int in player_team.player_ids:
+		var p: Player = GameManager.get_player(pid)
+		if p == null:
+			continue
+		var already: bool = false
+		for o: Dictionary in incoming_offers:
+			if o["player_id"] == p.id and o["status"] == "pending":
+				already = true
+				break
+		if already:
+			continue
+		if p.transfer_listed:
+			listed_cands.append(p)
+		elif p.release_clause > 0 and p.get_overall() >= 70:
+			# Solo incluir si hay equipos que puedan pagar la cláusula
+			clause_cands.append(p)
+
+	# Priorizar jugadores en venta; 35 % de chance de oferta de cláusula si no hay en venta
+	var target: Player = null
+	var is_clause: bool = false
+	if not listed_cands.is_empty() and (clause_cands.is_empty() or randf() < 0.65):
+		target = listed_cands[randi() % listed_cands.size()]
+		is_clause = false
+	elif not clause_cands.is_empty():
+		# Filtrar cláusula: si es muy alta respecto al valor, reducir probabilidad
+		var affordable: Array[Player] = []
+		for cp: Player in clause_cands:
+			var ratio: float = float(cp.release_clause) / float(maxi(calculate_value(cp), 1))
+			# <1.5× : siempre candidato; 1.5-2×: 50%; 2-3×: 20%; >3×: 5%
+			var prob: float
+			if   ratio < 1.5: prob = 1.00
+			elif ratio < 2.0: prob = 0.50
+			elif ratio < 3.0: prob = 0.20
+			else:             prob = 0.05
+			if randf() < prob:
+				affordable.append(cp)
+		if affordable.is_empty():
+			return
+		target = affordable[randi() % affordable.size()]
+		is_clause = true
+	else:
+		return
+
+	# Elegir comprador que pueda permitirse la cláusula
+	var buyer_candidates: Array = GameManager.teams.values().filter(func(t: Team) -> bool:
+		if t.id == player_team.id or t.budget <= 0:
+			return false
+		if is_clause and target != null:
+			return t.budget >= target.release_clause
+		return true
+	)
+	if buyer_candidates.is_empty():
+		return
+	var buyer: Team = buyer_candidates[randi() % buyer_candidates.size()]
+
+	var value: int = calculate_value(target)
+	var offer_money: int
+	if is_clause:
+		offer_money = target.release_clause
+	else:
+		offer_money = int(value * randf_range(0.70, 1.20))
+	offer_money = int(offer_money / 50_000.0) * 50_000
+
+	var offer: Dictionary = {
+		"id":             _next_incoming_id,
+		"player_id":      target.id,
+		"buyer_id":       buyer.id,
+		"offer_money":    offer_money,
+		"week_submitted": current_week,
+		"status":         "pending",
+		"is_clause":      is_clause,
+		"acknowledged":   false,
+	}
+	_next_incoming_id += 1
+	incoming_offers.append(offer)
+	emit_signal("incoming_offer_received", offer)
+
+
+## Acepta una oferta entrante: transfiere el jugador y cobra el dinero.
+func accept_incoming_offer(offer_id: int) -> void:
+	for offer: Dictionary in incoming_offers:
+		if offer["id"] != offer_id or offer["status"] != "pending":
+			continue
+		var player: Player = GameManager.get_player(offer["player_id"])
+		var buyer: Team    = GameManager.get_team(offer["buyer_id"])
+		var seller: Team   = GameManager.get_player_team()
+		if player == null or buyer == null or seller == null:
+			offer["status"] = "rejected"
+			return
+		offer["status"] = "accepted"
+		_complete_transfer(buyer, seller, player, offer["offer_money"])
+		NewsManager.add_transfer_done_news(player, seller, buyer, offer["offer_money"])
+		return
+
+
+## Rechaza una oferta entrante.
+func reject_incoming_offer(offer_id: int) -> void:
+	for offer: Dictionary in incoming_offers:
+		if offer["id"] == offer_id:
+			offer["status"] = "rejected"
+			return
 
 
 # ---------------------------------------------------------------------------
@@ -260,6 +407,17 @@ func _complete_transfer(buyer: Team, seller: Team, player: Player, fee: int) -> 
 	player.team_id = buyer.id
 	buyer.budget  -= fee
 	seller.budget += fee
+
+	# El dinero del traspaso va a la caja del vendedor
+	var player_team: Team = GameManager.get_player_team()
+	if player_team != null and seller.id == player_team.id:
+		seller.club_cash += fee
+		# Anotar en el historial financiero de la semana actual
+		if not seller.finance_history.is_empty():
+			var entry: Dictionary = seller.finance_history[seller.finance_history.size() - 1]
+			entry["transfer_income"] = entry.get("transfer_income", 0) + fee
+			entry["balance"] = seller.club_cash
+
 	emit_signal("transfer_completed", player, seller, buyer, fee)
 
 

@@ -9,7 +9,6 @@ func _ready() -> void:
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%BtnPrev.pressed.connect(_prev_matchday)
 	%BtnNext.pressed.connect(_next_matchday)
-	%BtnSimulate.pressed.connect(_simulate_current)
 
 	_league = _get_first_league()
 	if _league:
@@ -36,59 +35,20 @@ func _next_matchday() -> void:
 		_refresh()
 
 
-func _simulate_current() -> void:
-	if _league == null:
-		return
-	var fixtures := _league.get_fixtures_for_matchday(_current_matchday)
-	var all_played := fixtures.all(func(f: Dictionary) -> bool: return f["played"])
-	if all_played:
-		_set_status("Jornada %d ya jugada." % _current_matchday)
-		return
-
-	# Simular sólo los partidos que NO son del equipo del jugador
-	var pid := GameManager.player_team_id
-	var has_player_match := false
-	for f: Dictionary in fixtures:
-		if not f["played"]:
-			if f["home_id"] == pid or f["away_id"] == pid:
-				has_player_match = true
-			else:
-				var ht: Team = GameManager.get_team(f["home_id"])
-				var at: Team = GameManager.get_team(f["away_id"])
-				var res: Dictionary = MatchSimulator.simulate_match(ht, at)
-				f["home_goals"] = res["home_goals"]
-				f["away_goals"] = res["away_goals"]
-				f["played"]     = true
-				LeagueManager._apply_result(f)
-
-	if has_player_match:
-		_set_status("Pulsa tu partido para jugarlo en directo.")
-	else:
-		_league.current_matchday = _current_matchday
-
-	_refresh()
-
-
 func _refresh() -> void:
 	if _league == null:
 		%JornadaLabel.text = "Sin liga"
-		%BtnSimulate.disabled = true
 		return
 
 	%JornadaLabel.text = "Jornada %d / %d" % [_current_matchday, _total_matchdays]
 	%BtnPrev.disabled = (_current_matchday <= 1)
 	%BtnNext.disabled = (_current_matchday >= _total_matchdays)
 
-	var fixtures := _league.get_fixtures_for_matchday(_current_matchday)
-	var all_played := fixtures.all(func(f: Dictionary) -> bool: return f["played"])
-	%BtnSimulate.disabled = all_played
-	%BtnSimulate.text = "Jornada ya jugada" if all_played else "Simular Jornada"
-
 	var list: VBoxContainer = %MatchList
 	for child in list.get_children():
 		child.queue_free()
 
-	for f: Dictionary in fixtures:
+	for f: Dictionary in _league.get_fixtures_for_matchday(_current_matchday):
 		list.add_child(_make_fixture_row(f))
 
 
@@ -100,7 +60,6 @@ func _make_fixture_row(f: Dictionary) -> Control:
 
 	var pid := GameManager.player_team_id
 	var is_player_match: bool = (f["home_id"] == pid or f["away_id"] == pid)
-	var playable: bool = is_player_match and not f["played"]
 
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size = Vector2(0, 64)
@@ -113,7 +72,7 @@ func _make_fixture_row(f: Dictionary) -> Control:
 		style.border_width_right  = 2
 		style.border_width_top    = 2
 		style.border_width_bottom = 2
-		style.border_color = Color(0.3, 0.8, 0.3, 0.6) if not playable else Color(0.3, 1.0, 0.3, 1)
+		style.border_color = Color(0.3, 0.8, 0.3, 0.8)
 	else:
 		style.bg_color = Color(0.1, 0.1, 0.1, 0.3)
 	panel.add_theme_stylebox_override("panel", style)
@@ -140,9 +99,6 @@ func _make_fixture_row(f: Dictionary) -> Control:
 	if f["played"]:
 		lbl_score.text = "%d  -  %d" % [f["home_goals"], f["away_goals"]]
 		lbl_score.add_theme_color_override("font_color", Color(0.9, 0.9, 0.4, 1))
-	elif playable:
-		lbl_score.text = "▶ JUGAR"
-		lbl_score.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5, 1))
 	else:
 		lbl_score.text = "vs"
 		lbl_score.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
@@ -158,25 +114,4 @@ func _make_fixture_row(f: Dictionary) -> Control:
 		lbl_away.add_theme_color_override("font_color", Color(0.9, 1.0, 0.4, 1))
 	hbox.add_child(lbl_away)
 
-	# El panel entero es clickable si el partido es jugable
-	if playable:
-		var btn := Button.new()
-		btn.flat = true
-		btn.layout_mode = 1
-		btn.anchors_preset = 15
-		btn.anchor_right  = 1.0
-		btn.anchor_bottom = 1.0
-		btn.modulate = Color(1, 1, 1, 0)  # invisible pero recibe clicks
-		btn.pressed.connect(func(): _launch_match(f))
-		panel.add_child(btn)
-
 	return panel
-
-
-func _launch_match(f: Dictionary) -> void:
-	GameManager.active_fixture = f
-	get_tree().change_scene_to_file("res://scenes/game/match/match_view.tscn")
-
-
-func _set_status(msg: String) -> void:
-	%JornadaLabel.text = msg

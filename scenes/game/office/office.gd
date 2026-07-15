@@ -15,6 +15,9 @@ extends Control
 const _TICKER_SPEED: float = 110.0  # px/s
 var _notices: Array[String] = []
 var _ticker_x: float = 0.0
+var _squad_badge: Label     = null  # punto rojo sobre Plantilla
+var _transfers_badge: Label = null  # punto rojo sobre Fichajes
+var _tactics_badge: Label   = null  # punto rojo sobre Tácticas
 
 
 func _ready() -> void:
@@ -24,11 +27,11 @@ func _ready() -> void:
 	GameManager.matchday_done.connect(_on_matchday_done)
 	GameManager.season_ended.connect(_on_season_ended)
 
-	%BtnSquad.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/squad/squad.tscn"))
+	%BtnSquad.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/squad/plantilla.tscn"))
 	%BtnAlignment.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/squad/squad.tscn"))
 	%BtnTactics.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/tactics/tactics.tscn"))
 	%BtnTransfers.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/transfers/transfers.tscn"))
-	%BtnCalendar.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/calendar/calendar.tscn"))
+	%BtnCalendar.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/calendar/player_calendar.tscn"))
 	%BtnResults.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/calendar/calendar.tscn"))
 	%BtnStandings.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/standings/standings.tscn"))
 	%BtnPress.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/press/press.tscn"))
@@ -41,6 +44,11 @@ func _ready() -> void:
 	%BtnStadium.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/stadium/stadium.tscn"))
 	%BtnNextWeek.pressed.connect(_on_next_week)
 	btn_play_match.pressed.connect(_on_play_match)
+	TransferManager.incoming_offer_received.connect(_on_incoming_offer)
+	TransferManager.offer_response_received.connect(_on_offer_response)
+	_setup_squad_badge()
+	_setup_transfers_badge()
+	_setup_tactics_badge()
 
 	set_process(false)
 
@@ -150,6 +158,85 @@ func _on_play_match() -> void:
 
 func _on_date_advanced(_date: Dictionary) -> void:
 	_refresh_header()
+	_refresh_squad_badge()
+	_refresh_tactics_badge()
+
+
+func _setup_squad_badge() -> void:
+	# Inyectar un punto rojo sobre el botón Plantilla
+	var btn: Button = %BtnSquad
+	var badge := Label.new()
+	badge.text = "\u25cf"
+	badge.add_theme_font_size_override("font_size", 22)
+	badge.add_theme_color_override("font_color", Color(1.0, 0.20, 0.15, 1))
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Posicionar en esquina superior derecha del botón
+	btn.add_child(badge)
+	badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	badge.position = Vector2(-22, 2)
+	_squad_badge = badge
+	_refresh_squad_badge()
+
+
+func _refresh_squad_badge() -> void:
+	if _squad_badge == null:
+		return
+	var has_pending: bool = false
+	for o: Dictionary in TransferManager.incoming_offers:
+		if o["status"] == "pending" and not o.get("acknowledged", false):
+			has_pending = true
+			break
+	_squad_badge.visible = has_pending
+
+
+func _setup_transfers_badge() -> void:
+	var btn: Button = %BtnTransfers
+	var badge := Label.new()
+	badge.text = "\u25cf"
+	badge.add_theme_font_size_override("font_size", 22)
+	badge.add_theme_color_override("font_color", Color(1.0, 0.20, 0.15, 1))
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(badge)
+	badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	badge.position = Vector2(-22, 2)
+	_transfers_badge = badge
+	_refresh_transfers_badge()
+
+
+func _refresh_transfers_badge() -> void:
+	if _transfers_badge == null:
+		return
+	var has_response: bool = false
+	for o: Dictionary in TransferManager.active_offers:
+		var st: String = o.get("status", "")
+		if (st == "countered" or st == "rejected") and not o.get("acknowledged", false):
+			has_response = true
+			break
+	_transfers_badge.visible = has_response
+
+
+func _on_offer_response(_offer: Dictionary) -> void:
+	_refresh_transfers_badge()
+
+
+func _setup_tactics_badge() -> void:
+	var btn: Button = %BtnTactics
+	var badge := Label.new()
+	badge.text = "\u25cf"
+	badge.add_theme_font_size_override("font_size", 22)
+	badge.add_theme_color_override("font_color", Color(1.0, 0.20, 0.15, 1))
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(badge)
+	badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	badge.position = Vector2(-22, 2)
+	_tactics_badge = badge
+	_refresh_tactics_badge()
+
+
+func _refresh_tactics_badge() -> void:
+	if _tactics_badge == null:
+		return
+	_tactics_badge.visible = GameManager.tactics_badge_active
 
 
 func _on_season_ended() -> void:
@@ -161,7 +248,10 @@ func _set_status(msg: String) -> void:
 
 
 func _set_notice(msg: String) -> void:
-	_set_notices([msg] if msg != "" else [])
+	var arr: Array[String] = []
+	if msg != "":
+		arr.append(msg)
+	_set_notices(arr)
 
 
 func _set_notices(msgs: Array[String]) -> void:
@@ -191,3 +281,26 @@ func _get_suspended_in_lineup() -> Array[String]:
 		if p != null and (p.suspended or p.injured):
 			names.append(p.full_name)
 	return names
+
+
+func _on_incoming_offer(offer: Dictionary) -> void:
+	var p: Player   = GameManager.get_player(offer["player_id"])
+	var buyer: Team = GameManager.get_team(offer["buyer_id"])
+	if p == null or buyer == null:
+		return
+	var msg: String
+	if offer.get("is_clause", false):
+		msg = "🔔 %s ha activado la cláusula de rescisión de %s (%s). ¡Revisa Plantilla!" % [
+			buyer.name, p.full_name, _fmt_short(offer["offer_money"])]
+	else:
+		msg = "🔔 %s ha hecho una oferta por %s. ¡Revisa la sección Plantilla!" % [buyer.name, p.full_name]
+	_set_notice(msg)
+	_refresh_squad_badge()
+
+
+func _fmt_short(amount: int) -> String:
+	if amount >= 1_000_000:
+		return "%.1fM€" % (amount / 1_000_000.0)
+	elif amount >= 1_000:
+		return "%.0fK€" % (amount / 1_000.0)
+	return "%d€" % amount

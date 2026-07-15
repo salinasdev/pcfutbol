@@ -184,11 +184,11 @@ func _shot_outcome(att_str: float, def_str: float) -> EventType:
 
 
 func _pick_scorer(team: Team) -> int:
-	# Delanteros y mediocampistas tienen más peso para marcar
+	# Delanteros y mediocampistas tienen más peso para marcar; los sancionados no juegan
 	var candidates: Array[int] = []
 	for pid: int in team.starting_eleven:
 		var p: Player = GameManager.get_player(pid)
-		if p == null:
+		if p == null or p.suspended:
 			continue
 		if p.position == Player.Position.FWD:
 			candidates.append(pid)
@@ -201,9 +201,17 @@ func _pick_scorer(team: Team) -> int:
 
 
 func _pick_any_player(team: Team) -> int:
-	if team.starting_eleven.is_empty():
-		return -1
-	return team.starting_eleven[randi() % team.starting_eleven.size()]
+	var available: Array[int] = []
+	for pid: int in team.starting_eleven:
+		var p: Player = GameManager.get_player(pid)
+		if p and not p.suspended:
+			available.append(pid)
+	if available.is_empty():
+		# Fallback: cualquier jugador aunque esté sancionado (equipo muy mermado)
+		if team.starting_eleven.is_empty():
+			return -1
+		return team.starting_eleven[randi() % team.starting_eleven.size()]
+	return available[randi() % available.size()]
 
 
 ## Devuelve el jugador titular con menos energía si alguno está por debajo de 35, si no -1

@@ -49,6 +49,10 @@ enum Position { GK, DEF, MID, FWD }
 @export var suspended: bool = false     ## Sancionado para el próximo partido
 @export var red_carded: bool = false    ## Expulsado este partido (interno)
 
+# Estadísticas de temporada
+@export var season_goals: int = 0       ## Goles marcados esta temporada
+@export var season_reds: int = 0        ## Tarjetas rojas esta temporada
+
 
 ## Control/Técnica: media de pase y regate (1–99)
 func get_ca() -> int:

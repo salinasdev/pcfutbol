@@ -20,6 +20,7 @@ var _status_lbl: Label
 func _ready() -> void:
 	_build_ui()
 	_refresh()
+	TransferManager.acknowledge_active_offers()
 	TransferManager.offer_response_received.connect(_on_response)
 
 
