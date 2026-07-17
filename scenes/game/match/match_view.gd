@@ -36,6 +36,11 @@ func _ready() -> void:
 	%AwayName.text = _away.name
 	_add_crests()
 
+	# Banner especial de derbi
+	var _derby_name: String = NewsManager.get_derby_name(_home.name, _away.name)
+	if _derby_name != "":
+		_add_derby_banner(_derby_name)
+
 	# Generar todos los eventos
 	_events = MatchEngine.generate_events(_home, _away)
 
@@ -174,6 +179,10 @@ func _on_match_finished() -> void:
 		var _pgf: int = fixture["home_goals"] if _is_home else fixture["away_goals"]
 		var _pga: int = fixture["away_goals"] if _is_home else fixture["home_goals"]
 		GameManager.update_board_metrics(_pgf, _pga)
+		# Noticia especial de derbi (después de update_board_metrics que limpia active_derby_name)
+		var _d_name := NewsManager.get_derby_name(_home.name, _away.name)
+		if _d_name != "":
+			NewsManager.add_derby_result_news(fixture, GameManager.get_player_team(), _d_name)
 		# Primero liberar a los que cumplieron sanción, luego aplicar las nuevas
 		var pt: Team = GameManager.get_player_team()
 		if pt != null:
@@ -229,6 +238,28 @@ func _on_match_finished() -> void:
 
 func _go_back() -> void:
 	get_tree().change_scene_to_file("res://scenes/game/office/office.tscn")
+
+
+func _add_derby_banner(derby_name: String) -> void:
+	# Insertar una barra de derbi llamativa encima del marcador
+	var root_vbox := get_node_or_null("VBoxContainer") as VBoxContainer
+	if root_vbox == null:
+		root_vbox = get_child(0) as VBoxContainer
+	if root_vbox == null:
+		return
+	var banner := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.55, 0.08, 0.05, 1)
+	sb.set_content_margin_all(6)
+	banner.add_theme_stylebox_override("panel", sb)
+	var lbl := Label.new()
+	lbl.text = "🔥  %s  🔥" % derby_name.to_upper()
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 20)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.20, 1))
+	banner.add_child(lbl)
+	root_vbox.add_child(banner)
+	root_vbox.move_child(banner, 0)
 
 
 # ---------------------------------------------------------------------------

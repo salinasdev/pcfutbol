@@ -39,6 +39,9 @@ var bonus_history: Array[Dictionary] = []
 ## Punto rojo en el botón Tácticas cuando hay lesionados/sancionados
 var tactics_badge_active: bool = false
 
+## Nombre del derbi activo (vacío si el siguiente partido no es un derbi)
+var active_derby_name: String = ""
+
 # ---------------------------------------------------------------------------
 
 ## Paso 1: Resetea el estado y genera todas las ligas/equipos.
@@ -94,6 +97,22 @@ func advance_week() -> void:
 
 		if not player_fixture.is_empty():
 			active_fixture = player_fixture
+			# Detectar si es un derbi y preparar el ambiente especial
+			var _derby: String = NewsManager.get_derby_name_by_id(
+				player_fixture.get("home_id", -1), player_fixture.get("away_id", -1))
+			active_derby_name = _derby
+			if _derby != "":
+				var _dh: Team = get_team(player_fixture.get("home_id", -1))
+				var _da: Team = get_team(player_fixture.get("away_id", -1))
+				if _dh != null and _da != null:
+					# Boost de moral para todos los jugadores del equipo del jugador
+					var _derby_team: Team = get_player_team()
+					if _derby_team != null:
+						for _dp_id: int in _derby_team.player_ids:
+							var _dp: Player = get_player(_dp_id)
+							if _dp != null:
+								_dp.morale = clampi(_dp.morale + 10, 0, 100)
+					NewsManager.add_derby_preview_news(_dh, _da, _derby)
 			emit_signal("player_match_ready", player_fixture)
 		else:
 			league.current_matchday = next_md
@@ -152,18 +171,21 @@ func advance_week() -> void:
 # Junta Directiva — métricas y primas
 
 func update_board_metrics(goals_for: int, goals_against: int) -> void:
+	# Los derbis amplifican el impacto en las métricas de la junta
+	var derby_mult: float = 1.8 if active_derby_name != "" else 1.0
 	if goals_for > goals_against:
-		manager_rating    = clampf(manager_rating    + 0.30, 1.0, 10.0)
-		board_confidence  = clampf(board_confidence  + 0.20, 1.0, 10.0)
-		public_confidence = clampf(public_confidence + 0.25, 1.0, 10.0)
+		manager_rating    = clampf(manager_rating    + 0.30 * derby_mult, 1.0, 10.0)
+		board_confidence  = clampf(board_confidence  + 0.20 * derby_mult, 1.0, 10.0)
+		public_confidence = clampf(public_confidence + 0.25 * derby_mult, 1.0, 10.0)
 	elif goals_for == goals_against:
-		manager_rating    = clampf(manager_rating    - 0.05, 1.0, 10.0)
-		board_confidence  = clampf(board_confidence  - 0.08, 1.0, 10.0)
-		public_confidence = clampf(public_confidence - 0.10, 1.0, 10.0)
+		manager_rating    = clampf(manager_rating    - 0.05 * derby_mult, 1.0, 10.0)
+		board_confidence  = clampf(board_confidence  - 0.08 * derby_mult, 1.0, 10.0)
+		public_confidence = clampf(public_confidence - 0.10 * derby_mult, 1.0, 10.0)
 	else:
-		manager_rating    = clampf(manager_rating    - 0.40, 1.0, 10.0)
-		board_confidence  = clampf(board_confidence  - 0.30, 1.0, 10.0)
-		public_confidence = clampf(public_confidence - 0.35, 1.0, 10.0)
+		manager_rating    = clampf(manager_rating    - 0.40 * derby_mult, 1.0, 10.0)
+		board_confidence  = clampf(board_confidence  - 0.30 * derby_mult, 1.0, 10.0)
+		public_confidence = clampf(public_confidence - 0.35 * derby_mult, 1.0, 10.0)
+	active_derby_name = ""  # limpiar tras aplicar el resultado
 	# Moral de los jugadores según resultado
 	var pt: Team = get_player_team()
 	if pt != null:
@@ -374,6 +396,11 @@ func _process_weekly_finances() -> void:
 			team.sponsor_id             = 0
 			team.sponsor_weekly_income  = 0
 
+	# Ingresos de derechos de liga (reparto TV, abonados y comerciales base)
+	# Garantizados cada semana independientemente de si hay partido en casa
+	var league_tv: int = int(team.reputation * 3_500)
+	team.club_cash += league_tv
+
 	# Ingresos merchandising semanal (tienda del estadio + tiendas adicionales)
 	var merch_income: int = 0
 	var base_merch: int = [0, 3_000, 8_000, 18_000, 40_000][clampi(team.shop_level, 0, 4)]
@@ -400,6 +427,7 @@ func _process_weekly_finances() -> void:
 		"staff_cost":     staff_cost,
 		"loan_payment":   loan_payment,
 		"tv_income":      tv_income,
+		"league_tv":      league_tv,
 		"sponsor_income": sponsor_income,
 		"merch_income":   merch_income,
 		"matchday":       0,  # se rellena desde match_view si hay partido ese semana

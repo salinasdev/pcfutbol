@@ -129,6 +129,13 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 	%BtnNextWeek.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4, 1))
 
 	var msgs: Array[String] = []
+	# Aviso de derbi
+	var derby_name: String = NewsManager.get_derby_name(
+		home.name if home else "", away.name if away else "")
+	if derby_name != "":
+		msgs.append("🔥 ¡DERBI! — %s vs %s. La directiva y la afición exigen la victoria. ¡Los jugadores están motivados!" % [
+			home.short_name if home else "Local",
+			away.short_name if away else "Visitante"])
 	msgs.append("⚽ Jornada %d — Los rivales ya han jugado. ¡Te toca!" % fixture.get("matchday", 0))
 	var suspended_names := _get_suspended_in_lineup()
 	if not suspended_names.is_empty():

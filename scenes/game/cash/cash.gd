@@ -467,7 +467,7 @@ func _hist_row(entry: Dictionary) -> Control:
 	lbl_week.add_theme_font_size_override("font_size", 13)
 	row.add_child(lbl_week)
 
-	var total_income: int = entry.get("tv_income", 0) + entry.get("sponsor_income", 0) \
+	var total_income: int = entry.get("tv_income", 0) + entry.get("league_tv", 0) + entry.get("sponsor_income", 0) \
 		+ entry.get("merch_income", 0) + entry.get("matchday", 0) + entry.get("transfer_income", 0)
 	var lbl_income := Label.new()
 	lbl_income.text = "+%s" % _fmt(total_income) if total_income > 0 else "—"
@@ -551,18 +551,20 @@ func _show_entry_detail(entry: Dictionary) -> void:
 	vb.add_child(inc_title)
 
 	var tv: int = entry.get("tv_income", 0)
+	var ltv: int = entry.get("league_tv", 0)
 	var sp: int = entry.get("sponsor_income", 0)
 	var me: int = entry.get("merch_income", 0)
 	var md: int = entry.get("matchday", 0)
 	var tr: int = entry.get("transfer_income", 0)
-	var total_income: int = tv + sp + me + md + tr
+	var total_income: int = tv + ltv + sp + me + md + tr
 
 	var income_lines: Array = [
-		["Derechos de televisión",   tv],
-		["Patrocinador",              sp],
-		["Merchandising",             me],
-		["Taquilla (partido)",         md],
-		["Traspaso de jugador",        tr],
+		["Derechos de TV (acuerdo)",   tv],
+		["Derechos de liga",            ltv],
+		["Patrocinador",                sp],
+		["Merchandising",               me],
+		["Taquilla (partido)",           md],
+		["Traspaso de jugador",          tr],
 	]
 	for line: Array in income_lines:
 		var val: int = line[1] as int

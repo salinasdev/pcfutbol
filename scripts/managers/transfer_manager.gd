@@ -196,8 +196,8 @@ func generate_incoming_offers() -> void:
 		return o["status"] != "pending" or (current_week - o.get("week_submitted", current_week)) < 4
 	)
 
-	# ~35 % de probabilidad semanal
-	if randf() > 0.35:
+	# ~15 % de probabilidad semanal (reducido para no saturar al jugador)
+	if randf() > 0.15:
 		return
 
 	# Candidatos: jugadores en venta (oferta normal) y jugadores con cláusula activable
@@ -267,15 +267,27 @@ func generate_incoming_offers() -> void:
 		offer_money = int(value * randf_range(0.70, 1.20))
 	offer_money = int(offer_money / 50_000.0) * 50_000
 
+	# Calcular si el jugador quiere marcharse (influye en la UI de plantilla)
+	var want_prob: float = 0.0
+	if not target.transfer_listed:
+		if target.morale < 40:
+			want_prob = 0.70
+		elif target.morale < 60:
+			want_prob = 0.35
+		if target.contract_years <= 1:
+			want_prob = minf(want_prob + 0.25, 0.90)
+	var player_wants_to_go: bool = is_clause or (randf() < want_prob)
+
 	var offer: Dictionary = {
-		"id":             _next_incoming_id,
-		"player_id":      target.id,
-		"buyer_id":       buyer.id,
-		"offer_money":    offer_money,
-		"week_submitted": current_week,
-		"status":         "pending",
-		"is_clause":      is_clause,
-		"acknowledged":   false,
+		"id":                  _next_incoming_id,
+		"player_id":           target.id,
+		"buyer_id":            buyer.id,
+		"offer_money":         offer_money,
+		"week_submitted":      current_week,
+		"status":              "pending",
+		"is_clause":           is_clause,
+		"player_wants_to_go":  player_wants_to_go,
+		"acknowledged":        false,
 	}
 	_next_incoming_id += 1
 	incoming_offers.append(offer)

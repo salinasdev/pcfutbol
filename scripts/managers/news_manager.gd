@@ -30,6 +30,42 @@ var news_feed: Array[Dictionary] = []
 var _last_reported_player_matchday: int = 0
 
 # ---------------------------------------------------------------------------
+# Tabla de derbis — pares de nombres canónicos de equipo y su nombre de derby
+
+## Cada entrada: { "teams": [nameA, nameB], "name": "nombre del derbi" }
+const DERBY_MATCHES: Array = [
+	{"teams": ["Real Madrid",        "FC Barcelona"],          "name": "El Clásico"},
+	{"teams": ["Real Madrid",        "Atlético de Madrid"],    "name": "Derbi Madrileño"},
+	{"teams": ["Sevilla FC",         "Real Betis"],            "name": "Derbi Sevillano"},
+	{"teams": ["Athletic Club",      "Real Sociedad"],         "name": "Derbi Vasco"},
+	{"teams": ["Deportivo Alavés",   "Athletic Club"],         "name": "Derbi Vasco"},
+	{"teams": ["Deportivo Alavés",   "Real Sociedad"],         "name": "Derbi Vasco"},
+	{"teams": ["RC Celta",           "Deportivo de La Coruña"],"name": "Derbi Gallego"},
+	{"teams": ["Valencia CF",        "Villarreal CF"],         "name": "Derbi de la Comunitat"},
+	{"teams": ["Valencia CF",        "Levante UD"],            "name": "Derbi Valenciano"},
+	{"teams": ["Levante UD",         "Villarreal CF"],         "name": "Derbi de la Comunitat"},
+	{"teams": ["Rayo Vallecano",     "Getafe CF"],             "name": "Derbi del Sur de Madrid"},
+	{"teams": ["RCD Espanyol",       "FC Barcelona"],          "name": "Derbi Barcelonés"},
+]
+
+## Devuelve el nombre del derbi si el partido es uno, o "" si no lo es.
+func get_derby_name(home_name: String, away_name: String) -> String:
+	for d: Dictionary in DERBY_MATCHES:
+		var t: Array = d["teams"]
+		if (home_name == t[0] and away_name == t[1]) or \
+		   (home_name == t[1] and away_name == t[0]):
+			return d["name"]
+	return ""
+
+## Conveniencia: recibe IDs de equipo.
+func get_derby_name_by_id(home_id: int, away_id: int) -> String:
+	var home: Team = GameManager.get_team(home_id)
+	var away: Team = GameManager.get_team(away_id)
+	if home == null or away == null:
+		return ""
+	return get_derby_name(home.name, away.name)
+
+# ---------------------------------------------------------------------------
 # Plantillas — elegidas según el contexto real, nunca al azar sin filtro
 
 # Victoria: goleada (dif >= 3)
@@ -751,6 +787,108 @@ func _placeholder_news() -> Dictionary:
 	return _make_news(Category.VESTUARIO,
 		"Semana de trabajo en los entrenamientos",
 		"El cuerpo técnico ha intensificado la preparación de cara a los próximos compromisos.")
+
+
+
+# ---------------------------------------------------------------------------
+# Noticias de derbis — llamadas desde GameManager
+
+const DERBY_PREVIEW_HEADLINES := [
+	"¡{derby}! {home} y {away} se miden en el partido del año",
+	"El {derby} está aquí: {home} contra {away}, duelo sin cuartel",
+	"Semana grande: llega el {derby} entre {home} y {away}",
+	"El {derby} domina todos los titulares: ¿quién ganará esta edición?",
+	"{home} vs {away}: el {derby} sacude a toda la afición",
+]
+const DERBY_WIN_HEADLINES := [
+	"¡Histórico! {my_team} se lleva el {derby} ante {opp}: {score}",
+	"¡Victoria en el {derby}! {my_team} supera a {opp} con un {score} memorable",
+	"El {derby} es nuestro: {my_team} {score} {opp} en un partido épico",
+	"¡Gana el {derby}! {my_team} aplasta la ilusión del {opp}: {score}",
+]
+const DERBY_DRAW_HEADLINES := [
+	"Empate dramático en el {derby}: {my_team} y {opp} se neutralizan ({score})",
+	"El {derby} termina sin ganador: {my_team} {score} {opp}",
+	"Reparto de puntos en un {derby} intenso: {score}",
+]
+const DERBY_LOSS_HEADLINES := [
+	"Derrota dolorosa en el {derby}: {opp} supera a {my_team} ({score})",
+	"El {derby} se va con el {opp}: {score} ante {my_team}",
+	"El {derby} deja una herida: {my_team} cae ante {opp} ({score})",
+]
+
+func add_derby_preview_news(home: Team, away: Team, derby_name: String) -> void:
+	var headline: String = DERBY_PREVIEW_HEADLINES.pick_random()
+	headline = headline \
+		.replace("{derby}", derby_name) \
+		.replace("{home}", home.short_name) \
+		.replace("{away}", away.short_name)
+
+	var body := "🔥 %s 🔥\n\n" % derby_name
+	body += "%s vs %s\n\n" % [home.name, away.name]
+	body += "La directiva espera una victoria y los jugadores llegan con la moral por las nubes. El %s siempre es especial: más allá de la clasificación, estos partidos tienen su propia historia y quedan grabados en la memoria de la afición para siempre." % derby_name
+	body += "\n\n¡Es el partido más importante de la temporada!"
+	_push_news(_make_news(Category.VESTUARIO, headline, body))
+
+
+func add_derby_result_news(f: Dictionary, player_team: Team, derby_name: String) -> void:
+	var home: Team = GameManager.get_team(f["home_id"])
+	var away: Team = GameManager.get_team(f["away_id"])
+	if home == null or away == null or player_team == null:
+		return
+	var is_home: bool = f["home_id"] == player_team.id
+	var my_team: Team = home if is_home else away
+	var opp: Team     = away if is_home else home
+	var my_g: int     = f["home_goals"] if is_home else f["away_goals"]
+	var opp_g: int    = f["away_goals"] if is_home else f["home_goals"]
+	var diff: int     = my_g - opp_g
+	var score_str: String = "%d-%d" % [f["home_goals"], f["away_goals"]]
+
+	var headline: String
+	if diff > 0:
+		headline = DERBY_WIN_HEADLINES.pick_random()
+	elif diff == 0:
+		headline = DERBY_DRAW_HEADLINES.pick_random()
+	else:
+		headline = DERBY_LOSS_HEADLINES.pick_random()
+
+	headline = headline \
+		.replace("{derby}",   derby_name) \
+		.replace("{my_team}", my_team.short_name) \
+		.replace("{opp}",     opp.short_name) \
+		.replace("{score}",   score_str)
+
+	var body := "🔥 %s — %s %d-%d %s 🔥\n\n" % [derby_name, home.short_name, f["home_goals"], f["away_goals"], away.short_name]
+	if diff > 0:
+		body += "¡Victoria en el %s! El %s supera al %s y la afición explota de alegría." % [derby_name, my_team.name, opp.name]
+	elif diff == 0:
+		body += "El %s termina en empate. Ambos equipos comparten los puntos en un partido disputadísimo." % derby_name
+	else:
+		body += "Derrota en el %s. El %s no pudo con el %s y la hinchada lo sufrirá durante semanas." % [derby_name, my_team.name, opp.name]
+
+	var speaker := _last_name(_pick_speaker(player_team))
+	body += "\n\n%s comentó: «%s»" % [speaker, _derby_quote(diff)]
+	_push_news(_make_news(Category.RESULTADO, headline, body))
+
+
+func _derby_quote(diff: int) -> String:
+	if diff > 0:
+		return [
+			"Ganar el derbi es diferente. No hay palabras para describirlo.",
+			"Un partido así lo recuerdas toda la vida. Somos los mejores de la ciudad.",
+			"Esto es lo que lleva meses esperando la afición. Felicidad total.",
+		].pick_random()
+	elif diff == 0:
+		return [
+			"En un derbi, el empate es un resultado digno. Nos lo pusieron muy difícil.",
+			"El derbi siempre aprieta. Un punto que sabe a poco, pero el rival tampoco pudo con nosotros.",
+		].pick_random()
+	else:
+		return [
+			"La derrota en el derbi duele doble. Lo asumimos y aprendemos.",
+			"Es el resultado que más duele en todo el año. Hay que levantarse.",
+		].pick_random()
+
 
 
 # ---------------------------------------------------------------------------

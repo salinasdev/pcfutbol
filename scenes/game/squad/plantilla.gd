@@ -339,6 +339,7 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 	# Línea 2: descripción de la oferta
 	var val: int = TransferManager.calculate_value(p)
 	var ratio_pct: int = int(float(offer["offer_money"]) / float(maxi(val, 1)) * 100.0)
+	var player_wants_to_go: bool = offer.get("player_wants_to_go", false)
 	var lbl_detail := Label.new()
 	lbl_detail.add_theme_font_size_override("font_size", 13)
 	if is_clause:
@@ -350,15 +351,18 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 			Color(0.35, 0.90, 0.45, 1) if ratio_pct >= 90 else Color(0.90, 0.65, 0.25, 1))
 	info_vbox.add_child(lbl_detail)
 
-	# Línea 3: nota
+	# Línea 3: nota (estado del jugador)
 	var lbl_note := Label.new()
 	lbl_note.add_theme_font_size_override("font_size", 12)
 	if is_clause:
 		lbl_note.text = "Valor de mercado: %s  —  La cláusula es legalmente vinculante." % _fmt_money(val)
 		lbl_note.add_theme_color_override("font_color", Color(0.80, 0.55, 0.50, 1))
+	elif player_wants_to_go:
+		lbl_note.text = "⚠ El jugador está considerando seriamente la oferta. Puedes intentar convencerle."
+		lbl_note.add_theme_color_override("font_color", Color(1.0, 0.70, 0.25, 1))
 	else:
-		lbl_note.text = "Valor de mercado: %s  —  Puedes negociar o rechazar." % _fmt_money(val)
-		lbl_note.add_theme_color_override("font_color", Color(0.65, 0.70, 0.75, 1))
+		lbl_note.text = "El jugador no quiere marcharse. Puedes rechazar la oferta sin problema."
+		lbl_note.add_theme_color_override("font_color", Color(0.40, 0.80, 0.50, 1))
 	info_vbox.add_child(lbl_note)
 
 	# Botones
@@ -400,6 +404,16 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 			_build_list()
 		)
 		btn_vbox.add_child(btn_reject)
+
+		# Si el jugador quiere irse, ofrece la opción de convencerle
+		if player_wants_to_go:
+			var btn_convince := Button.new()
+			btn_convince.text = "💬 Convencer"
+			btn_convince.custom_minimum_size = Vector2(130, 0)
+			btn_convince.add_theme_font_size_override("font_size", 13)
+			btn_convince.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
+			btn_convince.pressed.connect(func(): _open_persuasion_dialog(p, offer))
+			btn_vbox.add_child(btn_convince)
 
 	return panel
 
@@ -522,6 +536,229 @@ func _open_clause_dialog(p: Player) -> void:
 		_build_list()
 	)
 	btn_row.add_child(btn_confirm)
+
+
+func _open_persuasion_dialog(p: Player, offer: Dictionary) -> void:
+	_renewal_round = 0
+	_renewal_frustration = 0
+	if _overlay != null:
+		_overlay.queue_free()
+	_overlay = _make_dim_overlay()
+	add_child(_overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_overlay.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(540, 0)
+	var pst := StyleBoxFlat.new()
+	pst.bg_color = Color(0.08, 0.12, 0.16, 0.98)
+	pst.set_corner_radius_all(8)
+	pst.set_content_margin_all(24)
+	panel.add_theme_stylebox_override("panel", pst)
+	center.add_child(panel)
+
+	var outer_vb := VBoxContainer.new()
+	outer_vb.add_theme_constant_override("separation", 12)
+	panel.add_child(outer_vb)
+
+	_build_renewal_header(outer_vb, p,
+		"El jugador está tentado por la oferta. Intenta convencerle de que se quede.")
+
+	var content_vb := VBoxContainer.new()
+	content_vb.add_theme_constant_override("separation", 12)
+	outer_vb.add_child(content_vb)
+	_persuasion_phase(content_vb, p, offer)
+
+
+func _persuasion_phase(box: VBoxContainer, p: Player, offer: Dictionary) -> void:
+	for c in box.get_children(): c.queue_free()
+
+	# Mostrar estado actual del jugador
+	var reason_text: String
+	if p.morale < 40:
+		reason_text = "La moral de %s está muy baja. Busca una salida para recuperar la motivación." % p.full_name
+	elif p.morale < 60:
+		reason_text = "%s no está del todo a gusto en el club y valora el cambio de aires." % p.full_name
+	elif p.contract_years <= 1:
+		reason_text = "El contrato de %s expira pronto y la oferta le parece una buena oportunidad." % p.full_name
+	else:
+		reason_text = "%s está considerando la oferta del %s." % [p.full_name,
+			(GameManager.get_team(offer["buyer_id"]).name if GameManager.get_team(offer["buyer_id"]) else "club rival")]
+
+	var lbl_reason := Label.new()
+	lbl_reason.text = reason_text
+	lbl_reason.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl_reason.add_theme_font_size_override("font_size", 14)
+	lbl_reason.add_theme_color_override("font_color", Color(0.90, 0.78, 0.50, 1))
+	box.add_child(lbl_reason)
+
+	# Probabilidad de éxito de una charla motivacional
+	var talk_success_pct: int = clampi(int(float(p.morale) * 0.70 + 15.0), 15, 80)
+	var lbl_talk_info := Label.new()
+	lbl_talk_info.text = "Charla del entrenador — probabilidad de éxito: %d%%" % talk_success_pct
+	lbl_talk_info.add_theme_font_size_override("font_size", 13)
+	lbl_talk_info.add_theme_color_override("font_color", Color(0.60, 0.70, 0.80, 1))
+	box.add_child(lbl_talk_info)
+
+	box.add_child(HSeparator.new())
+
+	# Sección: mejora salarial
+	var lbl_sal_title := Label.new()
+	lbl_sal_title.text = "Alternativamente, propón una mejora salarial:"
+	lbl_sal_title.add_theme_font_size_override("font_size", 14)
+	lbl_sal_title.add_theme_color_override("font_color", Color(0.75, 0.80, 0.90, 1))
+	box.add_child(lbl_sal_title)
+
+	var row_sal := HBoxContainer.new()
+	row_sal.add_theme_constant_override("separation", 12)
+	box.add_child(row_sal)
+	var lbl_s := Label.new(); lbl_s.text = "Nuevo sueldo semanal:"
+	lbl_s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lbl_s.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl_s.add_theme_font_size_override("font_size", 15)
+	row_sal.add_child(lbl_s)
+	var spin_sal := SpinBox.new()
+	spin_sal.min_value = p.salary
+	spin_sal.max_value = p.salary * 6
+	spin_sal.step = 500
+	spin_sal.suffix = "€"
+	spin_sal.value = int(p.salary * 1.15 / 500) * 500
+	spin_sal.custom_minimum_size = Vector2(160, 40)
+	row_sal.add_child(spin_sal)
+
+	box.add_child(HSeparator.new())
+
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 12)
+	box.add_child(btn_row)
+
+	var btn_close := Button.new()
+	btn_close.text = "Cancelar"
+	btn_close.custom_minimum_size = Vector2(100, 44)
+	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
+	btn_row.add_child(btn_close)
+
+	var btn_talk := Button.new()
+	btn_talk.text = "🗣 Charla motivacional"
+	btn_talk.custom_minimum_size = Vector2(190, 44)
+	btn_talk.add_theme_font_size_override("font_size", 14)
+	btn_talk.add_theme_color_override("font_color", Color(0.80, 0.90, 0.50, 1))
+	btn_talk.pressed.connect(func():
+		var success: bool = randf() < (float(talk_success_pct) / 100.0)
+		_persuasion_result(box, p, offer, success, false, 0)
+	)
+	btn_row.add_child(btn_talk)
+
+	var btn_raise := Button.new()
+	btn_raise.text = "💰 Mejorar contrato"
+	btn_raise.custom_minimum_size = Vector2(175, 44)
+	btn_raise.add_theme_font_size_override("font_size", 14)
+	btn_raise.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
+	btn_raise.pressed.connect(func():
+		var new_sal := int(spin_sal.value)
+		_persuasion_result(box, p, offer, true, true, new_sal)
+	)
+	btn_row.add_child(btn_raise)
+
+
+func _persuasion_result(box: VBoxContainer, p: Player, offer: Dictionary,
+		success: bool, is_raise: bool, new_salary: int) -> void:
+	for c in box.get_children(): c.queue_free()
+
+	var banner := PanelContainer.new()
+	var bsb := StyleBoxFlat.new()
+	bsb.bg_color = Color(0.05, 0.22, 0.08, 1) if success else Color(0.24, 0.05, 0.05, 1)
+	bsb.set_corner_radius_all(6)
+	bsb.set_content_margin_all(14)
+	banner.add_theme_stylebox_override("panel", bsb)
+	box.add_child(banner)
+
+	var bvb := VBoxContainer.new()
+	bvb.add_theme_constant_override("separation", 6)
+	banner.add_child(bvb)
+
+	var lbl_main := Label.new()
+	lbl_main.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_main.add_theme_font_size_override("font_size", 15)
+	lbl_main.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bvb.add_child(lbl_main)
+
+	var lbl_sub := Label.new()
+	lbl_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl_sub.add_theme_font_size_override("font_size", 13)
+	lbl_sub.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bvb.add_child(lbl_sub)
+
+	if success:
+		lbl_main.text = "✔  %s ha decidido quedarse en el club." % p.full_name
+		lbl_main.add_theme_color_override("font_color", Color(0.30, 0.95, 0.50, 1))
+		if is_raise:
+			lbl_sub.text = "Firma el nuevo contrato a %s/sem. La oferta del club rival queda rechazada." % _fmt_money(new_salary)
+		else:
+			lbl_sub.text = "La charla ha surtido efecto. La moral del jugador mejora y rechaza la oferta."
+		lbl_sub.add_theme_color_override("font_color", Color(0.65, 0.88, 0.65, 1))
+	else:
+		lbl_main.text = "✗  La charla no ha convencido a %s." % p.full_name
+		lbl_main.add_theme_color_override("font_color", Color(1.0, 0.35, 0.30, 1))
+		lbl_sub.text = "El jugador sigue considerando la oferta. Intenta mejorar su sueldo o acepta su salida."
+		lbl_sub.add_theme_color_override("font_color", Color(0.80, 0.55, 0.55, 1))
+
+	box.add_child(HSeparator.new())
+
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 14)
+	box.add_child(btn_row)
+
+	var btn_close := Button.new()
+	btn_close.text = "Cerrar"
+	btn_close.custom_minimum_size = Vector2(100, 44)
+	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null; _build_list())
+	btn_row.add_child(btn_close)
+
+	if success:
+		var btn_confirm := Button.new()
+		btn_confirm.text = "✔  Confirmar y retener"
+		btn_confirm.custom_minimum_size = Vector2(185, 44)
+		btn_confirm.add_theme_font_size_override("font_size", 15)
+		btn_confirm.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))
+		btn_confirm.pressed.connect(func():
+			TransferManager.reject_incoming_offer(offer["id"])
+			p.morale = clampi(p.morale + 15, 0, 100)
+			if is_raise:
+				var signing_fee: int = maxi(0, (new_salary - p.salary) * 26)
+				if _team.club_cash >= signing_fee:
+					_team.club_cash -= signing_fee
+					p.salary = new_salary
+					p.market_value = TransferManager.calculate_value(p)
+				else:
+					var dlg := AcceptDialog.new()
+					dlg.dialog_text = "Sin fondos para la prima de firma (%s).\nReduce el sueldo ofrecido." % _fmt_money(signing_fee)
+					add_child(dlg)
+					dlg.popup_centered()
+					return
+			SaveManager.save_game()
+			_overlay.queue_free()
+			_overlay = null
+			_build_list()
+		)
+		btn_row.add_child(btn_confirm)
+	else:
+		# Permitir reintentar con mejora salarial
+		var btn_retry := Button.new()
+		btn_retry.text = "Ofrecer subida de sueldo"
+		btn_retry.custom_minimum_size = Vector2(185, 44)
+		btn_retry.add_theme_font_size_override("font_size", 14)
+		btn_retry.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
+		btn_retry.pressed.connect(func():
+			p.morale = clampi(p.morale - 5, 0, 100)
+			_persuasion_phase(box, p, offer)
+		)
+		btn_row.add_child(btn_retry)
 
 
 func _open_renewal_dialog(p: Player) -> void:

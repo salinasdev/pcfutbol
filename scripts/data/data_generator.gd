@@ -181,6 +181,7 @@ func _generate_league(def: Dictionary) -> void:
 		t.coach_name       = DataGenerator.TEAM_COACHES.get(t.name, "")
 		t.budget           = td[3] * 80_000
 		t.weekly_wage_budget = td[3] * 5_000
+		t.club_cash        = td[3] * 300_000
 		t.league_id        = league.id
 		GameManager.register_team(t)
 		league.team_ids.append(t.id)
@@ -248,7 +249,7 @@ func _create_player(pos: Player.Position, team_rep: int) -> Player:
 	p.physical   = randi_range(lo, hi)
 	p.goalkeeping = randi_range(lo, hi) if pos == Player.Position.GK else randi_range(1, 25)
 
-	p.salary        = p.get_overall() * randi_range(800, 1_400)
+	p.salary        = p.get_overall() * randi_range(200, 400)
 	p.market_value  = TransferManager.calculate_value(p)
 	p.contract_years = randi_range(1, 5)
 	# Cláusula de rescisión para jugadores con cierta calidad
