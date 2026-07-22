@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_SIZE_NAV := 28
 
 enum Tab { TRIBUNAS, PARKING, EQUIPAMIENTO, SERVICIOS }
 
@@ -47,6 +48,7 @@ var _team: Team = null
 func _ready() -> void:
 	_team = GameManager.get_player_team()
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%TabTribunas.pressed.connect(func():     _set_tab(Tab.TRIBUNAS))

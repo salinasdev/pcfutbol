@@ -3,6 +3,8 @@ extends Control
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_SIZE_NAV := 28
+const ICON_SIZE_ACTION := 20
 
 const POS_COLORS := {
 	Player.Position.GK:  Color(0.55, 0.40, 0.02, 1),
@@ -43,6 +45,7 @@ func _input(event: InputEvent) -> void:
 func _ready() -> void:
 	_team = GameManager.get_player_team()
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	TransferManager.acknowledge_incoming_offers()
@@ -380,6 +383,7 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 	btn_accept.text = "⚠ Confirmar venta" if is_clause else "✔ Aceptar"
 	if not is_clause:
 		btn_accept.icon = ICON_CHECK
+		btn_accept.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_accept.custom_minimum_size = Vector2(130, 0)
 	btn_accept.add_theme_font_size_override("font_size", 13)
 	btn_accept.add_theme_color_override("font_color",
@@ -405,6 +409,7 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 		var btn_reject := Button.new()
 		btn_reject.text = "Rechazar"
 		btn_reject.icon = ICON_CLOSE
+		btn_reject.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 		btn_reject.custom_minimum_size = Vector2(130, 0)
 		btn_reject.add_theme_font_size_override("font_size", 13)
 		btn_reject.add_theme_color_override("font_color", Color(0.90, 0.30, 0.25, 1))
@@ -529,6 +534,7 @@ func _open_clause_dialog(p: Player) -> void:
 	var btn_cancel := Button.new()
 	btn_cancel.text = "Cancelar"
 	btn_cancel.icon = ICON_CLOSE
+	btn_cancel.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_cancel.custom_minimum_size = Vector2(110, 44)
 	btn_cancel.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
 	btn_row.add_child(btn_cancel)
@@ -536,6 +542,7 @@ func _open_clause_dialog(p: Player) -> void:
 	var btn_confirm := Button.new()
 	btn_confirm.text = "Guardar"
 	btn_confirm.icon = ICON_CHECK
+	btn_confirm.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_confirm.custom_minimum_size = Vector2(130, 44)
 	btn_confirm.add_theme_font_size_override("font_size", 15)
 	btn_confirm.add_theme_color_override("font_color", Color(0.35, 0.85, 0.98, 1))
@@ -650,6 +657,7 @@ func _persuasion_phase(box: VBoxContainer, p: Player, offer: Dictionary) -> void
 	var btn_close := Button.new()
 	btn_close.text = "Cancelar"
 	btn_close.icon = ICON_CLOSE
+	btn_close.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_close.custom_minimum_size = Vector2(100, 44)
 	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
 	btn_row.add_child(btn_close)
@@ -729,6 +737,7 @@ func _persuasion_result(box: VBoxContainer, p: Player, offer: Dictionary,
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
 	btn_close.icon = ICON_CLOSE
+	btn_close.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_close.custom_minimum_size = Vector2(100, 44)
 	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null; _build_list())
 	btn_row.add_child(btn_close)
@@ -737,6 +746,7 @@ func _persuasion_result(box: VBoxContainer, p: Player, offer: Dictionary,
 		var btn_confirm := Button.new()
 		btn_confirm.text = "Confirmar y retener"
 		btn_confirm.icon = ICON_CHECK
+		btn_confirm.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 		btn_confirm.custom_minimum_size = Vector2(185, 44)
 		btn_confirm.add_theme_font_size_override("font_size", 15)
 		btn_confirm.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))
@@ -931,6 +941,7 @@ func _retention_proposal_phase(box: VBoxContainer, p: Player, offer: Dictionary)
 	var btn_close := Button.new()
 	btn_close.text = "Cancelar"
 	btn_close.icon = ICON_CLOSE
+	btn_close.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_close.custom_minimum_size = Vector2(110, 44)
 	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
 	btn_row.add_child(btn_close)
@@ -1020,6 +1031,7 @@ func _retention_response_phase(box: VBoxContainer, p: Player, resp: Dictionary,
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
 	btn_close.icon = ICON_CLOSE
+	btn_close.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_close.custom_minimum_size = Vector2(100, 44)
 	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
 	btn_row.add_child(btn_close)
@@ -1028,6 +1040,7 @@ func _retention_response_phase(box: VBoxContainer, p: Player, resp: Dictionary,
 		var btn_confirm := Button.new()
 		btn_confirm.text = "Firmar y retener"
 		btn_confirm.icon = ICON_CHECK
+		btn_confirm.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 		btn_confirm.custom_minimum_size = Vector2(180, 44)
 		btn_confirm.add_theme_font_size_override("font_size", 15)
 		btn_confirm.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))
@@ -1141,6 +1154,7 @@ func _renewal_proposal_phase(box: VBoxContainer, p: Player) -> void:
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
 	btn_close.icon = ICON_CLOSE
+	btn_close.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_close.custom_minimum_size = Vector2(110, 44)
 	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
 	btn_row.add_child(btn_close)
@@ -1238,6 +1252,7 @@ func _renewal_response_phase(box: VBoxContainer, p: Player, resp: Dictionary,
 	var btn_close := Button.new()
 	btn_close.text = "Cerrar"
 	btn_close.icon = ICON_CLOSE
+	btn_close.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_close.custom_minimum_size = Vector2(100, 44)
 	btn_close.pressed.connect(func(): _overlay.queue_free(); _overlay = null)
 	btn_row.add_child(btn_close)
@@ -1246,6 +1261,7 @@ func _renewal_response_phase(box: VBoxContainer, p: Player, resp: Dictionary,
 		var btn_confirm := Button.new()
 		btn_confirm.text = "Firmar contrato"
 		btn_confirm.icon = ICON_CHECK
+		btn_confirm.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 		btn_confirm.custom_minimum_size = Vector2(170, 44)
 		btn_confirm.add_theme_font_size_override("font_size", 15)
 		btn_confirm.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))

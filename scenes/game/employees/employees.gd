@@ -4,6 +4,8 @@ class_name EmployeesScreen
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_SIZE_NAV := 28
+const ICON_SIZE_ACTION := 20
 
 ## Pantalla "Personal del Club": entrenadores secundarios y personal de apoyo.
 
@@ -79,6 +81,7 @@ func _build_ui() -> void:
 	var btn_back := Button.new()
 	btn_back.text = ""
 	btn_back.icon = ICON_BACK
+	btn_back.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	btn_back.custom_minimum_size = Vector2(64, 64)
 	btn_back.add_theme_font_size_override("font_size", 22)
 	btn_back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
@@ -156,6 +159,7 @@ func _build_ui() -> void:
 	var btn_fire := Button.new()
 	btn_fire.text = "Despedir Personal"
 	btn_fire.icon = ICON_CLOSE
+	btn_fire.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_fire.custom_minimum_size = Vector2(220, 56)
 	btn_fire.add_theme_font_size_override("font_size", 18)
 	btn_fire.add_theme_color_override("font_color", Color(0.95, 0.35, 0.25, 1))
@@ -314,6 +318,7 @@ func _open_hire_dialog() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "Cerrar"
 	close_btn.icon = ICON_CLOSE
+	close_btn.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	close_btn.custom_minimum_size = Vector2(0, 46)
 	close_btn.add_theme_font_size_override("font_size", 16)
 	close_btn.pressed.connect(func(): _hire_overlay.queue_free(); _hire_overlay = null)
@@ -367,6 +372,7 @@ func _hire_row(staff_id: String, label_txt: String, current_lvl: int) -> HBoxCon
 	var btn := Button.new()
 	btn.text = "Contratar"
 	btn.icon = ICON_CHECK
+	btn.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn.custom_minimum_size = Vector2(100, 38)
 	btn.add_theme_font_size_override("font_size", 14)
 	btn.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))
@@ -468,6 +474,7 @@ func _open_fire_dialog() -> void:
 	var close_btn := Button.new()
 	close_btn.text = "Cerrar"
 	close_btn.icon = ICON_CLOSE
+	close_btn.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	close_btn.custom_minimum_size = Vector2(0, 46)
 	close_btn.add_theme_font_size_override("font_size", 16)
 	close_btn.pressed.connect(func(): _fire_overlay.queue_free(); _fire_overlay = null)

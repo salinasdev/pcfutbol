@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_SIZE_NAV := 28
 
 const POS_COLORS := {
 	Player.Position.GK:  Color(0.55, 0.40, 0.02, 1),
@@ -43,6 +44,7 @@ func _input(event: InputEvent) -> void:
 func _ready() -> void:
 	_team = GameManager.get_player_team()
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	_ensure_bench()

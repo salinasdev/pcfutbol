@@ -2,6 +2,7 @@ extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
+const ICON_SIZE_NAV := 28
 
 var _league: League = null
 var _current_matchday: int = 1
@@ -10,10 +11,13 @@ var _total_matchdays: int = 0
 
 func _ready() -> void:
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 	%BtnPrev.icon = ICON_BACK
+	%BtnPrev.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnPrev.text = ""
 	%BtnNext.icon = ICON_ADVANCE
+	%BtnNext.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnNext.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%BtnPrev.pressed.connect(_prev_matchday)

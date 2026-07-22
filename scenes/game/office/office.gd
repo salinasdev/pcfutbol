@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
+const ICON_SIZE_NAV := 28
 
 @onready var team_name_label: Label = %TeamNameLabel
 @onready var date_label: Label      = %DateLabel
@@ -24,6 +25,7 @@ var _tactics_badge: Label   = null  # punto rojo sobre Tácticas
 
 func _ready() -> void:
 	%BtnNextWeek.icon = ICON_ADVANCE
+	%BtnNextWeek.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnNextWeek.text = %BtnNextWeek.text.replace("▶", "").strip_edges()
 	_refresh_header()
 	GameManager.date_advanced.connect(_on_date_advanced)

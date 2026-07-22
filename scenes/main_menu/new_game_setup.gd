@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_SIZE_NAV := 28
 
 var _selected_team_id: int = -1
 var _selected_btn: Button = null
@@ -10,6 +11,7 @@ func _ready() -> void:
 	# Generar todas las ligas y equipos antes de mostrar la pantalla
 	GameManager.prepare_new_game()
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))

@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_SIZE_NAV := 28
 
 ## Posiciones normalizadas (0–1) en el campo para cada formación.
 ## Orden: POR, DEF×n, MED×n, DEL×n  (de abajo arriba en portrait)
@@ -40,6 +41,7 @@ var _slot_buttons: Array[Button] = []
 func _ready() -> void:
 	_team = GameManager.get_player_team()
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 	GameManager.tactics_badge_active = false
 	if _team:

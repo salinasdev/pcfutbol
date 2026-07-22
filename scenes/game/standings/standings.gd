@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_SIZE_NAV := 28
 
 # Colores estilo PC Fútbol 6.0
 const C_POS_BG   := Color(0.706, 0.784, 0.863, 1)  # #b4c8dc
@@ -25,6 +26,7 @@ const C_GC_FG    := Color(0.682, 0.522, 0.365, 1)  # #ae855d
 
 func _ready() -> void:
 	%BtnBack.icon = ICON_BACK
+	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	_build_league_picker()

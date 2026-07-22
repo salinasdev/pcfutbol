@@ -3,6 +3,7 @@ extends Control
 
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_SIZE_ACTION := 20
 
 signal offer_submitted(offer_data: Dictionary)
 
@@ -288,6 +289,7 @@ func _build_ui() -> void:
 	var cancel_btn := Button.new()
 	cancel_btn.text = "Cancelar"
 	cancel_btn.icon = ICON_CLOSE
+	cancel_btn.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	cancel_btn.custom_minimum_size = Vector2(140, 52)
 	cancel_btn.add_theme_font_size_override("font_size", 17)
 	cancel_btn.pressed.connect(hide)
@@ -296,6 +298,7 @@ func _build_ui() -> void:
 	var confirm_btn := Button.new()
 	confirm_btn.text = "Hacer Oferta"
 	confirm_btn.icon = ICON_CHECK
+	confirm_btn.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	confirm_btn.custom_minimum_size = Vector2(200, 52)
 	confirm_btn.add_theme_font_size_override("font_size", 17)
 	confirm_btn.pressed.connect(_on_confirm)
