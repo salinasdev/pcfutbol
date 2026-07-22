@@ -3,6 +3,11 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
+      - master
+      - main
+  pull_request:
+    branches:
+      - master
       - main
   workflow_dispatch:
 
@@ -48,6 +53,7 @@ jobs:
           path: build/web
 
   deploy:
+    if: github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
     environment:

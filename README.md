@@ -111,6 +111,23 @@ pcfutbol/
 
 ---
 
+## ☁️ Probar cambios sin Godot local
+
+Si no puedes ejecutar Godot en tu equipo, puedes seguir este flujo:
+
+1. Edita código y assets en local.
+2. Haz `git push` a `main` o `master`.
+3. GitHub Actions ejecuta export Web con Godot 4.7 en remoto.
+4. El resultado se publica automáticamente en GitHub Pages.
+
+Notas:
+
+- En `pull_request` también se compila, pero solo sube artefacto para validación (no publica).
+- Si aún no lo hiciste, en GitHub ve a **Settings > Pages** y selecciona **Build and deployment: GitHub Actions**.
+- URL esperada de publicación: `https://<usuario>.github.io/<repo>/`.
+
+---
+
 ## 📊 Equipos disponibles
 
 | Reputación | Equipo | Estadio | Aforo |
