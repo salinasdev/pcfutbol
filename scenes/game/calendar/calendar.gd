@@ -1,11 +1,20 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
+
 var _league: League = null
 var _current_matchday: int = 1
 var _total_matchdays: int = 0
 
 
 func _ready() -> void:
+	%BtnBack.icon = ICON_BACK
+	%BtnBack.text = ""
+	%BtnPrev.icon = ICON_BACK
+	%BtnPrev.text = ""
+	%BtnNext.icon = ICON_ADVANCE
+	%BtnNext.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%BtnPrev.pressed.connect(_prev_matchday)
 	%BtnNext.pressed.connect(_next_matchday)

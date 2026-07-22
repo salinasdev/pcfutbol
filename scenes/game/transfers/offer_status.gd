@@ -1,5 +1,9 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
+const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+
 const STATUS_COLOR := {
 	"pending":  Color(0.95, 0.80, 0.10, 1),
 	"accepted": Color(0.25, 0.90, 0.35, 1),
@@ -134,7 +138,8 @@ func _make_row(offer: Dictionary) -> Control:
 		vbox.add_child(btn_row)
 
 		var btn_accept := Button.new()
-		btn_accept.text = "✔ Aceptar contraoferta"
+		btn_accept.text = "Aceptar contraoferta"
+		btn_accept.icon = ICON_CHECK
 		btn_accept.custom_minimum_size = Vector2(220, 42)
 		btn_accept.add_theme_font_size_override("font_size", 15)
 		var oid: int = offer["id"]
@@ -146,7 +151,8 @@ func _make_row(offer: Dictionary) -> Control:
 		btn_row.add_child(btn_accept)
 
 		var btn_reject := Button.new()
-		btn_reject.text = "✘ Rechazar"
+		btn_reject.text = "Rechazar"
+		btn_reject.icon = ICON_CLOSE
 		btn_reject.custom_minimum_size = Vector2(130, 42)
 		btn_reject.add_theme_font_size_override("font_size", 15)
 		btn_reject.pressed.connect(func() -> void:
@@ -218,7 +224,8 @@ func _build_ui() -> void:
 	vbox.add_child(top_bar)
 
 	var btn_back := Button.new()
-	btn_back.text = "◀"
+	btn_back.text = ""
+	btn_back.icon = ICON_BACK
 	btn_back.custom_minimum_size = Vector2(72, 72)
 	btn_back.add_theme_font_size_override("font_size", 24)
 	btn_back.pressed.connect(func() -> void:

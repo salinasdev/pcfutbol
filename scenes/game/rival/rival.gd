@@ -1,5 +1,7 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+
 const POS_ORDER := {
 	Player.Position.GK:  0,
 	Player.Position.DEF: 1,
@@ -9,6 +11,8 @@ const POS_ORDER := {
 
 
 func _ready() -> void:
+	%BtnBack.icon = ICON_BACK
+	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 
 	var fixture := _get_next_fixture()

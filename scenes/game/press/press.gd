@@ -1,9 +1,13 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+
 var _active_filter: int = -1   # -1 = todo
 
 
 func _ready() -> void:
+	%BtnBack.icon = ICON_BACK
+	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%WeekLabel.text = "Semana %d" % GameManager.current_week
 

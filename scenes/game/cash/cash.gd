@@ -1,6 +1,10 @@
 extends Control
 class_name CashScreen
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
+const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+
 ## Pantalla "Caja del Club": balance de ingresos/gastos, préstamos bancarios.
 
 var _team: Team = null
@@ -44,7 +48,8 @@ func _build_ui() -> void:
 	root.add_child(topbar)
 
 	var btn_back := Button.new()
-	btn_back.text = "◀"
+	btn_back.text = ""
+	btn_back.icon = ICON_BACK
 	btn_back.custom_minimum_size = Vector2(64, 64)
 	btn_back.add_theme_font_size_override("font_size", 22)
 	btn_back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
@@ -372,12 +377,14 @@ func _open_loan_dialog() -> void:
 
 	var btn_cancel := Button.new()
 	btn_cancel.text = "Cancelar"
+	btn_cancel.icon = ICON_CLOSE
 	btn_cancel.custom_minimum_size = Vector2(130, 44)
 	btn_cancel.pressed.connect(func(): _loan_overlay.queue_free(); _loan_overlay = null)
 	btn_row.add_child(btn_cancel)
 
 	var btn_confirm := Button.new()
-	btn_confirm.text = "✔  Confirmar"
+	btn_confirm.text = "Confirmar"
+	btn_confirm.icon = ICON_CHECK
 	btn_confirm.custom_minimum_size = Vector2(160, 44)
 	btn_confirm.add_theme_font_size_override("font_size", 16)
 	btn_confirm.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))

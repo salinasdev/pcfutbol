@@ -1,5 +1,7 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+
 # Colores estilo PC Fútbol 6.0
 const C_POS_BG   := Color(0.706, 0.784, 0.863, 1)  # #b4c8dc
 const C_POS_FG   := Color(0.0,   0.0,   0.502, 1)  # #000080
@@ -22,6 +24,8 @@ const C_GC_FG    := Color(0.682, 0.522, 0.365, 1)  # #ae855d
 
 
 func _ready() -> void:
+	%BtnBack.icon = ICON_BACK
+	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	_build_league_picker()
 	%LeaguePicker.item_selected.connect(func(idx: int): _load_league(idx))

@@ -1,6 +1,9 @@
 extends Control
 class_name TeamTacticsDialog
 
+const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
+const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+
 ## Diálogo de tácticas de equipo (ataque + defensa).
 ## Se construye completamente por código para no depender de .tscn.
 
@@ -182,13 +185,15 @@ func _build_ui() -> void:
 
 	var btn_cancel := Button.new()
 	btn_cancel.text = "Cancelar"
+	btn_cancel.icon = ICON_CLOSE
 	btn_cancel.custom_minimum_size = Vector2(140, 52)
 	btn_cancel.add_theme_font_size_override("font_size", 17)
 	btn_cancel.pressed.connect(hide)
 	btn_row.add_child(btn_cancel)
 
 	var btn_save := Button.new()
-	btn_save.text = "✔  Guardar Tácticas"
+	btn_save.text = "Guardar Tácticas"
+	btn_save.icon = ICON_CHECK
 	btn_save.custom_minimum_size = Vector2(210, 52)
 	btn_save.add_theme_font_size_override("font_size", 17)
 	btn_save.pressed.connect(_save_and_close)

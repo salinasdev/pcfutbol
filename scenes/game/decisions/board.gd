@@ -1,6 +1,8 @@
 extends Control
 class_name BoardScreen
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+
 ## Pantalla "Junta Directiva": métricas del mánager y propuesta de primas.
 
 # ── Refs a controles actualizables ──────────────────────────────────────────
@@ -133,7 +135,8 @@ func _build_ui() -> void:
 	root.add_child(topbar)
 
 	var btn_back := Button.new()
-	btn_back.text = "◀"
+	btn_back.text = ""
+	btn_back.icon = ICON_BACK
 	btn_back.custom_minimum_size = Vector2(64, 64)
 	btn_back.add_theme_font_size_override("font_size", 22)
 	btn_back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))

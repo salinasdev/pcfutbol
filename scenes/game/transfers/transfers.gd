@@ -1,5 +1,7 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+
 const POS_LABELS := ["Todas", "POR", "DEF", "MED", "DEL"]
 const MODE_ALL    := 0
 const MODE_LISTED := 1
@@ -10,6 +12,8 @@ var _filter_mode: int = 0   # 0 = todos, 1 = en venta
 
 
 func _ready() -> void:
+	%BtnBack.icon = ICON_BACK
+	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	TransferManager.acknowledge_active_offers()
 

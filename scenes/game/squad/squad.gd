@@ -1,5 +1,7 @@
 extends Control
 
+const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+
 const POS_COLORS := {
 	Player.Position.GK:  Color(0.55, 0.40, 0.02, 1),
 	Player.Position.DEF: Color(0.05, 0.40, 0.15, 1),
@@ -40,6 +42,8 @@ func _input(event: InputEvent) -> void:
 
 func _ready() -> void:
 	_team = GameManager.get_player_team()
+	%BtnBack.icon = ICON_BACK
+	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	_ensure_bench()
 	_sanitize_lists()

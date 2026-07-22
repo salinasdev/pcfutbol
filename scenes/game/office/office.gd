@@ -1,5 +1,7 @@
 extends Control
 
+const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
+
 @onready var team_name_label: Label = %TeamNameLabel
 @onready var date_label: Label      = %DateLabel
 @onready var status_bar: Label      = %StatusBar
@@ -21,6 +23,8 @@ var _tactics_badge: Label   = null  # punto rojo sobre Tácticas
 
 
 func _ready() -> void:
+	%BtnNextWeek.icon = ICON_ADVANCE
+	%BtnNextWeek.text = %BtnNextWeek.text.replace("▶", "").strip_edges()
 	_refresh_header()
 	GameManager.date_advanced.connect(_on_date_advanced)
 	GameManager.player_match_ready.connect(_on_player_match_ready)
@@ -125,7 +129,7 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 	away_manager_label.text = (away.coach_name if away.coach_name != "" else away.city) if away else ""
 	_set_crest(home_crest, home)
 	_set_crest(away_crest, away)
-	%BtnNextWeek.text = "⚽ Jugar Partido"
+	%BtnNextWeek.text = "Jugar Partido"
 	%BtnNextWeek.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4, 1))
 
 	var msgs: Array[String] = []
@@ -144,7 +148,7 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 
 
 func _on_matchday_done(matchday: int) -> void:
-	%BtnNextWeek.text = "Seguir  ▶"
+	%BtnNextWeek.text = "Seguir"
 	%BtnNextWeek.remove_theme_color_override("font_color")
 	_set_notices([])
 	_set_status("Semana %d — Jornada %d completada." % [GameManager.current_week, matchday])
