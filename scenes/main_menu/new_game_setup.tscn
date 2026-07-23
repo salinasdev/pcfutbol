@@ -103,11 +103,13 @@ theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 1)
 [node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 380)
 
 [node name="TeamList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 4
 
 [node name="HSeparator3" type="HSeparator" parent="VBoxContainer"]

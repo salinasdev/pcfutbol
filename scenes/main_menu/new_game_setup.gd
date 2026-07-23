@@ -21,7 +21,7 @@ func _ready() -> void:
 	%InputManager.focus_exited.connect(func(): DisplayServer.virtual_keyboard_hide())
 
 	%LeaguePicker.item_selected.connect(_on_league_selected)
-	_prepare_generated_data()
+	call_deferred("_prepare_generated_data")
 
 
 # ---------------------------------------------------------------------------
