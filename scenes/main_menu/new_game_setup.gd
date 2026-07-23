@@ -5,23 +5,27 @@ const ICON_SIZE_NAV := 28
 
 var _selected_team_id: int = -1
 var _selected_btn: Button = null
-var _data_ready_for_mode: bool = false
 
 
 func _ready() -> void:
+	# Generar todas las ligas y equipos antes de mostrar la pantalla
+	GameManager.prepare_new_game()
 	%BtnBack.icon = ICON_BACK
 	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
 
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
 	%BtnStart.pressed.connect(_on_start)
-	%BtnUseGenerated.pressed.connect(_prepare_generated_data)
 	%InputManager.text_submitted.connect(func(_t: String): _on_start())
 	%InputManager.focus_entered.connect(func(): DisplayServer.virtual_keyboard_show(""))
 	%InputManager.focus_exited.connect(func(): DisplayServer.virtual_keyboard_hide())
 
+	_build_league_picker()
 	%LeaguePicker.item_selected.connect(_on_league_selected)
-	call_deferred("_prepare_generated_data")
+
+	# Cargar la primera liga por defecto
+	if not GameManager.leagues.is_empty():
+		_load_league(GameManager.leagues.values()[0] as League)
 
 
 # ---------------------------------------------------------------------------
@@ -30,21 +34,11 @@ func _ready() -> void:
 func _build_league_picker() -> void:
 	var picker: OptionButton = %LeaguePicker
 	picker.clear()
-	picker.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	picker.add_theme_color_override("font_hover_color", Color(0.95, 1, 0.95, 1))
-	picker.add_theme_color_override("font_selected_color", Color(0.9, 1, 0.9, 1))
-	picker.add_theme_color_override("font_focus_color", Color(1, 1, 1, 1))
 	for league: League in GameManager.leagues.values():
 		picker.add_item("%s  (%s)" % [league.name, league.country])
-	if picker.item_count > 0:
-		picker.select(0)
 
 
 func _on_league_selected(idx: int) -> void:
-	if not _data_ready_for_mode:
-		return
-	if idx < 0 or idx >= GameManager.leagues.size():
-		return
 	var league: League = GameManager.leagues.values()[idx] as League
 	_load_league(league)
 
@@ -53,15 +47,15 @@ func _load_league(league: League) -> void:
 	_selected_team_id = -1
 	_selected_btn = null
 	_build_team_list(league)
-	%ErrorLabel.text = ""
 
 
 # ---------------------------------------------------------------------------
 # Lista de equipos
 
 func _build_team_list(league: League) -> void:
-	_clear_team_list()
 	var list: VBoxContainer = %TeamList
+	for child in list.get_children():
+		child.queue_free()
 
 	# Ordenar por reputación descendente
 	var sorted_teams: Array = []
@@ -74,24 +68,11 @@ func _build_team_list(league: League) -> void:
 	for t: Team in sorted_teams:
 		var btn := _make_team_button(t)
 		list.add_child(btn)
-	%TeamListLabel.text = "Elige tu equipo (%d)" % sorted_teams.size()
-
-
-func _clear_team_list() -> void:
-	var list: VBoxContainer = %TeamList
-	for child in list.get_children():
-		child.queue_free()
-
-
-func _clear_league_picker() -> void:
-	var picker: OptionButton = %LeaguePicker
-	picker.clear()
 
 
 func _make_team_button(t: Team) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(0, 72)
-	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.text = "%s\n%s  •  %s  •  %s" % [
 		t.name,
 		t.city,
@@ -99,21 +80,6 @@ func _make_team_button(t: Team) -> Button:
 		"%d.000 esp." % (t.stadium_capacity / 1000)
 	]
 	btn.add_theme_font_size_override("font_size", 17)
-	btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	btn.add_theme_color_override("font_hover_color", Color(0.95, 1, 0.95, 1))
-	btn.add_theme_color_override("font_pressed_color", Color(0.85, 1, 0.85, 1))
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.12, 0.18, 0.12, 1)
-	style.border_color = Color(0.28, 0.55, 0.28, 1)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.content_margin_left = 10
-	style.content_margin_right = 10
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
-	btn.add_theme_stylebox_override("normal", style)
 	btn.pressed.connect(func(): _select_team(t.id, btn))
 	return btn
 
@@ -151,41 +117,9 @@ func _on_start() -> void:
 	if _selected_team_id == -1:
 		_show_error("Selecciona un equipo de la lista.")
 		return
-	if GameManager.leagues.is_empty():
-		_show_error("No hay ligas cargadas. Revisa la fuente de datos.")
-		return
 
 	GameManager.start_game(manager_name, _selected_team_id)
 	get_tree().change_scene_to_file("res://scenes/game/office/office.tscn")
-
-
-func _prepare_generated_data() -> void:
-	_data_ready_for_mode = false
-	var ok := GameManager.prepare_new_game()
-	if not ok:
-		_show_error("No se han podido generar los datos de partida.")
-		return
-	if GameManager.leagues.is_empty():
-		_show_error("No se han generado ligas. Revisa DataGenerator.")
-		_clear_league_picker()
-		_clear_team_list()
-		return
-	_data_ready_for_mode = true
-	_refresh_leagues_after_load()
-
-
-func _refresh_leagues_after_load() -> void:
-	_build_league_picker()
-	if GameManager.leagues.is_empty():
-		_data_ready_for_mode = false
-		_clear_team_list()
-		%LeaguePicker.text = "Sin ligas"
-		_show_error("No hay ligas disponibles con la fuente de datos actual.")
-		return
-	_data_ready_for_mode = true
-	_show_error("")
-	%LeaguePicker.select(0)
-	_load_league(GameManager.leagues.values()[0] as League)
 
 
 # ---------------------------------------------------------------------------
