@@ -41,14 +41,24 @@ var tactics_badge_active: bool = false
 
 ## Nombre del derbi activo (vacío si el siguiente partido no es un derbi)
 var active_derby_name: String = ""
+var new_game_setup_error: String = ""
 
 # ---------------------------------------------------------------------------
 
 ## Paso 1: Resetea el estado y genera todas las ligas/equipos.
 ## Llamar al entrar a la pantalla de selección de equipo.
-func prepare_new_game() -> void:
+func prepare_new_game(external_json_path: String = "") -> bool:
 	_reset_state()
-	DataGenerator.generate_all()
+	new_game_setup_error = ""
+
+	if external_json_path.strip_edges().is_empty():
+		DataGenerator.generate_all()
+		return true
+
+	var ok := DataGenerator.generate_from_external_json(external_json_path)
+	if not ok:
+		new_game_setup_error = DataGenerator.get_last_error()
+	return ok
 
 
 ## Paso 2: Fija el equipo y el entrenador del jugador y arranca la partida.
@@ -586,6 +596,7 @@ func _reset_state() -> void:
 	bonus_win         = 0
 	bonus_title       = 0
 	bonus_history.clear()
+	new_game_setup_error = ""
 	_next_player_id = 1
 	_next_team_id = 1
 	_next_league_id = 1

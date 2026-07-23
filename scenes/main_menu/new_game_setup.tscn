@@ -69,6 +69,45 @@ placeholder_text = "Ej: José Mourinho"
 max_length = 32
 theme_override_font_sizes/font_size = 20
 
+[node name="LblDataSource" type="Label" parent="VBoxContainer/FormArea/FormVBox"]
+layout_mode = 2
+text = "Datos de la temporada"
+theme_override_font_sizes/font_size = 17
+theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 1)
+
+[node name="DataSourcePicker" type="OptionButton" parent="VBoxContainer/FormArea/FormVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+theme_override_font_sizes/font_size = 18
+
+[node name="JsonRow" type="HBoxContainer" parent="VBoxContainer/FormArea/FormVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="InputJsonPath" type="LineEdit" parent="VBoxContainer/FormArea/FormVBox/JsonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 50)
+placeholder_text = "Ruta del JSON (ej: C:/Datos/Temporada9798.json)"
+theme_override_font_sizes/font_size = 16
+
+[node name="BtnBrowseJson" type="Button" parent="VBoxContainer/FormArea/FormVBox/JsonRow"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(110, 50)
+text = "Examinar"
+theme_override_font_sizes/font_size = 16
+
+[node name="BtnLoadJson" type="Button" parent="VBoxContainer/FormArea/FormVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 48)
+text = "Cargar JSON"
+theme_override_font_sizes/font_size = 16
+
 [node name="LblLeague" type="Label" parent="VBoxContainer/FormArea/FormVBox"]
 layout_mode = 2
 text = "Liga"
@@ -120,3 +159,11 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 80)
 text = "¡Empezar!"
 theme_override_font_sizes/font_size = 24
+
+[node name="JsonFileDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Seleccionar archivo JSON"
+size = Vector2i(1000, 650)
+access = 2
+file_mode = 0
+filters = PackedStringArray("*.json ; Archivo JSON")

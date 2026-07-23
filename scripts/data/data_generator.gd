@@ -3,6 +3,8 @@
 ## nuevas ligas, divisiones o países sin tocar el resto del código.
 extends Node
 
+var _last_error: String = ""
+
 const FIRST_NAMES: Array[String] = [
 	"Alejandro", "Carlos", "David", "Sergio", "Javier", "Marcos",
 	"Roberto", "Pablo", "Adrián", "Raúl", "Iván", "Diego",
@@ -155,10 +157,133 @@ const LEAGUE_DEFINITIONS: Array = [
 
 ## Genera TODAS las ligas definidas. Llamar antes de que el jugador elija equipo.
 func generate_all() -> void:
+	_last_error = ""
 	for def: Dictionary in LEAGUE_DEFINITIONS:
 		_generate_league(def)
 	# Poblar la cartera de entrenadores libres
 	GameManager.free_coaches.assign(FREE_COACHES.duplicate())
+
+
+func get_last_error() -> String:
+	return _last_error
+
+
+func generate_from_external_json(file_path: String) -> bool:
+	_last_error = ""
+	var trimmed_path := file_path.strip_edges()
+	if trimmed_path.is_empty():
+		_last_error = "Debes indicar la ruta de un JSON."
+		return false
+	if not FileAccess.file_exists(trimmed_path):
+		_last_error = "No existe el archivo JSON indicado."
+		return false
+
+	var f := FileAccess.open(trimmed_path, FileAccess.READ)
+	if f == null:
+		_last_error = "No se pudo abrir el archivo JSON."
+		return false
+
+	var raw_text := f.get_as_text()
+	var parsed: Variant = JSON.parse_string(raw_text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		_last_error = "El JSON no tiene un objeto raíz válido."
+		return false
+
+	var root: Dictionary = parsed
+	var countries: Array = root.get("f1_countries", [])
+	if countries.is_empty():
+		_last_error = "El JSON no contiene países (f1_countries)."
+		return false
+
+	var created_leagues := 0
+	var created_teams := 0
+
+	for c: Dictionary in countries:
+		var country_name: String = str(c.get("f1_name", "España"))
+		var leagues_in_country: Array = c.get("f3_leagues", [])
+		for ldef: Dictionary in leagues_in_country:
+			var participants: Array = ldef.get("f3_participants", [])
+			if participants.is_empty():
+				continue
+
+			var league := League.new()
+			league.name = str(ldef.get("f1_name", "Liga"))
+			league.country = country_name
+			league.season = GameManager.season
+			GameManager.register_league(league)
+			created_leagues += 1
+
+			for tdef: Dictionary in participants:
+				var team := Team.new()
+				team.name = str(tdef.get("f01_name", "Equipo"))
+				team.short_name = _short_code_from_name(team.name)
+				team.city = _city_from_team_name(team.name)
+				team.league_id = league.id
+				team.formation = str(tdef.get("f03_tactic", "4-4-2"))
+				team.stadium_name = ""
+				team.stadium_capacity = int(tdef.get("f04_stadiumCapacity", 20_000))
+				team.parking_level = _map_stadium_level(int(tdef.get("f05_stadiumParking", 0)), [0, 800, 1800, 3000])
+				team.shop_level = _map_stadium_level(int(tdef.get("f06_stadiumShops", 0)), [0, 4, 8, 12])
+				team.bathrooms_level = _map_stadium_level(int(tdef.get("f07_stadiumWCs", 0)), [0, 10, 20, 30])
+				team.crest = TEAM_CRESTS.get(team.name, "")
+				team.stadium_image = TEAM_STADIUMS.get(team.name, "")
+				team.coach_name = TEAM_COACHES.get(team.name, "")
+
+				GameManager.register_team(team)
+				league.team_ids.append(team.id)
+				created_teams += 1
+
+				var lineup: Array = tdef.get("f08_lineupPlayers", [])
+				var reserves: Array = tdef.get("f09_reservePlayers", [])
+				var all_base_levels: Array[int] = []
+
+				for pdata: Dictionary in lineup:
+					var p := _create_player_from_external(pdata, country_name)
+					p.team_id = team.id
+					GameManager.register_player(p)
+					team.player_ids.append(p.id)
+					team.starting_eleven.append(p.id)
+					all_base_levels.append(int(pdata.get("f04_baseLevel", p.get_overall())))
+
+				for pdata: Dictionary in reserves:
+					var p := _create_player_from_external(pdata, country_name)
+					p.team_id = team.id
+					GameManager.register_player(p)
+					team.player_ids.append(p.id)
+					team.bench.append(p.id)
+					all_base_levels.append(int(pdata.get("f04_baseLevel", p.get_overall())))
+
+				if team.player_ids.is_empty():
+					_fill_squad(team)
+				else:
+					if team.starting_eleven.size() < 11:
+						for pid: int in team.player_ids:
+							if not team.starting_eleven.has(pid):
+								team.starting_eleven.append(pid)
+							if team.starting_eleven.size() >= 11:
+								break
+					if team.bench.size() > 7:
+						team.bench = team.bench.slice(0, 7)
+
+				team.reputation = _team_reputation_from_levels(all_base_levels)
+				var cash_millions := float(tdef.get("f02_cash", 0.0))
+				team.club_cash = maxi(200_000, int(cash_millions * 1_000_000.0))
+				team.budget = int(float(team.reputation) * 80_000.0)
+				team.weekly_wage_budget = int(float(team.reputation) * 5_000.0)
+
+				for pid: int in team.player_ids:
+					var tp: Player = GameManager.get_player(pid)
+					if tp:
+						tp.market_value = TransferManager.calculate_value(tp)
+
+			LeagueManager.generate_fixtures(league)
+
+	if created_leagues == 0 or created_teams == 0:
+		_last_error = "El JSON no contiene ligas o equipos válidos para importar."
+		return false
+
+	GameManager.free_coaches.assign(FREE_COACHES.duplicate())
+	return true
 
 
 func _generate_league(def: Dictionary) -> void:
@@ -258,3 +383,111 @@ func _create_player(pos: Player.Position, team_rep: int) -> Player:
 	p.morale     = randi_range(55, 95)
 	p.fitness    = randi_range(70, 100)
 	return p
+
+
+func _create_player_from_external(def: Dictionary, nationality: String) -> Player:
+	var p := Player.new()
+	var stat_gk: int = int(def.get("f09_statGoalkeeper", 20))
+	var stat_def: int = int(def.get("f10_statDefense", 50))
+	var stat_pass: int = int(def.get("f11_statPass", 50))
+	var stat_fin: int = int(def.get("f12_statFinishing", 50))
+	var stat_shot: int = int(def.get("f13_statShot", 50))
+	var stat_drib: int = int(def.get("f14_statDribble", 50))
+
+	p.number = int(def.get("f01_number", 0))
+	p.full_name = str(def.get("f02_name", "Jugador"))
+	p.age = int(def.get("f03_age", 24))
+	p.nationality = nationality
+	p.position = _position_from_external(int(def.get("f08_position", 2)))
+
+	p.goalkeeping = clampi(stat_gk, 1, 99)
+	p.defending = clampi(stat_def, 1, 99)
+	p.passing = clampi(stat_pass, 1, 99)
+	p.shooting = clampi(stat_fin, 1, 99)
+	p.dribbling = clampi(stat_drib, 1, 99)
+	p.pace = clampi(int(round((stat_shot + stat_drib) / 2.0)), 1, 99)
+	p.physical = clampi(int(round((stat_def + stat_shot) / 2.0)), 1, 99)
+
+	var salary_source := float(def.get("f05_salary", 1.0))
+	p.salary = maxi(1_000, int(salary_source * 6_000.0))
+
+	var value_source := float(def.get("f06_value", 1.0))
+	p.market_value = maxi(50_000, int(value_source * 1_000_000.0))
+	p.contract_years = maxi(1, int(def.get("f07_contractYears", 2)))
+	if p.get_overall() >= 62:
+		p.release_clause = int(p.market_value * 2.0 / 100_000.0) * 100_000
+
+	p.morale = randi_range(60, 95)
+	p.fitness = randi_range(70, 100)
+	p.energy = 100
+	return p
+
+
+func _position_from_external(pos: int) -> Player.Position:
+	match pos:
+		0:
+			return Player.Position.GK
+		1:
+			return Player.Position.DEF
+		2:
+			return Player.Position.MID
+		3:
+			return Player.Position.FWD
+	return Player.Position.MID
+
+
+func _team_reputation_from_levels(levels: Array[int]) -> int:
+	if levels.is_empty():
+		return 50
+	var total := 0
+	for lv: int in levels:
+		total += lv
+	return clampi(int(round(float(total) / float(levels.size()))), 35, 95)
+
+
+func _map_stadium_level(value: int, thresholds: Array[int]) -> int:
+	for i: int in range(thresholds.size() - 1, -1, -1):
+		if value >= thresholds[i]:
+			return i
+	return 0
+
+
+func _short_code_from_name(name: String) -> String:
+	var parts := name.split(" ", false)
+	var short_name := ""
+	for part: String in parts:
+		if part.length() >= 1:
+			short_name += part.substr(0, 1).to_upper()
+		if short_name.length() >= 3:
+			break
+	if short_name.length() < 2 and name.length() >= 2:
+		short_name = name.substr(0, 3).to_upper()
+	return short_name.substr(0, mini(3, short_name.length()))
+
+
+func _city_from_team_name(name: String) -> String:
+	if TEAM_STADIUMS.has(name):
+		var known: Dictionary = {
+			"Real Madrid": "Madrid",
+			"FC Barcelona": "Barcelona",
+			"Atlético de Madrid": "Madrid",
+			"Sevilla FC": "Sevilla",
+			"Valencia CF": "Valencia",
+			"Real Sociedad": "San Sebastián",
+			"Athletic Club": "Bilbao",
+			"Real Betis": "Sevilla",
+			"Villarreal CF": "Villarreal",
+			"RC Celta": "Vigo",
+			"RCD Espanyol": "Barcelona",
+			"CA Osasuna": "Pamplona",
+			"Rayo Vallecano": "Madrid",
+			"Getafe CF": "Getafe",
+			"Deportivo de La Coruña": "La Coruña",
+			"Deportivo Alavés": "Vitoria",
+			"Málaga CF": "Málaga",
+			"Elche CF": "Elche",
+			"Levante UD": "Valencia",
+			"Racing de Santander": "Santander",
+		}
+		return known.get(name, name)
+	return name
