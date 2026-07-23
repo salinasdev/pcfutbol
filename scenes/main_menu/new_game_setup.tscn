@@ -75,11 +75,32 @@ text = "Datos de la temporada"
 theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.7, 0.9, 0.7, 1)
 
+[node name="SourceButtons" type="HBoxContainer" parent="VBoxContainer/FormArea/FormVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnUseGenerated" type="Button" parent="VBoxContainer/FormArea/FormVBox/SourceButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 48)
+text = "Jugadores inventados"
+theme_override_font_sizes/font_size = 16
+
+[node name="BtnUseJsonSource" type="Button" parent="VBoxContainer/FormArea/FormVBox/SourceButtons"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 48)
+text = "Cargar desde JSON"
+theme_override_font_sizes/font_size = 16
+
 [node name="DataSourcePicker" type="OptionButton" parent="VBoxContainer/FormArea/FormVBox"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 60)
 theme_override_font_sizes/font_size = 18
+visible = false
 
 [node name="JsonRow" type="HBoxContainer" parent="VBoxContainer/FormArea/FormVBox"]
 unique_name_in_owner = true

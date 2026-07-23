@@ -4,19 +4,44 @@
 extends Node
 
 var _last_error: String = ""
+var _generated_full_names: Dictionary = {}
 
-const FIRST_NAMES: Array[String] = [
+const FIRST_NAMES_ES: Array[String] = [
 	"Alejandro", "Carlos", "David", "Sergio", "Javier", "Marcos",
 	"Roberto", "Pablo", "Adrián", "Raúl", "Iván", "Diego",
 	"Fernando", "Miguel", "Álvaro", "Rubén", "Víctor", "Hugo",
-	"Manuel", "Óscar", "Luis", "Jorge", "Andrés", "Rafael"
+	"Manuel", "Óscar", "Luis", "Jorge", "Andrés", "Rafael",
+	"Álex", "Aitor", "Iker", "Unai", "Mikel", "Gorka",
+	"Nicolás", "Thiago", "Mateo", "Tomás", "Enzo", "Gael",
+	"Nico", "Bruno", "Samuel", "Joaquín", "César", "Ángel"
 ]
 
-const LAST_NAMES: Array[String] = [
+const FIRST_NAMES_INTL: Array[String] = [
+	"Luka", "Matej", "Marco", "Lorenzo", "Giovanni", "Andrea",
+	"Nicolò", "Marek", "Pavel", "Dimitri", "Yuri", "Ivan",
+	"Olivier", "Julien", "Antoine", "Thierry", "Karim", "Youssef",
+	"Mustafa", "Emre", "Arda", "Hakan", "João", "Rui",
+	"Tiago", "Fábio", "Nuno", "Diego", "Miguel", "Lucas",
+	"Rafael", "Dante", "Matias", "Santiago", "Erik", "Jonas",
+	"Milan", "Noah", "Leo", "Tom", "Kevin", "Rayan"
+]
+
+const LAST_NAMES_ES: Array[String] = [
 	"García", "Martínez", "López", "Sánchez", "González", "Rodríguez",
 	"Fernández", "Pérez", "Álvarez", "Torres", "Navarro", "Domínguez",
 	"Ramos", "Gil", "Serrano", "Moreno", "Jiménez", "Ruiz",
-	"Ortega", "Molina", "Delgado", "Herrera", "Suárez", "Vega"
+	"Ortega", "Molina", "Delgado", "Herrera", "Suárez", "Vega",
+	"Cabrera", "Flores", "Iglesias", "Roldán", "Márquez", "Carmona",
+	"Soto", "Blanco", "Carrasco", "Reyes", "León", "Vidal"
+]
+
+const LAST_NAMES_INTL: Array[String] = [
+	"Kovač", "Rossi", "Bianchi", "Romano", "Conti", "Esposito",
+	"Costa", "Silva", "Ferreira", "Pereira", "Santos", "Moreira",
+	"Müller", "Schmidt", "Wagner", "Fischer", "Weber", "Hoffmann",
+	"Dubois", "Lefèvre", "Moreau", "Bernard", "Petit", "Simon",
+	"Novak", "Horvat", "Jovanović", "Petrović", "Kowalski", "Nowak",
+	"Adebayo", "Diallo", "Traoré", "Bamba", "Benali", "Haddad"
 ]
 
 ## Entrenadores iniciales por equipo.
@@ -158,6 +183,7 @@ const LEAGUE_DEFINITIONS: Array = [
 ## Genera TODAS las ligas definidas. Llamar antes de que el jugador elija equipo.
 func generate_all() -> void:
 	_last_error = ""
+	_generated_full_names.clear()
 	for def: Dictionary in LEAGUE_DEFINITIONS:
 		_generate_league(def)
 	# Poblar la cartera de entrenadores libres
@@ -369,7 +395,7 @@ func _fill_squad(team: Team) -> void:
 
 func _create_player(pos: Player.Position, team_rep: int) -> Player:
 	var p     := Player.new()
-	p.full_name  = FIRST_NAMES.pick_random() + " " + LAST_NAMES.pick_random()
+	p.full_name  = _generate_player_full_name()
 	p.age        = randi_range(17, 35)
 	p.position   = pos
 
@@ -395,6 +421,31 @@ func _create_player(pos: Player.Position, team_rep: int) -> Player:
 	p.morale     = randi_range(55, 95)
 	p.fitness    = randi_range(70, 100)
 	return p
+
+
+func _generate_player_full_name() -> String:
+	for _attempt: int in range(40):
+		var first := _pick_weighted_name(FIRST_NAMES_ES, FIRST_NAMES_INTL, 0.38)
+		var last := _pick_weighted_name(LAST_NAMES_ES, LAST_NAMES_INTL, 0.32)
+		var full_name := "%s %s" % [first, last]
+		if not _generated_full_names.has(full_name):
+			_generated_full_names[full_name] = true
+			return full_name
+
+	# Fallback extremo: usa dos apellidos para forzar unicidad visual.
+	var fallback_first := _pick_weighted_name(FIRST_NAMES_ES, FIRST_NAMES_INTL, 0.38)
+	var fallback_last := _pick_weighted_name(LAST_NAMES_ES, LAST_NAMES_INTL, 0.32)
+	var fallback_second := _pick_weighted_name(LAST_NAMES_ES, LAST_NAMES_INTL, 0.32)
+	var fallback_name := "%s %s %s" % [fallback_first, fallback_last, fallback_second]
+	_generated_full_names[fallback_name] = true
+	return fallback_name
+
+
+func _pick_weighted_name(local_names: Array[String], foreign_names: Array[String], foreign_chance: float) -> String:
+	var pool: Array[String] = foreign_names if randf() < foreign_chance else local_names
+	if pool.is_empty():
+		pool = local_names if not local_names.is_empty() else foreign_names
+	return pool.pick_random()
 
 
 func _create_player_from_external(def: Dictionary, nationality: String) -> Player:

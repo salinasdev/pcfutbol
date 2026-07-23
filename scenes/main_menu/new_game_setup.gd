@@ -19,6 +19,7 @@ func _ready() -> void:
 
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
 	%BtnStart.pressed.connect(_on_start)
+	%BtnUseGenerated.pressed.connect(func(): _set_source_mode(SOURCE_GENERATED))
 	%BtnLoadJson.pressed.connect(_on_load_json_pressed)
 	%BtnUseDefaultJson.pressed.connect(_on_use_default_json_pressed)
 	%BtnLoadJsonText.pressed.connect(_on_load_json_text_pressed)
@@ -33,7 +34,10 @@ func _ready() -> void:
 	%LeaguePicker.item_selected.connect(_on_league_selected)
 	_build_source_picker()
 	_set_json_controls_visible(false)
+	%BtnUseJsonSource.visible = false
+	%DataSourcePicker.visible = false
 	_prefill_json_path()
+	_set_source_mode(SOURCE_GENERATED)
 	_prepare_generated_data()
 
 
@@ -165,10 +169,16 @@ func _on_start() -> void:
 
 
 func _on_source_selected(idx: int) -> void:
-	_source_mode = idx
-	_set_json_controls_visible(_source_mode == SOURCE_JSON)
+	_set_source_mode(idx)
+
+
+func _set_source_mode(mode: int) -> void:
+	_source_mode = mode
+	%DataSourcePicker.select(mode)
 	_selected_team_id = -1
 	_selected_btn = null
+	_set_json_controls_visible(_source_mode == SOURCE_JSON)
+	_set_source_buttons_state()
 	if _source_mode == SOURCE_GENERATED:
 		_prepare_generated_data()
 		return
@@ -179,7 +189,39 @@ func _on_source_selected(idx: int) -> void:
 	_show_error("Selecciona un JSON y pulsa 'Cargar JSON'.")
 
 
+func _set_source_buttons_state() -> void:
+	var generated_style := StyleBoxFlat.new()
+	generated_style.bg_color = Color(0.14, 0.22, 0.14, 1)
+	generated_style.border_color = Color(0.2, 0.45, 0.2, 1)
+	generated_style.border_width_left = 2
+	generated_style.border_width_right = 2
+	generated_style.border_width_top = 2
+	generated_style.border_width_bottom = 2
+
+	var json_style := StyleBoxFlat.new()
+	json_style.bg_color = Color(0.14, 0.22, 0.14, 1)
+	json_style.border_color = Color(0.2, 0.45, 0.2, 1)
+	json_style.border_width_left = 2
+	json_style.border_width_right = 2
+	json_style.border_width_top = 2
+	json_style.border_width_bottom = 2
+
+	var active_style := StyleBoxFlat.new()
+	active_style.bg_color = Color(0.1, 0.35, 0.1, 1)
+	active_style.border_color = Color(0.3, 0.9, 0.3, 1)
+	active_style.border_width_left = 2
+	active_style.border_width_right = 2
+	active_style.border_width_top = 2
+	active_style.border_width_bottom = 2
+
+	%BtnUseGenerated.add_theme_stylebox_override("normal", active_style if _source_mode == SOURCE_GENERATED else generated_style)
+	%BtnUseJsonSource.add_theme_stylebox_override("normal", active_style if _source_mode == SOURCE_JSON else json_style)
+
+
 func _set_json_controls_visible(visible: bool) -> void:
+	if not visible:
+		%InputJsonPath.text = ""
+		%InputJsonText.text = ""
 	%JsonRow.visible = visible
 	%BtnLoadJson.visible = visible
 	%BtnUseDefaultJson.visible = visible
