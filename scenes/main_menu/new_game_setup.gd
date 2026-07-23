@@ -20,6 +20,7 @@ func _ready() -> void:
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
 	%BtnStart.pressed.connect(_on_start)
 	%BtnLoadJson.pressed.connect(_on_load_json_pressed)
+	%BtnUseDefaultJson.pressed.connect(_on_use_default_json_pressed)
 	%BtnBrowseJson.pressed.connect(_on_browse_json_pressed)
 	%DataSourcePicker.item_selected.connect(_on_source_selected)
 	%JsonFileDialog.file_selected.connect(_on_json_file_selected)
@@ -180,19 +181,24 @@ func _on_source_selected(idx: int) -> void:
 func _set_json_controls_visible(visible: bool) -> void:
 	%JsonRow.visible = visible
 	%BtnLoadJson.visible = visible
+	%BtnUseDefaultJson.visible = visible
 
 
 func _on_browse_json_pressed() -> void:
 	var fd: FileDialog = %JsonFileDialog
 	fd.access = FileDialog.ACCESS_FILESYSTEM
 	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
-	fd.use_native_dialog = true
+	fd.use_native_dialog = false
+	fd.root_subfolder = ""
+	fd.filters = PackedStringArray(["*.json ; Archivo JSON", "*.* ; Todos los archivos"])
 
 	var base_dir := OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
 	if _json_path.strip_edges() != "":
 		var hinted_dir := _json_path.get_base_dir()
 		if DirAccess.dir_exists_absolute(hinted_dir):
 			base_dir = hinted_dir
+	elif not DirAccess.dir_exists_absolute(base_dir):
+		base_dir = "C:/Users"
 	fd.current_dir = base_dir
 
 	%JsonFileDialog.popup_centered_ratio(0.8)
@@ -210,6 +216,16 @@ func _on_load_json_pressed() -> void:
 		_show_error("Indica una ruta de JSON para cargar la temporada.")
 		return
 	_prepare_json_data(_json_path)
+
+
+func _on_use_default_json_pressed() -> void:
+	var default_path := _get_default_json_path()
+	if not FileAccess.file_exists(default_path):
+		_show_error("No se encontró el JSON por defecto en Desktop/XE42852.")
+		return
+	_json_path = default_path
+	%InputJsonPath.text = default_path
+	_prepare_json_data(default_path)
 
 
 func _prepare_generated_data() -> void:
@@ -253,10 +269,14 @@ func _non_empty_error(fallback: String) -> String:
 
 
 func _prefill_json_path() -> void:
-	var default_path := OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP).path_join("XE42852").path_join("Temporada9798.json")
+	var default_path := _get_default_json_path()
 	if FileAccess.file_exists(default_path):
 		_json_path = default_path
 		%InputJsonPath.text = default_path
+
+
+func _get_default_json_path() -> String:
+	return OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP).path_join("XE42852").path_join("Temporada9798.json")
 
 
 # ---------------------------------------------------------------------------

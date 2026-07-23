@@ -108,6 +108,13 @@ custom_minimum_size = Vector2(0, 48)
 text = "Cargar JSON"
 theme_override_font_sizes/font_size = 16
 
+[node name="BtnUseDefaultJson" type="Button" parent="VBoxContainer/FormArea/FormVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+text = "Usar Temporada9798 por defecto"
+theme_override_font_sizes/font_size = 15
+
 [node name="LblLeague" type="Label" parent="VBoxContainer/FormArea/FormVBox"]
 layout_mode = 2
 text = "Liga"
