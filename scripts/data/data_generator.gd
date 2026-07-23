@@ -441,11 +441,15 @@ func _generate_player_full_name() -> String:
 	return fallback_name
 
 
-func _pick_weighted_name(local_names: Array[String], foreign_names: Array[String], foreign_chance: float) -> String:
-	var pool: Array[String] = foreign_names if randf() < foreign_chance else local_names
+func _pick_weighted_name(local_names: Array, foreign_names: Array, foreign_chance: float) -> String:
+	var use_foreign := randf() < foreign_chance
+	var pool: Array = foreign_names if use_foreign else local_names
 	if pool.is_empty():
 		pool = local_names if not local_names.is_empty() else foreign_names
-	return pool.pick_random()
+	if pool.is_empty():
+		return "Jugador"
+	var idx := randi() % pool.size()
+	return str(pool[idx])
 
 
 func _create_player_from_external(def: Dictionary, nationality: String) -> Player:

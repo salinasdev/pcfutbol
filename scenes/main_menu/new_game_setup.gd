@@ -160,9 +160,15 @@ func _on_start() -> void:
 
 
 func _prepare_generated_data() -> void:
+	_data_ready_for_mode = false
 	var ok := GameManager.prepare_new_game()
 	if not ok:
-		_show_error(_non_empty_error("No se han podido generar los datos de partida."))
+		_show_error("No se han podido generar los datos de partida.")
+		return
+	if GameManager.leagues.is_empty():
+		_show_error("No se han generado ligas. Revisa DataGenerator.")
+		_clear_league_picker()
+		_clear_team_list()
 		return
 	_data_ready_for_mode = true
 	_refresh_leagues_after_load()
