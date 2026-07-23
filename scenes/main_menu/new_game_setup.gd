@@ -30,8 +30,14 @@ func _ready() -> void:
 func _build_league_picker() -> void:
 	var picker: OptionButton = %LeaguePicker
 	picker.clear()
+	picker.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	picker.add_theme_color_override("font_hover_color", Color(0.95, 1, 0.95, 1))
+	picker.add_theme_color_override("font_selected_color", Color(0.9, 1, 0.9, 1))
+	picker.add_theme_color_override("font_focus_color", Color(1, 1, 1, 1))
 	for league: League in GameManager.leagues.values():
 		picker.add_item("%s  (%s)" % [league.name, league.country])
+	if picker.item_count > 0:
+		picker.select(0)
 
 
 func _on_league_selected(idx: int) -> void:
@@ -68,6 +74,7 @@ func _build_team_list(league: League) -> void:
 	for t: Team in sorted_teams:
 		var btn := _make_team_button(t)
 		list.add_child(btn)
+	%TeamListLabel.text = "Elige tu equipo (%d)" % sorted_teams.size()
 
 
 func _clear_team_list() -> void:
@@ -84,6 +91,7 @@ func _clear_league_picker() -> void:
 func _make_team_button(t: Team) -> Button:
 	var btn := Button.new()
 	btn.custom_minimum_size = Vector2(0, 72)
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	btn.text = "%s\n%s  •  %s  •  %s" % [
 		t.name,
 		t.city,
@@ -91,6 +99,21 @@ func _make_team_button(t: Team) -> Button:
 		"%d.000 esp." % (t.stadium_capacity / 1000)
 	]
 	btn.add_theme_font_size_override("font_size", 17)
+	btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	btn.add_theme_color_override("font_hover_color", Color(0.95, 1, 0.95, 1))
+	btn.add_theme_color_override("font_pressed_color", Color(0.85, 1, 0.85, 1))
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.18, 0.12, 1)
+	style.border_color = Color(0.28, 0.55, 0.28, 1)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	btn.add_theme_stylebox_override("normal", style)
 	btn.pressed.connect(func(): _select_team(t.id, btn))
 	return btn
 
@@ -150,6 +173,7 @@ func _refresh_leagues_after_load() -> void:
 	if GameManager.leagues.is_empty():
 		_data_ready_for_mode = false
 		_clear_team_list()
+		%LeaguePicker.text = "Sin ligas"
 		_show_error("No hay ligas disponibles con la fuente de datos actual.")
 		return
 	_data_ready_for_mode = true
