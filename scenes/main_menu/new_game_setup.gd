@@ -31,6 +31,7 @@ func _ready() -> void:
 	%LeaguePicker.item_selected.connect(_on_league_selected)
 	_build_source_picker()
 	_set_json_controls_visible(false)
+	_prefill_json_path()
 	_prepare_generated_data()
 
 
@@ -182,6 +183,18 @@ func _set_json_controls_visible(visible: bool) -> void:
 
 
 func _on_browse_json_pressed() -> void:
+	var fd: FileDialog = %JsonFileDialog
+	fd.access = FileDialog.ACCESS_FILESYSTEM
+	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	fd.use_native_dialog = true
+
+	var base_dir := OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP)
+	if _json_path.strip_edges() != "":
+		var hinted_dir := _json_path.get_base_dir()
+		if DirAccess.dir_exists_absolute(hinted_dir):
+			base_dir = hinted_dir
+	fd.current_dir = base_dir
+
 	%JsonFileDialog.popup_centered_ratio(0.8)
 
 
@@ -237,6 +250,13 @@ func _non_empty_error(fallback: String) -> String:
 	if msg.is_empty():
 		return fallback
 	return msg
+
+
+func _prefill_json_path() -> void:
+	var default_path := OS.get_system_dir(OS.SYSTEM_DIR_DESKTOP).path_join("XE42852").path_join("Temporada9798.json")
+	if FileAccess.file_exists(default_path):
+		_json_path = default_path
+		%InputJsonPath.text = default_path
 
 
 # ---------------------------------------------------------------------------
