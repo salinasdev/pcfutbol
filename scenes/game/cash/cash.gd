@@ -451,7 +451,7 @@ func _section_title_with_icon(text: String, icon_tex: Texture2D) -> HBoxContaine
 	if icon_tex != null:
 		var icon := TextureRect.new()
 		icon.texture = icon_tex
-		icon.custom_minimum_size = Vector2(20, 20)
+		icon.custom_minimum_size = Vector2(22, 22)
 		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(icon)

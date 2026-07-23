@@ -60,7 +60,7 @@ func _ready() -> void:
 	%BtnFast.pressed.connect(_on_fast)
 	%BtnSkip.pressed.connect(_on_skip)
 	%BtnFast.icon = ICON_SPEED_FAST
-	%BtnFast.add_theme_constant_override("icon_max_width", 18)
+	%BtnFast.add_theme_constant_override("icon_max_width", 20)
 
 	_refresh_scoreboard()
 
@@ -74,13 +74,13 @@ func _on_play_pause() -> void:
 		return
 	_playing = not _playing
 	if _playing:
-		%BtnPlayPause.text = "⏸ Pausa"
+		%BtnPlayPause.text = "Pausa"
 		_fast = false
 		%BtnFast.text = "Rápido"
 		%BtnFast.icon = ICON_SPEED_FAST
 		_tick()
 	else:
-		%BtnPlayPause.text = "▶ Jugar"
+		%BtnPlayPause.text = "Jugar"
 		_timer.stop()
 
 

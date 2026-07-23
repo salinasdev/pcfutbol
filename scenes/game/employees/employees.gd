@@ -29,21 +29,21 @@ const LEVEL_COLORS: Array[Color] = [
 
 ## id, nombre, icono, efecto corto
 const COACH_DEFS: Array = [
-	["staff_gk_coach",        "Entr. Porteros",    "🧤", "Mejora la portería de los porteros semanalmente."],
-	["staff_passing_coach",   "Entr. de Pase",     "🎯", "Incrementa el pase de todos los jugadores."],
-	["staff_dribbling_coach", "Entr. de Regate",   "⚡", "Incrementa el regate de los jugadores de campo."],
-	["staff_shooting_coach",  "Entr. de Remate",   "🥅", "Incrementa el remate de delanteros y mediapuntas."],
-	["staff_tackling_coach",  "Entr. de Entradas", "🛡", "Mejora la defensa de defensas y centrocampistas."],
-	["staff_physical_coach",  "Preparador Físico", "💪", "Mejora el físico y velocidad de toda la plantilla."],
+	["staff_gk_coach",        "Entr. Porteros",    "", "Mejora la portería de los porteros semanalmente."],
+	["staff_passing_coach",   "Entr. de Pase",     "", "Incrementa el pase de todos los jugadores."],
+	["staff_dribbling_coach", "Entr. de Regate",   "", "Incrementa el regate de los jugadores de campo."],
+	["staff_shooting_coach",  "Entr. de Remate",   "", "Incrementa el remate de delanteros y mediapuntas."],
+	["staff_tackling_coach",  "Entr. de Entradas", "", "Mejora la defensa de defensas y centrocampistas."],
+	["staff_physical_coach",  "Preparador Físico", "", "Mejora el físico y velocidad de toda la plantilla."],
 ]
 const STAFF_DEFS: Array = [
-	["staff_physio",          "Fisioterapeuta",    "💉", "Reduce tiempo de lesión y probabilidad de lesionarse."],
-	["staff_psychologist",    "Psicólogo",         "🧠", "Amortigua la pérdida de moral tras las derrotas."],
-	["staff_scout",           "Observador",        "🔭", "Analiza el equipo rival con mayor profundidad."],
-	["staff_tech_secretary",  "Secretario Técnico","📋", "Mejora las condiciones en negociaciones de fichajes."],
-	["staff_youth_coach",     "Entr. Juveniles",   "🌱", "Los jugadores jóvenes progresan más rápido."],
-	["staff_talent_scout",    "Ojeador",           "👁", "Recomienda jugadores de calidad en el mercado."],
-	["staff_groundskeeper",   "Enc. del Campo",    "🌿", "Mantiene el campo en perfectas condiciones."],
+	["staff_physio",          "Fisioterapeuta",    "", "Reduce tiempo de lesión y probabilidad de lesionarse."],
+	["staff_psychologist",    "Psicólogo",         "", "Amortigua la pérdida de moral tras las derrotas."],
+	["staff_scout",           "Observador",        "", "Analiza el equipo rival con mayor profundidad."],
+	["staff_tech_secretary",  "Secretario Técnico","", "Mejora las condiciones en negociaciones de fichajes."],
+	["staff_youth_coach",     "Entr. Juveniles",   "", "Los jugadores jóvenes progresan más rápido."],
+	["staff_talent_scout",    "Ojeador",           "", "Recomienda jugadores de calidad en el mercado."],
+	["staff_groundskeeper",   "Enc. del Campo",    "", "Mantiene el campo en perfectas condiciones."],
 ]
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ func _build_ui() -> void:
 
 	var cash_icon := TextureRect.new()
 	cash_icon.texture = ICON_MONEY
-	cash_icon.custom_minimum_size = Vector2(24, 24)
+	cash_icon.custom_minimum_size = Vector2(22, 22)
 	cash_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	cash_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	topbar.add_child(cash_icon)
@@ -211,7 +211,7 @@ func _staff_card(staff_id: String, label_txt: String, icon: String, effect: Stri
 
 	# Nombre + icono
 	var name_lbl := Label.new()
-	name_lbl.text = "%s  %s" % [icon, label_txt]
+	name_lbl.text = label_txt
 	name_lbl.add_theme_font_size_override("font_size", 16)
 	name_lbl.add_theme_color_override("font_color", Color(0.95, 0.95, 1.0, 1))
 	vb.add_child(name_lbl)

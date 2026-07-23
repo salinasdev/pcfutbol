@@ -120,7 +120,7 @@ func _make_card(label: String, desc: String, scene: String, accent: Color, icon_
 	if icon_tex != null:
 		var icon := TextureRect.new()
 		icon.texture = icon_tex
-		icon.custom_minimum_size = Vector2(22, 22)
+		icon.custom_minimum_size = Vector2(20, 20)
 		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		title_row.add_child(icon)
