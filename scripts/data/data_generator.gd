@@ -183,13 +183,25 @@ func generate_from_external_json(file_path: String) -> bool:
 		_last_error = "No se pudo abrir el archivo JSON."
 		return false
 
-	var raw_text := f.get_as_text()
+	return generate_from_external_json_text(f.get_as_text())
+
+
+func generate_from_external_json_text(raw_text: String) -> bool:
+	_last_error = ""
+	if raw_text.strip_edges().is_empty():
+		_last_error = "El contenido JSON está vacío."
+		return false
+
 	var parsed: Variant = JSON.parse_string(raw_text)
 	if typeof(parsed) != TYPE_DICTIONARY:
 		_last_error = "El JSON no tiene un objeto raíz válido."
 		return false
 
 	var root: Dictionary = parsed
+	return _generate_from_external_root(root)
+
+
+func _generate_from_external_root(root: Dictionary) -> bool:
 	var countries: Array = root.get("f1_countries", [])
 	if countries.is_empty():
 		_last_error = "El JSON no contiene países (f1_countries)."

@@ -21,6 +21,7 @@ func _ready() -> void:
 	%BtnStart.pressed.connect(_on_start)
 	%BtnLoadJson.pressed.connect(_on_load_json_pressed)
 	%BtnUseDefaultJson.pressed.connect(_on_use_default_json_pressed)
+	%BtnLoadJsonText.pressed.connect(_on_load_json_text_pressed)
 	%BtnBrowseJson.pressed.connect(_on_browse_json_pressed)
 	%DataSourcePicker.item_selected.connect(_on_source_selected)
 	%JsonFileDialog.file_selected.connect(_on_json_file_selected)
@@ -182,6 +183,9 @@ func _set_json_controls_visible(visible: bool) -> void:
 	%JsonRow.visible = visible
 	%BtnLoadJson.visible = visible
 	%BtnUseDefaultJson.visible = visible
+	%LblJsonText.visible = visible
+	%InputJsonText.visible = visible
+	%BtnLoadJsonText.visible = visible
 
 
 func _on_browse_json_pressed() -> void:
@@ -254,6 +258,14 @@ func _on_use_default_json_pressed() -> void:
 	_prepare_json_data(default_path)
 
 
+func _on_load_json_text_pressed() -> void:
+	var json_text := %InputJsonText.text
+	if json_text.strip_edges().is_empty():
+		_show_error("Pega el contenido del JSON antes de cargar.")
+		return
+	_prepare_json_text_data(json_text)
+
+
 func _prepare_generated_data() -> void:
 	_data_ready_for_mode = false
 	var ok := GameManager.prepare_new_game()
@@ -270,6 +282,17 @@ func _prepare_json_data(path: String) -> void:
 		_clear_team_list()
 		_clear_league_picker()
 		_show_error(_non_empty_error("No se pudo cargar el JSON."))
+		return
+	_refresh_leagues_after_load()
+
+
+func _prepare_json_text_data(json_text: String) -> void:
+	_data_ready_for_mode = false
+	var ok := GameManager.prepare_new_game_from_json_text(json_text)
+	if not ok:
+		_clear_team_list()
+		_clear_league_picker()
+		_show_error(_non_empty_error("No se pudo cargar el JSON pegado."))
 		return
 	_refresh_leagues_after_load()
 

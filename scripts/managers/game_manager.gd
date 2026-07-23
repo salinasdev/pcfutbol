@@ -61,6 +61,15 @@ func prepare_new_game(external_json_path: String = "") -> bool:
 	return ok
 
 
+func prepare_new_game_from_json_text(json_text: String) -> bool:
+	_reset_state()
+	new_game_setup_error = ""
+	var ok := DataGenerator.generate_from_external_json_text(json_text)
+	if not ok:
+		new_game_setup_error = DataGenerator.get_last_error()
+	return ok
+
+
 ## Paso 2: Fija el equipo y el entrenador del jugador y arranca la partida.
 func start_game(p_manager_name: String, team_id: int) -> void:
 	manager_name   = p_manager_name
