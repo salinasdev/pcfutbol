@@ -185,6 +185,13 @@ func _set_json_controls_visible(visible: bool) -> void:
 
 
 func _on_browse_json_pressed() -> void:
+	if OS.get_name() == "Windows":
+		var selected_path := _pick_json_with_windows_dialog()
+		if selected_path != "":
+			_json_path = selected_path
+			%InputJsonPath.text = selected_path
+			return
+
 	var fd: FileDialog = %JsonFileDialog
 	fd.access = FileDialog.ACCESS_FILESYSTEM
 	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -202,6 +209,25 @@ func _on_browse_json_pressed() -> void:
 	fd.current_dir = base_dir
 
 	%JsonFileDialog.popup_centered_ratio(0.8)
+
+
+func _pick_json_with_windows_dialog() -> String:
+	var output: Array = []
+	var ps_script := (
+		"Add-Type -AssemblyName System.Windows.Forms; "
+		+ "$dlg = New-Object System.Windows.Forms.OpenFileDialog; "
+		+ "$dlg.Title = 'Selecciona archivo JSON'; "
+		+ "$dlg.Filter = 'Archivo JSON (*.json)|*.json|Todos los archivos (*.*)|*.*'; "
+		+ "$dlg.InitialDirectory = 'C:\\'; "
+		+ "if ($dlg.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { "
+		+ "Write-Output $dlg.FileName "
+		+ "}"
+	)
+	var args: PackedStringArray = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_script]
+	var exit_code := OS.execute("powershell", args, output, true)
+	if exit_code != 0 or output.is_empty():
+		return ""
+	return str(output[0]).strip_edges()
 
 
 func _on_json_file_selected(path: String) -> void:
