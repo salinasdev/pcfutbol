@@ -146,7 +146,8 @@ func _make_ranking_panel(title: String, players: Array, value_fn: Callable, acce
 	if icon_tex != null:
 		var icon := TextureRect.new()
 		icon.texture = icon_tex
-		icon.custom_minimum_size = Vector2(16, 16)
+		icon.custom_minimum_size = Vector2(22, 22)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		title_row.add_child(icon)
 	var lbl_title := Label.new()

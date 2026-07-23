@@ -219,6 +219,7 @@ func _build_ui() -> void:
 	var primas_icon := TextureRect.new()
 	primas_icon.texture = ICON_MONEY
 	primas_icon.custom_minimum_size = Vector2(20, 20)
+	primas_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	primas_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	primas_row.add_child(primas_icon)
 	var primas_title := Label.new()

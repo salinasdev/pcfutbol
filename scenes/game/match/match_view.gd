@@ -298,7 +298,8 @@ func _add_commentary(text: String, type: MatchEngine.EventType) -> void:
 	if icon_tex != null:
 		var icon := TextureRect.new()
 		icon.texture = icon_tex
-		icon.custom_minimum_size = Vector2(20, 20)
+		icon.custom_minimum_size = Vector2(24, 24)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		row.add_child(icon)
 

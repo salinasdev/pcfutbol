@@ -68,6 +68,7 @@ func _build_ui() -> void:
 	var title_icon := TextureRect.new()
 	title_icon.texture = ICON_MONEY
 	title_icon.custom_minimum_size = Vector2(26, 26)
+	title_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	title_row.add_child(title_icon)
 	var title := Label.new()
@@ -630,6 +631,7 @@ func _show_entry_detail(entry: Dictionary) -> void:
 	var saldo_icon := TextureRect.new()
 	saldo_icon.texture = ICON_MONEY
 	saldo_icon.custom_minimum_size = Vector2(18, 18)
+	saldo_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	saldo_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	saldo_row.add_child(saldo_icon)
 	var saldo_lbl := Label.new()

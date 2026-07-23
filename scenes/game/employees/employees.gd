@@ -99,7 +99,8 @@ func _build_ui() -> void:
 
 	var cash_icon := TextureRect.new()
 	cash_icon.texture = ICON_MONEY
-	cash_icon.custom_minimum_size = Vector2(18, 18)
+	cash_icon.custom_minimum_size = Vector2(24, 24)
+	cash_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	cash_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	topbar.add_child(cash_icon)
 
