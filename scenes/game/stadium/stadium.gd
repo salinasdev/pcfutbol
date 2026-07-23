@@ -1,6 +1,9 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
+const ICON_WARNING := preload("res://assets/ui/icons/warning.png")
+const ICON_LOCK := preload("res://assets/ui/icons/lock.png")
 const ICON_SIZE_NAV := 28
 
 enum Tab { TRIBUNAS, PARKING, EQUIPAMIENTO, SERVICIOS }
@@ -114,7 +117,7 @@ func _buy_stands(idx: int) -> void:
 	_team.club_cash -= u["cost"]
 	_team.construction_item = "stands_%d" % (idx + 1)
 	_team.construction_weeks_left = u["weeks"]
-	_post_buy("✅ Construcción iniciada: %s — %d semanas" % [u["name"], u["weeks"]])
+	_post_buy("Construcción iniciada: %s — %d semanas" % [u["name"], u["weeks"]])
 
 
 # ──────────────────────────────────────────────────────────────
@@ -154,7 +157,7 @@ func _buy_parking(idx: int) -> void:
 	_team.club_cash -= u["cost"]
 	_team.construction_item = "parking_%d" % (idx + 1)
 	_team.construction_weeks_left = u["weeks"]
-	_post_buy("✅ Construcción iniciada: %s — %d semanas" % [u["name"], u["weeks"]])
+	_post_buy("Construcción iniciada: %s — %d semanas" % [u["name"], u["weeks"]])
 
 
 # ──────────────────────────────────────────────────────────────
@@ -198,7 +201,7 @@ func _buy_upgrade(idx: int, is_service: bool) -> void:
 	if not _check_funds(u["cost"]): return
 	_team.club_cash -= u["cost"]
 	_set_field(u["key"], cur + 1)
-	_post_buy("✅ Instalado: %s" % u["name"])
+	_post_buy("Instalado: %s" % u["name"])
 
 
 # ──────────────────────────────────────────────────────────────
@@ -209,7 +212,7 @@ func _refresh_right_panel() -> void:
 	%StadiumName.text     = _team.stadium_name if _team.stadium_name != "" else "Estadio Municipal"
 	%StadiumCapacity.text = "Capacidad: %s espectadores" % _fmt(_team.get_effective_capacity())
 	%StadiumParking.text  = "Parking: %s plazas" % _fmt(_team.get_parking_spaces())
-	%ClubCash.text        = "💰 Caja del club: %s €" % _fmt(_team.club_cash)
+	%ClubCash.text        = "Caja del club: %s €" % _fmt(_team.club_cash)
 
 	# Resolver la ruta del estadio: campo guardado, o fallback por nombre
 	var img_path: String = _team.stadium_image
@@ -226,7 +229,7 @@ func _refresh_right_panel() -> void:
 		%StadiumPhoto.texture = null
 	if _team.construction_weeks_left > 0:
 		%ConstructionStatus.visible = true
-		%ConstructionStatus.text    = "🔨 En construcción — %d sem. restantes" % _team.construction_weeks_left
+		%ConstructionStatus.text    = "En construcción — %d sem. restantes" % _team.construction_weeks_left
 	else:
 		%ConstructionStatus.visible = false
 
@@ -332,10 +335,14 @@ func _make_card(title: String, details: Array, cost: int,
 	btn.custom_minimum_size = Vector2(140, 0)
 	btn.add_theme_font_size_override("font_size", 14)
 	if done:
-		btn.text     = "✅ Completado"
+		btn.text     = "Completado"
+		btn.icon     = ICON_CHECK
+		btn.add_theme_constant_override("icon_max_width", 16)
 		btn.disabled = true
 	elif in_build:
-		btn.text     = "🔨 En obras"
+		btn.text     = "En obras"
+		btn.icon     = ICON_WARNING
+		btn.add_theme_constant_override("icon_max_width", 16)
 		btn.disabled = true
 	elif available:
 		if _team != null and _team.club_cash < cost:
@@ -346,6 +353,8 @@ func _make_card(title: String, details: Array, cost: int,
 			btn.pressed.connect(on_buy)
 	else:
 		btn.text     = "No disponible"
+		btn.icon     = ICON_LOCK
+		btn.add_theme_constant_override("icon_max_width", 16)
 		btn.disabled = true
 	hbox.add_child(btn)
 
@@ -362,7 +371,7 @@ func _make_info_lbl(txt: String) -> Label:
 
 func _make_construction_lbl() -> Label:
 	var lbl := Label.new()
-	lbl.text = "🔨 Obra en curso — %d semana(s) restantes" % _team.construction_weeks_left
+	lbl.text = "Obra en curso — %d semana(s) restantes" % _team.construction_weeks_left
 	lbl.add_theme_font_size_override("font_size", 15)
 	lbl.add_theme_color_override("font_color", Color(0.95, 0.78, 0.20, 1))
 	return lbl
@@ -377,7 +386,7 @@ func _post_buy(msg: String) -> void:
 
 func _check_funds(cost: int) -> bool:
 	if _team == null or _team.club_cash < cost:
-		%StatusBar.text = "❌ Fondos insuficientes — necesitas %s €" % _fmt(cost)
+		%StatusBar.text = "Fondos insuficientes — necesitas %s €" % _fmt(cost)
 		return false
 	return true
 

@@ -208,11 +208,11 @@ func _make_no_convocado_row(p: Player) -> Control:
 	var lbl := Label.new()
 	var reason: String
 	if p.injured:
-		reason = "🩹 Lesionado (%d sem.)" % p.injury_weeks
+		reason = "Lesionado (%d sem.)" % p.injury_weeks
 	elif p.red_carded:
-		reason = "🟥 Roja directa"
+		reason = "Roja directa"
 	else:
-		reason = "🚫 Sancionado"
+		reason = "Sancionado"
 	lbl.text = "[%s] %s  %s" % [p.get_position_abbr(), p.full_name.split(" ")[0], reason]
 	lbl.custom_minimum_size = Vector2(0, 44)
 	lbl.add_theme_font_size_override("font_size", 14)

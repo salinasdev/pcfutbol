@@ -4,6 +4,11 @@ const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
 const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
+const ICON_MAIL := preload("res://assets/ui/icons/chart.png")
+const ICON_LOCK := preload("res://assets/ui/icons/lock.png")
+const ICON_WARNING := preload("res://assets/ui/icons/warning.png")
+const ICON_HANDSHAKE := preload("res://assets/ui/icons/handshake.png")
+const ICON_BRIEFCASE := preload("res://assets/ui/icons/briefcase.png")
 const ICON_SIZE_NAV := 28
 const ICON_SIZE_ACTION := 20
 
@@ -72,7 +77,8 @@ func _build_list() -> void:
 
 	if not pending.is_empty():
 		list.add_child(_make_section_header(
-			"📨  OFERTAS ENTRANTES (%d)" % pending.size(),
+			"OFERTAS ENTRANTES (%d)" % pending.size(),
+			ICON_MAIL,
 			Color(0.22, 0.12, 0.05, 1), Color(1.0, 0.75, 0.30, 1)))
 		for o: Dictionary in pending:
 			list.add_child(_make_incoming_offer_row(o))
@@ -96,16 +102,28 @@ func _build_list() -> void:
 			list.add_child(_make_plantilla_row(p))
 
 
-func _make_section_header(text: String, bg: Color, fg: Color) -> Control:
+func _make_section_header(text: String, icon_tex: Texture2D, bg: Color, fg: Color) -> Control:
+	var panel := PanelContainer.new()
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = bg
+	sb.set_content_margin_all(6)
+	panel.add_theme_stylebox_override("panel", sb)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	panel.add_child(row)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(16, 16)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", fg)
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = bg
-	sb.set_content_margin_all(6)
-	lbl.add_theme_stylebox_override("normal", sb)
-	return lbl
+	row.add_child(lbl)
+	return panel
 
 
 func _make_plantilla_header() -> Control:
@@ -273,7 +291,9 @@ func _make_plantilla_row(p: Player) -> Control:
 		lbl_clause.add_theme_color_override("font_color", Color(0.45, 0.48, 0.55, 1))
 	clause_vbox.add_child(lbl_clause)
 	var btn_clause := Button.new()
-	btn_clause.text = "🔒 Fijar"
+	btn_clause.text = "Fijar"
+	btn_clause.icon = ICON_LOCK
+	btn_clause.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_clause.add_theme_font_size_override("font_size", 11)
 	btn_clause.add_theme_color_override("font_color", Color(0.70, 0.80, 1.0, 1))
 	btn_clause.pressed.connect(_open_clause_dialog.bind(p))
@@ -335,7 +355,7 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 	info_vbox.add_child(name_row)
 	if is_clause:
 		var badge := Label.new()
-		badge.text = "⚠ CLÁUSULA"
+		badge.text = "CLÁUSULA"
 		badge.add_theme_font_size_override("font_size", 11)
 		badge.add_theme_color_override("font_color", Color(1.0, 0.30, 0.25, 1))
 		name_row.add_child(badge)
@@ -368,7 +388,7 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 		lbl_note.text = "Valor de mercado: %s  —  La cláusula es legalmente vinculante." % _fmt_money(val)
 		lbl_note.add_theme_color_override("font_color", Color(0.80, 0.55, 0.50, 1))
 	elif player_wants_to_go:
-		lbl_note.text = "⚠ El jugador está considerando seriamente la oferta. Puedes intentar convencerle."
+		lbl_note.text = "El jugador está considerando seriamente la oferta. Puedes intentar convencerle."
 		lbl_note.add_theme_color_override("font_color", Color(1.0, 0.70, 0.25, 1))
 	else:
 		lbl_note.text = "El jugador no quiere marcharse. Puedes rechazar la oferta sin problema."
@@ -381,10 +401,9 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 	outer_hbox.add_child(btn_vbox)
 
 	var btn_accept := Button.new()
-	btn_accept.text = "⚠ Confirmar venta" if is_clause else "✔ Aceptar"
-	if not is_clause:
-		btn_accept.icon = ICON_CHECK
-		btn_accept.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
+	btn_accept.text = "Confirmar venta" if is_clause else "Aceptar"
+	btn_accept.icon = ICON_WARNING if is_clause else ICON_CHECK
+	btn_accept.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_accept.custom_minimum_size = Vector2(130, 0)
 	btn_accept.add_theme_font_size_override("font_size", 13)
 	btn_accept.add_theme_color_override("font_color",
@@ -400,7 +419,9 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 	if is_clause:
 		# Opción de intentar retener al jugador negociando su contrato
 		var btn_retain := Button.new()
-		btn_retain.text = "🤝 Retener"
+		btn_retain.text = "Retener"
+		btn_retain.icon = ICON_HANDSHAKE
+		btn_retain.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 		btn_retain.custom_minimum_size = Vector2(130, 0)
 		btn_retain.add_theme_font_size_override("font_size", 13)
 		btn_retain.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
@@ -423,7 +444,9 @@ func _make_incoming_offer_row(offer: Dictionary) -> Control:
 		# Si el jugador quiere irse, ofrece la opción de convencerle
 		if player_wants_to_go:
 			var btn_convince := Button.new()
-			btn_convince.text = "💬 Convencer"
+			btn_convince.text = "Convencer"
+			btn_convince.icon = ICON_BRIEFCASE
+			btn_convince.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 			btn_convince.custom_minimum_size = Vector2(130, 0)
 			btn_convince.add_theme_font_size_override("font_size", 13)
 			btn_convince.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
@@ -459,7 +482,7 @@ func _open_clause_dialog(p: Player) -> void:
 	panel.add_child(vb)
 
 	var ttl := Label.new()
-	ttl.text = "🔒  Cláusula de rescisión — " + p.full_name
+	ttl.text = "Cláusula de rescisión — " + p.full_name
 	ttl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ttl.add_theme_font_size_override("font_size", 17)
 	ttl.add_theme_color_override("font_color", Color(0.75, 0.85, 1.0, 1))
@@ -664,7 +687,9 @@ func _persuasion_phase(box: VBoxContainer, p: Player, offer: Dictionary) -> void
 	btn_row.add_child(btn_close)
 
 	var btn_talk := Button.new()
-	btn_talk.text = "🗣 Charla motivacional"
+	btn_talk.text = "Charla motivacional"
+	btn_talk.icon = ICON_BRIEFCASE
+	btn_talk.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_talk.custom_minimum_size = Vector2(190, 44)
 	btn_talk.add_theme_font_size_override("font_size", 14)
 	btn_talk.add_theme_color_override("font_color", Color(0.80, 0.90, 0.50, 1))
@@ -718,6 +743,7 @@ func _persuasion_result(box: VBoxContainer, p: Player, offer: Dictionary,
 
 	if success:
 		lbl_main.text = "✔  %s ha decidido quedarse en el club." % p.full_name
+		lbl_main.text = "%s ha decidido quedarse en el club." % p.full_name
 		lbl_main.add_theme_color_override("font_color", Color(0.30, 0.95, 0.50, 1))
 		if is_raise:
 			lbl_sub.text = "Firma el nuevo contrato a %s/sem. La oferta del club rival queda rechazada." % _fmt_money(new_salary)
@@ -725,7 +751,7 @@ func _persuasion_result(box: VBoxContainer, p: Player, offer: Dictionary,
 			lbl_sub.text = "La charla ha surtido efecto. La moral del jugador mejora y rechaza la oferta."
 		lbl_sub.add_theme_color_override("font_color", Color(0.65, 0.88, 0.65, 1))
 	else:
-		lbl_main.text = "✗  La charla no ha convencido a %s." % p.full_name
+		lbl_main.text = "La charla no ha convencido a %s." % p.full_name
 		lbl_main.add_theme_color_override("font_color", Color(1.0, 0.35, 0.30, 1))
 		lbl_sub.text = "El jugador sigue considerando la oferta. Intenta mejorar su sueldo o acepta su salida."
 		lbl_sub.add_theme_color_override("font_color", Color(0.80, 0.55, 0.55, 1))
@@ -850,7 +876,7 @@ func _open_retention_dialog(p: Player, offer: Dictionary) -> void:
 	panel.add_child(outer_vb)
 
 	_build_renewal_header(outer_vb, p,
-		"⚠  %s quiere irse. Ofrécele mejores condiciones para que se quede." % p.full_name)
+		"%s quiere irse. Ofrécele mejores condiciones para que se quede." % p.full_name)
 
 	var content_vb := VBoxContainer.new()
 	content_vb.add_theme_constant_override("separation", 12)
@@ -860,7 +886,7 @@ func _open_retention_dialog(p: Player, offer: Dictionary) -> void:
 
 func _build_renewal_header(vb: VBoxContainer, p: Player, subtitle: String) -> void:
 	var ttl := Label.new()
-	ttl.text = "🤝  Negociación — %s" % p.full_name
+	ttl.text = "Negociación — %s" % p.full_name
 	ttl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ttl.add_theme_font_size_override("font_size", 18)
 	ttl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
@@ -950,7 +976,9 @@ func _retention_proposal_phase(box: VBoxContainer, p: Player, offer: Dictionary)
 	btn_row.add_child(btn_close)
 
 	var btn_propose := Button.new()
-	btn_propose.text = "💬  Proponer condiciones"
+	btn_propose.text = "Proponer condiciones"
+	btn_propose.icon = ICON_BRIEFCASE
+	btn_propose.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_propose.custom_minimum_size = Vector2(210, 44)
 	btn_propose.add_theme_font_size_override("font_size", 15)
 	btn_propose.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
@@ -1006,19 +1034,19 @@ func _retention_response_phase(box: VBoxContainer, p: Player, resp: Dictionary,
 
 	match verdict:
 		"accept":
-			lbl_main.text = "✔  %s decide quedarse en el club." % p.full_name
+			lbl_main.text = "%s decide quedarse en el club." % p.full_name
 			lbl_main.add_theme_color_override("font_color", Color(0.30, 0.95, 0.50, 1))
 			lbl_sub.text = "La oferta de cláusula será rechazada. Nuevo contrato: %d año%s · %s/sem" % [
 				offered_years, "s" if offered_years != 1 else "", _fmt_money(offered_salary)]
 			lbl_sub.add_theme_color_override("font_color", Color(0.65, 0.88, 0.65, 1))
 		"counter":
-			lbl_main.text = "🤔  %s considera la oferta, pero quiere más." % p.full_name
+			lbl_main.text = "%s considera la oferta, pero quiere más." % p.full_name
 			lbl_main.add_theme_color_override("font_color", Color(1.0, 0.80, 0.30, 1))
 			lbl_sub.text = "Para quedarse exige: %d año%s · %s/sem" % [
 				desired_years, "s" if desired_years != 1 else "", _fmt_money(desired_salary)]
 			lbl_sub.add_theme_color_override("font_color", Color(0.90, 0.75, 0.50, 1))
 		"reject", "walkout":
-			lbl_main.text = "🔴  %s prefiere marcharse al %s." % [p.full_name,
+			lbl_main.text = "%s prefiere marcharse al %s." % [p.full_name,
 				(GameManager.get_team(offer["buyer_id"]).name if GameManager.get_team(offer["buyer_id"]) else "club comprador")]
 			lbl_main.add_theme_color_override("font_color", Color(1.0, 0.35, 0.30, 1))
 			lbl_sub.text = "No es posible retenerle. Puedes confirmar la venta o dejar caducar la oferta."
@@ -1163,7 +1191,9 @@ func _renewal_proposal_phase(box: VBoxContainer, p: Player) -> void:
 	btn_row.add_child(btn_close)
 
 	var btn_propose := Button.new()
-	btn_propose.text = "💬  Proponer condiciones"
+	btn_propose.text = "Proponer condiciones"
+	btn_propose.icon = ICON_BRIEFCASE
+	btn_propose.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_propose.custom_minimum_size = Vector2(210, 44)
 	btn_propose.add_theme_font_size_override("font_size", 15)
 	btn_propose.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))
@@ -1219,24 +1249,24 @@ func _renewal_response_phase(box: VBoxContainer, p: Player, resp: Dictionary,
 
 	match verdict:
 		"accept":
-			lbl_main.text = "✔  %s acepta las condiciones." % p.full_name
+			lbl_main.text = "%s acepta las condiciones." % p.full_name
 			lbl_main.add_theme_color_override("font_color", Color(0.30, 0.95, 0.50, 1))
 			lbl_sub.text = "Nuevo contrato: %d año%s · %s/semana" % [
 				offered_years, "s" if offered_years != 1 else "", _fmt_money(offered_salary)]
 			lbl_sub.add_theme_color_override("font_color", Color(0.65, 0.88, 0.65, 1))
 		"counter":
-			lbl_main.text = "🤔  %s quiere negociar otros términos." % p.full_name
+			lbl_main.text = "%s quiere negociar otros términos." % p.full_name
 			lbl_main.add_theme_color_override("font_color", Color(1.0, 0.80, 0.30, 1))
 			lbl_sub.text = "Contraoferta: %d año%s · %s/semana" % [
 				desired_years, "s" if desired_years != 1 else "", _fmt_money(desired_salary)]
 			lbl_sub.add_theme_color_override("font_color", Color(0.90, 0.75, 0.50, 1))
 		"reject":
-			lbl_main.text = "✗  %s rechaza la propuesta." % p.full_name
+			lbl_main.text = "%s rechaza la propuesta." % p.full_name
 			lbl_main.add_theme_color_override("font_color", Color(1.0, 0.35, 0.30, 1))
 			lbl_sub.text = "El jugador esperaba al menos %s/semana." % _fmt_money(desired_salary)
 			lbl_sub.add_theme_color_override("font_color", Color(0.80, 0.55, 0.55, 1))
 		"walkout":
-			lbl_main.text = "🔴  %s ha roto las negociaciones." % p.full_name
+			lbl_main.text = "%s ha roto las negociaciones." % p.full_name
 			lbl_main.add_theme_font_size_override("font_size", 16)
 			lbl_main.add_theme_color_override("font_color", Color(1.0, 0.22, 0.18, 1))
 			lbl_sub.text = "El jugador ha pedido expresamente ser traspasado. Se ha puesto en venta de forma automática."

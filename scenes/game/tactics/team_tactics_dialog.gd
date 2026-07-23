@@ -3,6 +3,8 @@ class_name TeamTacticsDialog
 
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_GOAL := preload("res://assets/ui/icons/goal.png")
+const ICON_LOCK := preload("res://assets/ui/icons/lock.png")
 const ICON_SIZE_ACTION := 20
 
 ## Diálogo de tácticas de equipo (ataque + defensa).
@@ -110,7 +112,7 @@ func _build_ui() -> void:
 	# ── ATAQUE ───────────────────────────────────────────────────────────────
 	var atk_panel := _colored_section(vbox, Color.html("1c4f8c"))
 
-	atk_panel.add_child(_section_title("⚔  ATAQUE"))
+	atk_panel.add_child(_section_title("ATAQUE", ICON_GOAL))
 
 	# Estilo de juego
 	atk_panel.add_child(_lbl("Estilo de juego:"))
@@ -150,7 +152,7 @@ func _build_ui() -> void:
 	# ── DEFENSA ──────────────────────────────────────────────────────────────
 	var def_panel := _colored_section(vbox, Color.html("4a1c1c"))
 
-	def_panel.add_child(_section_title("🛡  DEFENSA"))
+	def_panel.add_child(_section_title("DEFENSA", ICON_LOCK))
 
 	def_panel.add_child(_lbl("Tipo de entradas:"))
 	var tackle_row := HBoxContainer.new()
@@ -220,12 +222,22 @@ func _colored_section(parent: Control, color: Color) -> VBoxContainer:
 	return inner
 
 
-func _section_title(text: String) -> Label:
+func _section_title(text: String, icon_tex: Texture2D = null) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(18, 18)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", 18)
 	l.add_theme_color_override("font_color", Color(1, 1, 1, 1))
-	return l
+	row.add_child(l)
+	return row
 
 
 func _lbl(text: String) -> Label:
