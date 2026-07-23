@@ -1,6 +1,8 @@
 extends Control
 class_name SponsorsScreen
 
+const ICON_HANDSHAKE := preload("res://assets/ui/icons/handshake.png")
+
 # Patrocinadores disponibles — precio semanal escala con la reputación del equipo
 const SPONSORS: Array[Dictionary] = [
 	{"id": 1, "name": "SportMax",    "sector": "Equipación deportiva",
@@ -49,14 +51,23 @@ func _build_ui() -> void:
 	header.custom_minimum_size = Vector2(0, 70)
 	root.add_child(header)
 
+	var title_row := HBoxContainer.new()
+	title_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 10)
+	header.add_child(title_row)
+	var title_icon := TextureRect.new()
+	title_icon.texture = ICON_HANDSHAKE
+	title_icon.custom_minimum_size = Vector2(24, 24)
+	title_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_row.add_child(title_icon)
 	var title_lbl := Label.new()
-	title_lbl.text = "🤝  PATROCINADORES"
-	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	title_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_lbl.text = "PATROCINADORES"
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", Color.WHITE)
-	header.add_child(title_lbl)
+	title_row.add_child(title_lbl)
 
 	var team := GameManager.get_player_team()
 	root.add_child(_make_info_bar(team))

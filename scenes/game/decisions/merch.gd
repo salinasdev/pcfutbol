@@ -1,6 +1,8 @@
 extends Control
 class_name MerchScreen
 
+const ICON_STORE := preload("res://assets/ui/icons/store.png")
+
 # Coste por tienda extra y su ingreso semanal adicional
 const STORE_COST:   int = 500_000
 const STORE_INCOME: int = 25_000
@@ -26,14 +28,23 @@ func _build_ui() -> void:
 	header.custom_minimum_size = Vector2(0, 70)
 	root.add_child(header)
 
+	var title_row := HBoxContainer.new()
+	title_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	title_row.add_theme_constant_override("separation", 10)
+	header.add_child(title_row)
+	var title_icon := TextureRect.new()
+	title_icon.texture = ICON_STORE
+	title_icon.custom_minimum_size = Vector2(24, 24)
+	title_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_row.add_child(title_icon)
 	var title_lbl := Label.new()
-	title_lbl.text = "🏪  MERCHANDISING"
-	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	title_lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	title_lbl.text = "MERCHANDISING"
+	title_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title_lbl.add_theme_font_size_override("font_size", 24)
 	title_lbl.add_theme_color_override("font_color", Color.WHITE)
-	header.add_child(title_lbl)
+	title_row.add_child(title_lbl)
 
 	# Contenido con scroll
 	var scroll := ScrollContainer.new()

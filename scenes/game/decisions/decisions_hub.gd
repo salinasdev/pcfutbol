@@ -1,6 +1,11 @@
 extends Control
 class_name DecisionsHub
 
+const ICON_BOARD := preload("res://assets/ui/icons/goal.png")
+const ICON_TV := preload("res://assets/ui/icons/tv.png")
+const ICON_STORE := preload("res://assets/ui/icons/store.png")
+const ICON_HANDSHAKE := preload("res://assets/ui/icons/handshake.png")
+
 func _ready() -> void:
 	_build_ui()
 
@@ -48,18 +53,22 @@ func _build_ui() -> void:
 	margin.add_child(vbox)
 
 	var items: Array[Dictionary] = [
-		{"label": "⚽ Junta Directiva",  "desc": "Objetivos de temporada, confianza de la junta y bonus de rendimiento.",
+		{"label": "Junta Directiva",  "desc": "Objetivos de temporada, confianza de la junta y bonus de rendimiento.",
+		 "icon": ICON_BOARD,
 		 "scene": "res://scenes/game/decisions/board.tscn",              "color": Color(0.20, 0.35, 0.55)},
-		{"label": "📺 Ofertas de TV",    "desc": "Negocia contratos televisivos y asegura ingresos semanales.",
+		{"label": "Ofertas de TV",    "desc": "Negocia contratos televisivos y asegura ingresos semanales.",
+		 "icon": ICON_TV,
 		 "scene": "res://scenes/game/decisions/tv_deals.tscn",           "color": Color(0.18, 0.40, 0.30)},
-		{"label": "🏪 Merchandising",    "desc": "Abre nuevas tiendas del club y aumenta los ingresos de merchandising.",
+		{"label": "Merchandising",    "desc": "Abre nuevas tiendas del club y aumenta los ingresos de merchandising.",
+		 "icon": ICON_STORE,
 		 "scene": "res://scenes/game/decisions/merch.tscn",              "color": Color(0.45, 0.28, 0.10)},
-		{"label": "🤝 Patrocinadores",   "desc": "Firma acuerdos de patrocinio con marcas para obtener ingresos regulares.",
+		{"label": "Patrocinadores",   "desc": "Firma acuerdos de patrocinio con marcas para obtener ingresos regulares.",
+		 "icon": ICON_HANDSHAKE,
 		 "scene": "res://scenes/game/decisions/sponsors.tscn",           "color": Color(0.38, 0.18, 0.42)},
 	]
 
 	for item in items:
-		vbox.add_child(_make_card(item["label"], item["desc"], item["scene"], item["color"]))
+		vbox.add_child(_make_card(item["label"], item["desc"], item["scene"], item["color"], item["icon"]))
 
 	# Botón volver
 	var footer := MarginContainer.new()
@@ -76,7 +85,7 @@ func _build_ui() -> void:
 	footer.add_child(btn_back)
 
 
-func _make_card(label: String, desc: String, scene: String, accent: Color) -> PanelContainer:
+func _make_card(label: String, desc: String, scene: String, accent: Color, icon_tex: Texture2D) -> PanelContainer:
 	var card := PanelContainer.new()
 	var style := StyleBoxFlat.new()
 	style.bg_color       = Color(0.13, 0.16, 0.22)
@@ -106,11 +115,22 @@ func _make_card(label: String, desc: String, scene: String, accent: Color) -> Pa
 	texts.add_theme_constant_override("separation", 4)
 	pad.add_child(texts)
 
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(22, 22)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		title_row.add_child(icon)
+	texts.add_child(title_row)
+
 	var lbl := Label.new()
 	lbl.text = label
 	lbl.add_theme_font_size_override("font_size", 18)
 	lbl.add_theme_color_override("font_color", Color.WHITE)
-	texts.add_child(lbl)
+	title_row.add_child(lbl)
 
 	var desc_lbl := Label.new()
 	desc_lbl.text = desc

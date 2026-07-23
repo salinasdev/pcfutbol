@@ -5,6 +5,10 @@ const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
 const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
+const ICON_EXPENSE := preload("res://assets/ui/icons/warning.png")
+const ICON_BANK := preload("res://assets/ui/icons/bank.png")
+const ICON_CHART := preload("res://assets/ui/icons/chart.png")
+const ICON_SEARCH := preload("res://assets/ui/icons/search.png")
 const ICON_SIZE_NAV := 28
 const ICON_SIZE_ACTION := 20
 
@@ -133,7 +137,7 @@ func _build_ui() -> void:
 	col_exp_m.add_child(col_exp)
 	summary_hbox.add_child(col_exp_m)
 
-	col_exp.add_child(_section_title("📤  Gastos semanales estimados"))
+	col_exp.add_child(_section_title_with_icon("Gastos semanales estimados", ICON_EXPENSE))
 	col_exp.add_child(_sub("Masa salarial de la plantilla"))
 	_lbl_wages = Label.new()
 	_lbl_wages.add_theme_font_size_override("font_size", 17)
@@ -164,7 +168,7 @@ func _build_ui() -> void:
 	col_loan_m.add_child(col_loan)
 	summary_hbox.add_child(col_loan_m)
 
-	col_loan.add_child(_section_title("🏦  Préstamo bancario"))
+	col_loan.add_child(_section_title_with_icon("Préstamo bancario", ICON_BANK))
 	_lbl_loan_info = Label.new()
 	_lbl_loan_info.add_theme_font_size_override("font_size", 15)
 	_lbl_loan_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -193,7 +197,7 @@ func _build_ui() -> void:
 	hist_vbox.add_theme_constant_override("separation", 6)
 	hist_m.add_child(hist_vbox)
 
-	hist_vbox.add_child(_section_title("📊  Historial financiero"))
+	hist_vbox.add_child(_section_title_with_icon("Historial financiero", ICON_CHART))
 
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -441,12 +445,22 @@ func _make_overlay() -> Control:
 	return ov
 
 
-func _section_title(text: String) -> Label:
+func _section_title_with_icon(text: String, icon_tex: Texture2D) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(20, 20)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
 	var l := Label.new()
 	l.text = text
 	l.add_theme_font_size_override("font_size", 17)
 	l.add_theme_color_override("font_color", Color(0.85, 0.80, 0.45, 1))
-	return l
+	row.add_child(l)
+	return row
 
 
 func _sub(text: String) -> Label:
@@ -521,10 +535,11 @@ func _hist_row(entry: Dictionary) -> Control:
 
 	# Botón detalle
 	var btn_detail := Button.new()
-	btn_detail.text = "🔍"
+	btn_detail.text = ""
+	btn_detail.icon = ICON_SEARCH
+	btn_detail.add_theme_constant_override("icon_max_width", 18)
 	btn_detail.flat = true
 	btn_detail.custom_minimum_size = Vector2(32, 0)
-	btn_detail.add_theme_font_size_override("font_size", 14)
 	btn_detail.pressed.connect(func(): _show_entry_detail(entry))
 	row.add_child(btn_detail)
 
@@ -559,20 +574,11 @@ func _show_entry_detail(entry: Dictionary) -> void:
 	panel.add_child(vb)
 
 	# Título
-	var ttl := Label.new()
-	ttl.text = "📊  Semana %d — Desglose financiero" % entry.get("week", 0)
-	ttl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ttl.add_theme_font_size_override("font_size", 19)
-	ttl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
-	vb.add_child(ttl)
+	vb.add_child(_section_title_with_icon("Semana %d — Desglose financiero" % entry.get("week", 0), ICON_CHART))
 	vb.add_child(HSeparator.new())
 
 	# ── INGRESOS ──
-	var inc_title := Label.new()
-	inc_title.text = "📥  INGRESOS"
-	inc_title.add_theme_font_size_override("font_size", 15)
-	inc_title.add_theme_color_override("font_color", Color(0.35, 0.90, 0.50, 1))
-	vb.add_child(inc_title)
+	vb.add_child(_section_title_with_icon("INGRESOS", ICON_MONEY))
 
 	var tv: int = entry.get("tv_income", 0)
 	var ltv: int = entry.get("league_tv", 0)
@@ -599,11 +605,7 @@ func _show_entry_detail(entry: Dictionary) -> void:
 	vb.add_child(HSeparator.new())
 
 	# ── GASTOS ──
-	var exp_title := Label.new()
-	exp_title.text = "📤  GASTOS"
-	exp_title.add_theme_font_size_override("font_size", 15)
-	exp_title.add_theme_color_override("font_color", Color(0.90, 0.40, 0.30, 1))
-	vb.add_child(exp_title)
+	vb.add_child(_section_title_with_icon("GASTOS", ICON_EXPENSE))
 
 	var wa: int = entry.get("wages", 0)
 	var sc: int = entry.get("staff_cost", 0)

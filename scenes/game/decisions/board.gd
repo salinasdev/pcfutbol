@@ -3,6 +3,10 @@ class_name BoardScreen
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
+const ICON_GOAL := preload("res://assets/ui/icons/goal.png")
+const ICON_TROPHY := preload("res://assets/ui/icons/trophy.png")
+const ICON_MANAGER := preload("res://assets/ui/icons/briefcase.png")
+const ICON_CLIPBOARD := preload("res://assets/ui/icons/chart.png")
 const ICON_SIZE_NAV := 28
 
 ## Pantalla "Junta Directiva": métricas del mánager y propuesta de primas.
@@ -60,9 +64,9 @@ func _rebuild_bonus_table() -> void:
 		_bonus_table.add_child(lbl)
 	else:
 		if GameManager.bonus_win > 0:
-			_bonus_table.add_child(_bonus_row("⚽  Por victoria", GameManager.bonus_win))
+			_bonus_table.add_child(_bonus_row("Por victoria", GameManager.bonus_win, ICON_GOAL))
 		if GameManager.bonus_title > 0:
-			_bonus_table.add_child(_bonus_row("🏆  Por título", GameManager.bonus_title))
+			_bonus_table.add_child(_bonus_row("Por título", GameManager.bonus_title, ICON_TROPHY))
 
 	# Historial (últimas 6 entradas)
 	if not GameManager.bonus_history.is_empty():
@@ -85,9 +89,16 @@ func _rebuild_bonus_table() -> void:
 			_bonus_table.add_child(row_lbl)
 
 
-func _bonus_row(label_txt: String, amount: int) -> HBoxContainer:
+func _bonus_row(label_txt: String, amount: int, icon_tex: Texture2D = null) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(18, 18)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
 	var lbl := Label.new()
 	lbl.text = label_txt
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -181,11 +192,20 @@ func _build_ui() -> void:
 	left_margin.add_child(left)
 
 	# Nombre del mánager
+	var name_header_row := HBoxContainer.new()
+	name_header_row.add_theme_constant_override("separation", 6)
+	left.add_child(name_header_row)
+	var name_icon := TextureRect.new()
+	name_icon.texture = ICON_MANAGER
+	name_icon.custom_minimum_size = Vector2(16, 16)
+	name_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	name_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	name_header_row.add_child(name_icon)
 	var name_header := Label.new()
-	name_header.text = "👤  Mánager"
+	name_header.text = "Mánager"
 	name_header.add_theme_font_size_override("font_size", 13)
 	name_header.add_theme_color_override("font_color", Color(0.55, 0.60, 0.65, 1))
-	left.add_child(name_header)
+	name_header_row.add_child(name_header)
 
 	_lbl_name = Label.new()
 	_lbl_name.add_theme_font_size_override("font_size", 22)
@@ -296,11 +316,20 @@ func _build_ui() -> void:
 	right.add_theme_constant_override("separation", 12)
 	right_margin.add_child(right)
 
+	var right_title_row := HBoxContainer.new()
+	right_title_row.add_theme_constant_override("separation", 8)
+	right.add_child(right_title_row)
+	var right_title_icon := TextureRect.new()
+	right_title_icon.texture = ICON_CLIPBOARD
+	right_title_icon.custom_minimum_size = Vector2(20, 20)
+	right_title_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	right_title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	right_title_row.add_child(right_title_icon)
 	var right_title := Label.new()
-	right_title.text = "📋  Primas Vigentes"
+	right_title.text = "Primas Vigentes"
 	right_title.add_theme_font_size_override("font_size", 19)
 	right_title.add_theme_color_override("font_color", Color(0.90, 0.80, 0.30, 1))
-	right.add_child(right_title)
+	right_title_row.add_child(right_title)
 
 	right.add_child(HSeparator.new())
 
