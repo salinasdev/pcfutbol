@@ -4,6 +4,7 @@ class_name CashScreen
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
 const ICON_SIZE_NAV := 28
 const ICON_SIZE_ACTION := 20
 
@@ -58,14 +59,24 @@ func _build_ui() -> void:
 	btn_back.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	topbar.add_child(btn_back)
 
+	var title_wrap := CenterContainer.new()
+	title_wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	topbar.add_child(title_wrap)
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 8)
+	title_wrap.add_child(title_row)
+	var title_icon := TextureRect.new()
+	title_icon.texture = ICON_MONEY
+	title_icon.custom_minimum_size = Vector2(26, 26)
+	title_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	title_row.add_child(title_icon)
 	var title := Label.new()
-	title.text = "💰  Caja del Club"
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text = "Caja del Club"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
-	topbar.add_child(title)
+	title_row.add_child(title)
 
 	var top_spacer := Control.new()
 	top_spacer.custom_minimum_size = Vector2(64, 0)
@@ -616,8 +627,13 @@ func _show_entry_detail(entry: Dictionary) -> void:
 	var bal: int = entry.get("balance", 0)
 	var net: int = total_income - total_expenses
 	var saldo_row := HBoxContainer.new()
+	var saldo_icon := TextureRect.new()
+	saldo_icon.texture = ICON_MONEY
+	saldo_icon.custom_minimum_size = Vector2(18, 18)
+	saldo_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	saldo_row.add_child(saldo_icon)
 	var saldo_lbl := Label.new()
-	saldo_lbl.text = "💰  Saldo al final de la semana"
+	saldo_lbl.text = "Saldo al final de la semana"
 	saldo_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	saldo_lbl.add_theme_font_size_override("font_size", 15)
 	saldo_row.add_child(saldo_lbl)

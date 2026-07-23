@@ -3,6 +3,7 @@ extends Control
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
 const ICON_SIZE_NAV := 28
 const ICON_SIZE_ACTION := 20
 
@@ -674,7 +675,9 @@ func _persuasion_phase(box: VBoxContainer, p: Player, offer: Dictionary) -> void
 	btn_row.add_child(btn_talk)
 
 	var btn_raise := Button.new()
-	btn_raise.text = "💰 Mejorar contrato"
+	btn_raise.text = "Mejorar contrato"
+	btn_raise.icon = ICON_MONEY
+	btn_raise.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_raise.custom_minimum_size = Vector2(175, 44)
 	btn_raise.add_theme_font_size_override("font_size", 14)
 	btn_raise.add_theme_color_override("font_color", Color(0.35, 0.82, 0.98, 1))

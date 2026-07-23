@@ -1,6 +1,9 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_GOAL := preload("res://assets/ui/icons/goal.png")
+const ICON_YELLOW := preload("res://assets/ui/icons/yellow-card.png")
+const ICON_RED := preload("res://assets/ui/icons/red-card.png")
 const ICON_SIZE_NAV := 28
 
 # Colores estilo PC Fútbol 6.0
@@ -107,22 +110,22 @@ func _make_stats_block(league: League) -> Control:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 8)
 
-	hbox.add_child(_make_ranking_panel("⚽  Goleadores", scorers,
+	hbox.add_child(_make_ranking_panel("Goleadores", scorers,
 		func(p: Player) -> String: return str(p.season_goals),
-		Color(0.30, 0.80, 0.35, 1)))
+		Color(0.30, 0.80, 0.35, 1), ICON_GOAL))
 
-	hbox.add_child(_make_ranking_panel("🟨  Tarjetas amarillas", yellows,
+	hbox.add_child(_make_ranking_panel("Tarjetas amarillas", yellows,
 		func(p: Player) -> String: return str(p.yellow_cards),
-		Color(0.92, 0.80, 0.10, 1)))
+		Color(0.92, 0.80, 0.10, 1), ICON_YELLOW))
 
-	hbox.add_child(_make_ranking_panel("🟥  Tarjetas rojas", reds,
+	hbox.add_child(_make_ranking_panel("Tarjetas rojas", reds,
 		func(p: Player) -> String: return str(p.season_reds),
-		Color(0.88, 0.20, 0.20, 1)))
+		Color(0.88, 0.20, 0.20, 1), ICON_RED))
 
 	return hbox
 
 
-func _make_ranking_panel(title: String, players: Array, value_fn: Callable, accent: Color) -> Control:
+func _make_ranking_panel(title: String, players: Array, value_fn: Callable, accent: Color, icon_tex: Texture2D = null) -> Control:
 	var panel := PanelContainer.new()
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sb := StyleBoxFlat.new()
@@ -137,12 +140,21 @@ func _make_ranking_panel(title: String, players: Array, value_fn: Callable, acce
 	vbox.add_theme_constant_override("separation", 3)
 	panel.add_child(vbox)
 
-	# Título
+	# Título con icono
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 6)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(16, 16)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		title_row.add_child(icon)
 	var lbl_title := Label.new()
 	lbl_title.text = title
 	lbl_title.add_theme_font_size_override("font_size", 13)
 	lbl_title.add_theme_color_override("font_color", accent)
-	vbox.add_child(lbl_title)
+	title_row.add_child(lbl_title)
+	vbox.add_child(title_row)
 
 	vbox.add_child(HSeparator.new())
 

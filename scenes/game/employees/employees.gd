@@ -4,6 +4,7 @@ class_name EmployeesScreen
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
+const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
 const ICON_SIZE_NAV := 28
 const ICON_SIZE_ACTION := 20
 
@@ -95,6 +96,12 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
 	topbar.add_child(title)
+
+	var cash_icon := TextureRect.new()
+	cash_icon.texture = ICON_MONEY
+	cash_icon.custom_minimum_size = Vector2(18, 18)
+	cash_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	topbar.add_child(cash_icon)
 
 	_cash_lbl = Label.new()
 	_cash_lbl.custom_minimum_size = Vector2(200, 0)
@@ -254,7 +261,7 @@ func _refresh_card(staff_id: String) -> void:
 
 func _refresh_cash() -> void:
 	if _cash_lbl != null and _team != null:
-		_cash_lbl.text = "💰 %s €" % _fmt(_team.club_cash)
+		_cash_lbl.text = "%s €" % _fmt(_team.club_cash)
 
 
 # ────────────────────────────────────────────────────────────────────────────

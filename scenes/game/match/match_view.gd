@@ -3,6 +3,9 @@ extends Control
 ## Velocidades de reproducción (segundos reales por minuto de partido)
 const SPEED_NORMAL := 0.55
 const SPEED_FAST   := 0.12
+const ICON_GOAL := preload("res://assets/ui/icons/goal.png")
+const ICON_YELLOW := preload("res://assets/ui/icons/yellow-card.png")
+const ICON_RED := preload("res://assets/ui/icons/red-card.png")
 
 ## Fixture que se está jugando (pasado desde el calendario via GameManager)
 var fixture: Dictionary = {}
@@ -287,10 +290,23 @@ func _update_stats() -> void:
 
 
 func _add_commentary(text: String, type: MatchEngine.EventType) -> void:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_BEGIN
+	row.add_theme_constant_override("separation", 8)
+
+	var icon_tex := _event_icon_texture(type)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(20, 20)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
+
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.add_theme_font_size_override("font_size", 16)
 	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	match type:
 		MatchEngine.EventType.GOAL:
@@ -303,11 +319,24 @@ func _add_commentary(text: String, type: MatchEngine.EventType) -> void:
 			lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.5, 1))
 		_:
 			lbl.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8, 1))
+	row.add_child(lbl)
 
 	var list: VBoxContainer = %CommentaryList
 	# Insertar al inicio para que el más reciente quede arriba
-	list.add_child(lbl)
-	list.move_child(lbl, 0)
+	list.add_child(row)
+	list.move_child(row, 0)
+
+
+func _event_icon_texture(type: MatchEngine.EventType) -> Texture2D:
+	match type:
+		MatchEngine.EventType.GOAL:
+			return ICON_GOAL
+		MatchEngine.EventType.YELLOW_CARD:
+			return ICON_YELLOW
+		MatchEngine.EventType.RED_CARD:
+			return ICON_RED
+		_:
+			return null
 
 
 func _get_fixture_league() -> League:

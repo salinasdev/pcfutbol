@@ -2,6 +2,7 @@ extends Control
 class_name BoardScreen
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
 const ICON_SIZE_NAV := 28
 
 ## Pantalla "Junta Directiva": métricas del mánager y propuesta de primas.
@@ -212,11 +213,19 @@ func _build_ui() -> void:
 	left.add_child(HSeparator.new())
 
 	# Sección Primas
+	var primas_row := HBoxContainer.new()
+	primas_row.add_theme_constant_override("separation", 8)
+	left.add_child(primas_row)
+	var primas_icon := TextureRect.new()
+	primas_icon.texture = ICON_MONEY
+	primas_icon.custom_minimum_size = Vector2(20, 20)
+	primas_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	primas_row.add_child(primas_icon)
 	var primas_title := Label.new()
-	primas_title.text = "💰  Proponer Primas"
+	primas_title.text = "Proponer Primas"
 	primas_title.add_theme_font_size_override("font_size", 19)
 	primas_title.add_theme_color_override("font_color", Color(0.90, 0.80, 0.30, 1))
-	left.add_child(primas_title)
+	primas_row.add_child(primas_title)
 
 	# Prima por victoria
 	var win_row := HBoxContainer.new()
