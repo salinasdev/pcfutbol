@@ -139,13 +139,13 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 	var derby_name: String = NewsManager.get_derby_name(
 		home.name if home else "", away.name if away else "")
 	if derby_name != "":
-		msgs.append("🔥 ¡DERBI! — %s vs %s. La directiva y la afición exigen la victoria. ¡Los jugadores están motivados!" % [
+		msgs.append("DERBI: %s vs %s. La directiva y la afición exigen la victoria. ¡Los jugadores están motivados!" % [
 			home.short_name if home else "Local",
 			away.short_name if away else "Visitante"])
-	msgs.append("⚽ Jornada %d — Los rivales ya han jugado. ¡Te toca!" % fixture.get("matchday", 0))
+	msgs.append("Jornada %d — Los rivales ya han jugado. ¡Te toca!" % fixture.get("matchday", 0))
 	var suspended_names := _get_suspended_in_lineup()
 	if not suspended_names.is_empty():
-		msgs.append("⚠️ Sancionados en el once: %s — Ve a Tácticas y cámbialos antes de jugar." % ", ".join(suspended_names))
+		msgs.append("Sancionados en el once: %s — Ve a Tácticas y cámbialos antes de jugar." % ", ".join(suspended_names))
 	_set_notices(msgs)
 
 
@@ -303,10 +303,10 @@ func _on_incoming_offer(offer: Dictionary) -> void:
 		return
 	var msg: String
 	if offer.get("is_clause", false):
-		msg = "🔔 %s ha activado la cláusula de rescisión de %s (%s). ¡Revisa Plantilla!" % [
+		msg = "%s ha activado la cláusula de rescisión de %s (%s). ¡Revisa Plantilla!" % [
 			buyer.name, p.full_name, _fmt_short(offer["offer_money"])]
 	else:
-		msg = "🔔 %s ha hecho una oferta por %s. ¡Revisa la sección Plantilla!" % [buyer.name, p.full_name]
+		msg = "%s ha hecho una oferta por %s. ¡Revisa la sección Plantilla!" % [buyer.name, p.full_name]
 	_set_notice(msg)
 	_refresh_squad_badge()
 

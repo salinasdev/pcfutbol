@@ -13,10 +13,10 @@ const STATUS_COLOR := {
 	"countered":Color(1.00, 0.60, 0.10, 1),
 }
 const STATUS_LABEL := {
-	"pending":   "⏳ Pendiente",
-	"accepted":  "✅ Aceptada",
-	"rejected":  "❌ Rechazada",
-	"countered": "🔄 Contraoferta",
+	"pending":   "Pendiente",
+	"accepted":  "Aceptada",
+	"rejected":  "Rechazada",
+	"countered": "Contraoferta",
 }
 
 var _list: VBoxContainer

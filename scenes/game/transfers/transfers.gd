@@ -106,7 +106,7 @@ func _make_player_row(p: Player, my_team: Team) -> Control:
 	lbl_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl_name.add_theme_font_size_override("font_size", 16)
 	var lbl_club := Label.new()
-	lbl_club.text = seller_short + ("  📋" if p.transfer_listed else "")
+	lbl_club.text = seller_short + ("  | En venta" if p.transfer_listed else "")
 	lbl_club.add_theme_font_size_override("font_size", 12)
 	lbl_club.add_theme_color_override("font_color", Color(0.6, 0.8, 0.6, 1))
 	name_vbox.add_child(lbl_name)
@@ -175,9 +175,9 @@ func _on_offer_submitted(data: Dictionary) -> void:
 		return
 	var oid: int = TransferManager.place_offer(my_team, data)
 	if oid >= 0:
-		_set_status("✔ Oferta enviada. El club responderá en breve.", true)
+		_set_status("Oferta enviada. El club responderá en breve.", true)
 	else:
-		_set_status("✘ No se pudo enviar la oferta.", false)
+		_set_status("No se pudo enviar la oferta.", false)
 	_offer_player = null
 
 
@@ -187,11 +187,11 @@ func _on_offer_submitted(data: Dictionary) -> void:
 func _on_transfer_done(player: Player, _from: Team, _to: Team, fee: int) -> void:
 	_refresh_budget()
 	_refresh_list()
-	_set_status("✔ %s fichado por %s €" % [player.full_name, _fmt(fee)], true)
+	_set_status("%s fichado por %s €" % [player.full_name, _fmt(fee)], true)
 
 
 func _on_transfer_rejected(_player: Player, reason: String) -> void:
-	_set_status("✘ " + reason, false)
+	_set_status(reason, false)
 
 
 # ---------------------------------------------------------------------------

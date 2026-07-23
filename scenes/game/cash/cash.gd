@@ -298,7 +298,7 @@ func _open_loan_dialog() -> void:
 	panel.add_child(vb)
 
 	var ttl := Label.new()
-	ttl.text = "🏦  Solicitar Préstamo Bancario"
+	ttl.text = "Solicitar Préstamo Bancario"
 	ttl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	ttl.add_theme_font_size_override("font_size", 20)
 	ttl.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
@@ -422,7 +422,7 @@ func _open_loan_dialog() -> void:
 		_team.loan_amount         = amount
 		_team.loan_weekly_payment = weekly_pay
 		_team.loan_weeks_left     = weeks
-		result_lbl.text = "✔ Préstamo de %s € concedido. Cuota semanal: %s €" % [_fmt(amount), _fmt(weekly_pay)]
+		result_lbl.text = "Préstamo de %s € concedido. Cuota semanal: %s €" % [_fmt(amount), _fmt(weekly_pay)]
 		result_lbl.add_theme_color_override("font_color", Color(0.25, 0.90, 0.40, 1))
 		btn_confirm.disabled = true
 		_refresh()

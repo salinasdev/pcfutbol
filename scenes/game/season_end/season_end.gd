@@ -30,7 +30,7 @@ func _build_content() -> void:
 	for league: League in GameManager.leagues.values():
 		# --- Título de liga ---
 		var lbl_league := Label.new()
-		lbl_league.text = "🏆 %s — Temporada %d" % [league.name, GameManager.season]
+		lbl_league.text = "%s — Temporada %d" % [league.name, GameManager.season]
 		lbl_league.add_theme_font_size_override("font_size", 20)
 		lbl_league.add_theme_color_override("font_color", Color(1.0, 0.85, 0.1, 1))
 		content.add_child(lbl_league)
@@ -93,7 +93,7 @@ func _make_standing_row(team: Team, pos: int, total: int, is_player: bool, _pt: 
 	# Nombre
 	var lbl_name := Label.new()
 	lbl_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lbl_name.text = ("★ " if is_player else "") + team.name
+	lbl_name.text = ("[Tu equipo] " if is_player else "") + team.name
 	lbl_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl_name.add_theme_font_size_override("font_size", 17)
 	lbl_name.add_theme_color_override("font_color",
@@ -132,13 +132,13 @@ func _make_player_result(team: Team, standings: Array) -> Control:
 	var result_color: Color
 
 	if pos == 1:
-		result_text = "🏆 ¡CAMPEÓN DE LIGA! Temporada histórica, %s." % GameManager.manager_name
+		result_text = "¡CAMPEÓN DE LIGA! Temporada histórica, %s." % GameManager.manager_name
 		result_color = COLOR_CHAMPION
 	elif pos <= PROMOTION_SPOTS:
-		result_text = "🟢 Clasificado para competición europea. ¡Gran temporada!"
+		result_text = "Clasificado para competición europea. ¡Gran temporada!"
 		result_color = COLOR_PROMOTION
 	elif pos > total - RELEGATION_SPOTS:
-		result_text = "🔴 DESCENSO. El equipo baja de categoría."
+		result_text = "DESCENSO. El equipo baja de categoría."
 		result_color = COLOR_RELEGATION
 	else:
 		result_text = "Temporada finalizada en %dª posición." % pos

@@ -5,6 +5,9 @@ const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_CHECK := preload("res://assets/ui/icons/checkmark-white.png")
 const ICON_CLOSE := preload("res://assets/ui/icons/close-white.png")
 const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
+const ICON_TRAINING := preload("res://assets/ui/icons/training.png")
+const ICON_PEOPLE := preload("res://assets/ui/icons/people.png")
+const ICON_BRIEFCASE := preload("res://assets/ui/icons/briefcase.png")
 const ICON_SIZE_NAV := 28
 const ICON_SIZE_ACTION := 20
 
@@ -136,14 +139,14 @@ func _build_ui() -> void:
 	scroll.add_child(mg)
 
 	# Sección: Segundos Entrenadores
-	content.add_child(_section_title("🎓  Segundos Entrenadores"))
+	content.add_child(_section_title_row("Segundos Entrenadores", ICON_TRAINING))
 	var coach_grid := _make_grid(COACH_DEFS, content)
 	content.add_child(coach_grid)
 
 	content.add_child(HSeparator.new())
 
 	# Sección: Personal de Apoyo
-	content.add_child(_section_title("👥  Personal de Apoyo"))
+	content.add_child(_section_title_row("Personal de Apoyo", ICON_PEOPLE))
 	var staff_grid := _make_grid(STAFF_DEFS, content)
 	content.add_child(staff_grid)
 
@@ -157,7 +160,9 @@ func _build_ui() -> void:
 	root.add_child(btn_row)
 
 	var btn_hire := Button.new()
-	btn_hire.text = "💼  Contratar / Mejorar"
+	btn_hire.text = "Contratar / Mejorar"
+	btn_hire.icon = ICON_BRIEFCASE
+	btn_hire.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	btn_hire.custom_minimum_size = Vector2(240, 56)
 	btn_hire.add_theme_font_size_override("font_size", 18)
 	btn_hire.add_theme_color_override("font_color", Color(0.20, 0.90, 0.50, 1))
@@ -294,7 +299,7 @@ func _open_hire_dialog() -> void:
 	panel.add_child(vb)
 
 	var dlg_title := Label.new()
-	dlg_title.text = "💼  Contratar / Mejorar Personal"
+	dlg_title.text = "Contratar / Mejorar Personal"
 	dlg_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dlg_title.add_theme_font_size_override("font_size", 20)
 	dlg_title.add_theme_color_override("font_color", Color(0.90, 0.85, 0.50, 1))
@@ -558,6 +563,20 @@ func _section_title(text: String) -> Label:
 	l.add_theme_font_size_override("font_size", 18)
 	l.add_theme_color_override("font_color", Color(0.85, 0.80, 0.45, 1))
 	return l
+
+
+func _section_title_row(text: String, icon_tex: Texture2D = null) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	if icon_tex != null:
+		var icon := TextureRect.new()
+		icon.texture = icon_tex
+		icon.custom_minimum_size = Vector2(20, 20)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(icon)
+	row.add_child(_section_title(text))
+	return row
 
 
 func _fmt(n: int) -> String:

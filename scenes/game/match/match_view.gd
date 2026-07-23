@@ -6,6 +6,9 @@ const SPEED_FAST   := 0.12
 const ICON_GOAL := preload("res://assets/ui/icons/goal.png")
 const ICON_YELLOW := preload("res://assets/ui/icons/yellow-card.png")
 const ICON_RED := preload("res://assets/ui/icons/red-card.png")
+const ICON_SPEED_FAST := preload("res://assets/ui/icons/speed-fast.png")
+const ICON_SPEED_NORMAL := preload("res://assets/ui/icons/speed-normal.png")
+const ICON_FIRE := preload("res://assets/ui/icons/fire.png")
 
 ## Fixture que se está jugando (pasado desde el calendario via GameManager)
 var fixture: Dictionary = {}
@@ -56,6 +59,8 @@ func _ready() -> void:
 	%BtnPlayPause.pressed.connect(_on_play_pause)
 	%BtnFast.pressed.connect(_on_fast)
 	%BtnSkip.pressed.connect(_on_skip)
+	%BtnFast.icon = ICON_SPEED_FAST
+	%BtnFast.add_theme_constant_override("icon_max_width", 18)
 
 	_refresh_scoreboard()
 
@@ -71,7 +76,8 @@ func _on_play_pause() -> void:
 	if _playing:
 		%BtnPlayPause.text = "⏸ Pausa"
 		_fast = false
-		%BtnFast.text = "⏩ Rápido"
+		%BtnFast.text = "Rápido"
+		%BtnFast.icon = ICON_SPEED_FAST
 		_tick()
 	else:
 		%BtnPlayPause.text = "▶ Jugar"
@@ -82,7 +88,8 @@ func _on_fast() -> void:
 	if _finished:
 		return
 	_fast = not _fast
-	%BtnFast.text = "⏩ Rápido" if not _fast else "🐢 Normal"
+	%BtnFast.text = "Rápido" if not _fast else "Normal"
+	%BtnFast.icon = ICON_SPEED_FAST if not _fast else ICON_SPEED_NORMAL
 	if not _playing:
 		_playing = true
 		%BtnPlayPause.text = "⏸ Pausa"
@@ -255,12 +262,30 @@ func _add_derby_banner(derby_name: String) -> void:
 	sb.bg_color = Color(0.55, 0.08, 0.05, 1)
 	sb.set_content_margin_all(6)
 	banner.add_theme_stylebox_override("panel", sb)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 8)
+	banner.add_child(row)
 	var lbl := Label.new()
-	lbl.text = "🔥  %s  🔥" % derby_name.to_upper()
+	if ICON_FIRE != null:
+		var fire_l := TextureRect.new()
+		fire_l.texture = ICON_FIRE
+		fire_l.custom_minimum_size = Vector2(20, 20)
+		fire_l.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		fire_l.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(fire_l)
+	lbl.text = derby_name.to_upper()
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.add_theme_font_size_override("font_size", 20)
 	lbl.add_theme_color_override("font_color", Color(1.0, 0.88, 0.20, 1))
-	banner.add_child(lbl)
+	row.add_child(lbl)
+	if ICON_FIRE != null:
+		var fire_r := TextureRect.new()
+		fire_r.texture = ICON_FIRE
+		fire_r.custom_minimum_size = Vector2(20, 20)
+		fire_r.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		fire_r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		row.add_child(fire_r)
 	root_vbox.add_child(banner)
 	root_vbox.move_child(banner, 0)
 
