@@ -33,6 +33,16 @@ func _ready() -> void:
 func _get_first_league() -> League:
 	var player_team: Team = GameManager.get_player_team()
 	if player_team != null:
+		for league: League in GameManager.leagues.values():
+			if league.team_ids.has(player_team.id):
+				return league
+		# Fallback para partidas con league_id desajustado pero fixtures válidos
+		for league: League in GameManager.leagues.values():
+			for f: Dictionary in league.fixtures:
+				if f.get("home_id", -1) == player_team.id or f.get("away_id", -1) == player_team.id:
+					return league
+
+	if player_team != null:
 		var player_league: League = GameManager.get_league(player_team.league_id)
 		if player_league != null:
 			return player_league

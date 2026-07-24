@@ -18,6 +18,16 @@ func _ready() -> void:
 func _get_first_league() -> League:
 	var player_team: Team = GameManager.get_player_team()
 	if player_team != null:
+		for league: League in GameManager.leagues.values():
+			if league.team_ids.has(player_team.id):
+				return league
+		# Fallback para partidas con league_id desajustado pero fixtures válidos
+		for league: League in GameManager.leagues.values():
+			for f: Dictionary in league.fixtures:
+				if f.get("home_id", -1) == player_team.id or f.get("away_id", -1) == player_team.id:
+					return league
+
+	if player_team != null:
 		var player_league: League = GameManager.get_league(player_team.league_id)
 		if player_league != null:
 			return player_league
@@ -54,6 +64,14 @@ func _build_list() -> void:
 		# Marcar el primer partido no jugado como "próximo"
 		if next_panel == null and not f["played"]:
 			next_panel = row
+
+	if player_fixtures.is_empty():
+		var empty_lbl := Label.new()
+		empty_lbl.text = "No hay partidos en el calendario para tu equipo."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.add_theme_font_size_override("font_size", 18)
+		empty_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.8, 1))
+		list.add_child(empty_lbl)
 
 	# Scroll automático al próximo partido
 	if next_panel != null:
