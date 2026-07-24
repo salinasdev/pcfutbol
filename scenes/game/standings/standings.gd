@@ -66,7 +66,7 @@ func _build_table(league: League) -> void:
 
 	for i in range(n):
 		var t: Team = standings[i]
-		list.add_child(_make_row(i + 1, t, n, player_tid))
+		list.add_child(_make_row(i + 1, t, n, player_tid, league))
 
 	# ── Rankings de jugadores ──────────────────────────────────────────────────
 	list.add_child(_make_spacer(12))
@@ -223,7 +223,7 @@ func _make_header() -> Control:
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 1)
 	# Columna indicador (sin título)
-	hbox.add_child(_make_indicator_cell(-1, 1))
+	hbox.add_child(_make_indicator_cell(-1, 1, null))
 	var cols: Array = [
 		["POS",    36,  C_POS_BG,  C_POS_FG],
 		["EQUIPO", -1,  C_TEAM_BG, C_TEAM_FG],
@@ -240,14 +240,14 @@ func _make_header() -> Control:
 	return hbox
 
 
-func _make_row(pos: int, t: Team, total: int, player_tid: int) -> Control:
+func _make_row(pos: int, t: Team, total: int, player_tid: int, league: League) -> Control:
 	var is_player_team := (t.id == player_tid)
 
 	var hbox := HBoxContainer.new()
 	hbox.add_theme_constant_override("separation", 1)
 
 	# Indicador Europa / Descenso
-	hbox.add_child(_make_indicator_cell(pos, total))
+	hbox.add_child(_make_indicator_cell(pos, total, league))
 
 	# POS
 	hbox.add_child(_make_cell(str(pos), 36, C_POS_BG, C_POS_FG, true, false))
@@ -334,7 +334,7 @@ func _make_cell(text: String, width: int, bg: Color, fg: Color, centered: bool, 
 
 ## Celda indicador: franja de color a la izquierda sobre fondo blanco.
 ## pos == -1 → cabecera (celda blanca vacía).
-func _make_indicator_cell(pos: int, total: int) -> Control:
+func _make_indicator_cell(pos: int, total: int, league: League) -> Control:
 	var outer := PanelContainer.new()
 	outer.custom_minimum_size = Vector2(10, 0)
 	var sb_outer := StyleBoxFlat.new()
@@ -346,14 +346,22 @@ func _make_indicator_cell(pos: int, total: int) -> Control:
 		return outer  # cabecera: solo blanco
 
 	var strip_color: Color
-	if pos <= 4:
-		strip_color = Color(0.098, 0.318, 0.843, 1)   # azul Champions
-	elif pos <= 6:
-		strip_color = Color(0.98, 0.5, 0.0, 1)         # naranja Europa League
-	elif pos > total - 3:
-		strip_color = Color(0.82, 0.09, 0.09, 1)        # rojo descenso
+	if league != null and league.level == 2:
+		if pos <= 2:
+			strip_color = Color(0.098, 0.318, 0.843, 1)   # azul ascenso directo
+		elif pos <= 6:
+			strip_color = Color(0.98, 0.5, 0.0, 1)         # naranja playoff ascenso
+		else:
+			return outer
 	else:
-		return outer  # sin indicador
+		if pos <= 4:
+			strip_color = Color(0.098, 0.318, 0.843, 1)   # azul Champions
+		elif pos <= 6:
+			strip_color = Color(0.98, 0.5, 0.0, 1)         # naranja Europa League
+		elif pos > total - 3:
+			strip_color = Color(0.82, 0.09, 0.09, 1)        # rojo descenso
+		else:
+			return outer
 
 	var strip := ColorRect.new()
 	strip.color = strip_color

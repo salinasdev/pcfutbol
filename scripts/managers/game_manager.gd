@@ -26,6 +26,10 @@ var _next_league_id: int = 1
 
 ## Bolsa de entrenadores sin equipo actualmente.
 var free_coaches: Array[String] = []
+## Cartera de equipos para cubrir huecos en Segunda por descenso administrativo de filiales.
+## Formato de entrada: {name, short_name, city, reputation, stadium_name, stadium_capacity, crest}
+var reserve_replacement_pool: Dictionary = {"España": []}
+var _last_spanish_transition: Dictionary = {}
 
 ## Métricas de la Junta Directiva (1.0 – 10.0)
 var manager_rating:    float = 5.0
@@ -586,6 +590,7 @@ func _reset_state() -> void:
 	bonus_win         = 0
 	bonus_title       = 0
 	bonus_history.clear()
+	_last_spanish_transition.clear()
 	_next_player_id = 1
 	_next_team_id = 1
 	_next_league_id = 1
@@ -601,3 +606,271 @@ func _advance_date(days: int) -> void:
 			current_date["month"] = 1
 			current_date["year"] += 1
 			season = current_date["year"]
+
+
+func configure_reserve_replacement_pool(country: String, pool: Array) -> void:
+	reserve_replacement_pool[country] = pool.duplicate(true)
+
+
+func process_end_of_season_spanish_leagues() -> Dictionary:
+	var primera := get_league_by_country_level("España", 1)
+	var segunda := get_league_by_country_level("España", 2)
+	if primera == null or segunda == null:
+		_last_spanish_transition = {}
+		return _last_spanish_transition
+
+	var primera_standings: Array = LeagueManager.get_standings(primera)
+	var segunda_standings: Array = LeagueManager.get_standings(segunda)
+	if primera_standings.size() < 3 or segunda_standings.size() < 6:
+		_last_spanish_transition = {}
+		return _last_spanish_transition
+
+	var relegated: Array[Team] = []
+	for i: int in range(primera_standings.size() - 3, primera_standings.size()):
+		relegated.append(primera_standings[i] as Team)
+	var relegated_names: Array[String] = []
+	for t: Team in relegated:
+		relegated_names.append(t.name)
+
+	var promoted: Array[Team] = []
+	var blocked_reserves: Array[String] = []
+	for i: int in range(0, mini(2, segunda_standings.size())):
+		var t: Team = segunda_standings[i] as Team
+		if _is_eligible_for_promotion(t, primera, relegated_names):
+			promoted.append(t)
+		elif t.is_reserve_team:
+			blocked_reserves.append(t.name)
+
+	var playoff_candidates: Array[Team] = []
+	for i: int in range(2, mini(6, segunda_standings.size())):
+		var t: Team = segunda_standings[i] as Team
+		if _is_eligible_for_promotion(t, primera, relegated_names):
+			playoff_candidates.append(t)
+		elif t.is_reserve_team:
+			blocked_reserves.append(t.name)
+
+	var playoff_winner: Team = _simulate_playoff_winner(playoff_candidates)
+	if playoff_winner != null and not promoted.has(playoff_winner):
+		promoted.append(playoff_winner)
+
+	# Si alguna plaza queda vacante por filiales bloqueados, pasa al siguiente clasificado elegible.
+	if promoted.size() < 3:
+		for i: int in range(2, segunda_standings.size()):
+			var t: Team = segunda_standings[i] as Team
+			if _is_eligible_for_promotion(t, primera, relegated_names) and not promoted.has(t):
+				promoted.append(t)
+				if promoted.size() >= 3:
+					break
+
+	var reserve_dropped: Array[Team] = _collect_admin_reserve_relegations(relegated_names, segunda_standings)
+	var second_relegated: Array[Team] = _build_second_division_relegations(segunda_standings, reserve_dropped)
+
+	var swaps: int = mini(relegated.size(), promoted.size())
+	for i: int in range(swaps):
+		_move_team_to_league(promoted[i], segunda, primera)
+		_move_team_to_league(relegated[i], primera, segunda)
+
+	for t: Team in second_relegated:
+		segunda.team_ids.erase(t.id)
+		t.league_id = 0
+
+	var second_promoted_from_pool: Array[Team] = []
+	for _slot: int in range(second_relegated.size()):
+		var replacement: Team = _promote_replacement_to_second_division(segunda)
+		if replacement != null:
+			replacement.league_id = segunda.id
+			segunda.team_ids.append(replacement.id)
+			second_promoted_from_pool.append(replacement)
+
+	_last_spanish_transition = {
+		"promoted": promoted,
+		"relegated": relegated,
+		"second_relegated": second_relegated,
+		"second_promoted_from_pool": second_promoted_from_pool,
+		"playoff_winner": playoff_winner,
+		"blocked_reserves": blocked_reserves,
+		"reserve_dropped": reserve_dropped,
+	}
+	return _last_spanish_transition
+
+
+func apply_end_of_season_prizes(transition: Dictionary = {}) -> void:
+	for league: League in leagues.values():
+		var standings: Array = LeagueManager.get_standings(league)
+		var positional: Array[int] = _position_prize_table(league.level, standings.size())
+		for i: int in range(mini(standings.size(), positional.size())):
+			var t: Team = standings[i] as Team
+			t.club_cash += positional[i]
+
+		if league.country == "España" and league.level == 1:
+			for i: int in range(mini(6, standings.size())):
+				var t: Team = standings[i] as Team
+				if i == 0:
+					t.club_cash += 12_000_000  # campeón de liga
+				elif i <= 3:
+					t.club_cash += 8_000_000   # plazas Champions
+				else:
+					t.club_cash += 4_000_000   # plazas europeas adicionales
+
+	if transition.is_empty():
+		transition = _last_spanish_transition
+
+	for t: Team in transition.get("promoted", []):
+		if t:
+			t.club_cash += 10_000_000  # prima de ascenso
+
+
+func get_league_by_country_level(country: String, level: int) -> League:
+	for league: League in leagues.values():
+		if league.country == country and league.level == level:
+			return league
+	return null
+
+
+func _is_eligible_for_promotion(candidate: Team, target_league: League, relegated_parent_names: Array[String] = []) -> bool:
+	if candidate == null:
+		return false
+	if not candidate.is_reserve_team:
+		return true
+	if candidate.parent_club_name.is_empty():
+		return true
+	if relegated_parent_names.has(candidate.parent_club_name):
+		return true
+	for tid: int in target_league.team_ids:
+		var t: Team = get_team(tid)
+		if t != null and t.name == candidate.parent_club_name:
+			return false
+	return true
+
+
+func _simulate_playoff_winner(candidates: Array[Team]) -> Team:
+	if candidates.is_empty():
+		return null
+	if candidates.size() == 1:
+		return candidates[0]
+	if candidates.size() == 2:
+		return _simulate_knockout_match(candidates[0], candidates[1])
+	if candidates.size() == 3:
+		var final_a: Team = _simulate_knockout_match(candidates[1], candidates[2])
+		return _simulate_knockout_match(candidates[0], final_a)
+
+	var semi_a: Team = _simulate_knockout_match(candidates[0], candidates[3])
+	var semi_b: Team = _simulate_knockout_match(candidates[1], candidates[2])
+	return _simulate_knockout_match(semi_a, semi_b)
+
+
+func _simulate_knockout_match(home: Team, away: Team) -> Team:
+	var home_score := float(home.reputation) * randf_range(0.85, 1.15) + 2.5
+	var away_score := float(away.reputation) * randf_range(0.85, 1.15)
+	if home_score >= away_score:
+		return home
+	return away
+
+
+func _move_team_to_league(team: Team, from_league: League, to_league: League) -> void:
+	if team == null or from_league == null or to_league == null:
+		return
+	from_league.team_ids.erase(team.id)
+	if not to_league.team_ids.has(team.id):
+		to_league.team_ids.append(team.id)
+	team.league_id = to_league.id
+
+
+func _collect_admin_reserve_relegations(relegated_parent_names: Array[String], segunda_standings: Array) -> Array[Team]:
+	var dropped: Array[Team] = []
+	for t: Team in segunda_standings:
+		if t != null and t.is_reserve_team and relegated_parent_names.has(t.parent_club_name):
+			dropped.append(t)
+	return dropped
+
+
+func _build_second_division_relegations(segunda_standings: Array, admin_relegated: Array[Team]) -> Array[Team]:
+	var down: Array[Team] = []
+	for t: Team in admin_relegated:
+		if t != null and not down.has(t):
+			down.append(t)
+
+	if admin_relegated.is_empty():
+		for i: int in range(maxi(0, segunda_standings.size() - 4), segunda_standings.size()):
+			var t: Team = segunda_standings[i] as Team
+			if t != null and not down.has(t):
+				down.append(t)
+		return down
+
+	# Con descenso administrativo: descienden los 3 últimos + el/los afectados.
+	for i: int in range(maxi(0, segunda_standings.size() - 3), segunda_standings.size()):
+		var t: Team = segunda_standings[i] as Team
+		if t != null and not down.has(t):
+			down.append(t)
+
+	return down
+
+
+func _promote_replacement_to_second_division(segunda: League) -> Team:
+	var pool: Array = reserve_replacement_pool.get("España", [])
+	if not pool.is_empty():
+		var entry: Dictionary = pool[0]
+		pool.remove_at(0)
+		reserve_replacement_pool["España"] = pool
+		return _create_team_from_pool_entry(entry, segunda)
+
+	# Fallback: mantener tamaño de liga estable hasta que exista cartera real.
+	var fallback := Team.new()
+	fallback.name = "Ascenso pendiente %d" % _next_team_id
+	fallback.short_name = "TBD"
+	fallback.city = "España"
+	fallback.reputation = 50
+	fallback.stadium_name = "Estadio Municipal"
+	fallback.stadium_capacity = 12_000
+	fallback.crest = ""
+	fallback.budget = 4_000_000
+	fallback.weekly_wage_budget = 250_000
+	fallback.club_cash = 8_000_000
+	fallback.league_id = segunda.id
+	register_team(fallback)
+	DataGenerator._fill_squad(fallback)
+	return fallback
+
+
+func _create_team_from_pool_entry(entry: Dictionary, segunda: League) -> Team:
+	var t := Team.new()
+	t.name = str(entry.get("name", "Equipo Ascendido"))
+	t.short_name = str(entry.get("short_name", "ASC"))
+	t.city = str(entry.get("city", t.name))
+	t.reputation = int(entry.get("reputation", 52))
+	t.stadium_name = str(entry.get("stadium_name", "Estadio Municipal"))
+	t.stadium_capacity = int(entry.get("stadium_capacity", 14_000))
+	t.crest = str(entry.get("crest", DataGenerator.TEAM_CRESTS.get(t.name, "")))
+	t.stadium_image = DataGenerator.TEAM_STADIUMS.get(t.name, "")
+	t.budget = t.reputation * 80_000
+	t.weekly_wage_budget = t.reputation * 5_000
+	t.club_cash = t.reputation * 300_000
+	t.league_id = segunda.id
+	register_team(t)
+	DataGenerator._fill_squad(t)
+	return t
+
+
+func _position_prize_table(level: int, size: int) -> Array[int]:
+	if level == 1:
+		var la_liga: Array[int] = [
+			20_000_000, 16_000_000, 14_000_000, 12_000_000, 10_000_000,
+			9_000_000, 8_000_000, 7_000_000, 6_000_000, 5_000_000,
+			4_500_000, 4_000_000, 3_500_000, 3_000_000, 2_600_000,
+			2_300_000, 2_000_000, 1_700_000, 1_500_000, 1_300_000,
+		]
+		return la_liga.slice(0, mini(size, la_liga.size()))
+
+	if level == 2:
+		var segunda: Array[int] = [
+			8_000_000, 7_200_000, 6_700_000, 6_200_000, 5_800_000, 5_400_000,
+			5_000_000, 4_600_000, 4_200_000, 3_900_000, 3_600_000,
+			3_300_000, 3_000_000, 2_700_000, 2_400_000, 2_200_000,
+			2_000_000, 1_800_000, 1_600_000, 1_450_000, 1_300_000, 1_200_000,
+		]
+		return segunda.slice(0, mini(size, segunda.size()))
+
+	var generic: Array[int] = []
+	for i: int in range(size):
+		generic.append(maxi(400_000, 2_000_000 - i * 80_000))
+	return generic

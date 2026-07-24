@@ -35,6 +35,7 @@ func save_game() -> void:
 		"bonus_win":          GameManager.bonus_win,
 		"bonus_title":        GameManager.bonus_title,
 		"bonus_history":      GameManager.bonus_history,
+		"reserve_replacement_pool": GameManager.reserve_replacement_pool,
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -91,6 +92,7 @@ func load_game() -> bool:
 	GameManager.bonus_win         = data.get("bonus_win",         0)
 	GameManager.bonus_title       = data.get("bonus_title",       0)
 	GameManager.bonus_history.assign(data.get("bonus_history", []))
+	GameManager.reserve_replacement_pool = data.get("reserve_replacement_pool", {"España": []})
 
 	return true
 
@@ -190,6 +192,8 @@ func _serialize_teams() -> Dictionary:
 		out[str(id)] = {
 			"id": t.id, "name": t.name, "short_name": t.short_name,
 			"city": t.city, "league_id": t.league_id,
+			"is_reserve_team": t.is_reserve_team,
+			"parent_club_name": t.parent_club_name,
 			"budget": t.budget, "weekly_wage_budget": t.weekly_wage_budget,
 			"reputation": t.reputation,
 			"crest": t.crest,
@@ -253,6 +257,8 @@ func _deserialize_teams(raw: Dictionary) -> void:
 		t.short_name       = d.get("short_name", "")
 		t.city             = d.get("city", "")
 		t.league_id        = d.get("league_id", 0)
+		t.is_reserve_team  = d.get("is_reserve_team", false)
+		t.parent_club_name = d.get("parent_club_name", "")
 		t.budget           = d.get("budget", 1000000)
 		t.weekly_wage_budget = d.get("weekly_wage_budget", 100000)
 		t.reputation       = d.get("reputation", 50)
@@ -338,7 +344,8 @@ func _serialize_leagues() -> Dictionary:
 	for id: int in GameManager.leagues:
 		var l: League = GameManager.leagues[id]
 		out[str(id)] = {
-			"id": l.id, "name": l.name, "country": l.country,
+			"id": l.id, "name": l.name, "short_name": l.short_name,
+			"country": l.country, "level": l.level,
 			"season": l.season, "team_ids": l.team_ids,
 			"current_matchday": l.current_matchday,
 			"fixtures": l.fixtures,
@@ -352,7 +359,9 @@ func _deserialize_leagues(raw: Dictionary) -> void:
 		var l := League.new()
 		l.id               = d.get("id", 0)
 		l.name             = d.get("name", "")
+		l.short_name       = d.get("short_name", l.name)
 		l.country          = d.get("country", "")
+		l.level            = d.get("level", 1)
 		l.season           = d.get("season", 2026)
 		l.team_ids.assign(d.get("team_ids", []))
 		l.current_matchday = d.get("current_matchday", 0)

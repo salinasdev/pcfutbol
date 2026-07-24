@@ -101,7 +101,81 @@ const TEAM_CRESTS: Dictionary = {
 	"Elche CF":               "res://assets/teams/esp4_elche.png",
 	"Levante UD":             "res://assets/teams/esp15_levante.png",
 	"Racing de Santander":    "res://assets/teams/esp7_santander.png",
+	"Albacete Balompié":      "res://assets/teams/esp21_albacete.png",
+	"UD Almería":             "res://assets/teams/esp22_almeria.png",
+	"Burgos CF":              "res://assets/teams/esp23_burgos.png",
+	"CD Castellón":           "res://assets/teams/esp24_castellon.png",
+	"RC Celta Fortuna":       "res://assets/teams/esp25_celtaFortuna.png",
+	"AD Ceuta FC":            "res://assets/teams/esp26_ceuta.png",
+	"Cádiz CF":               "res://assets/teams/esp27_cadiz.png",
+	"Córdoba CF":             "res://assets/teams/esp28_cordoba.png",
+	"SD Eibar":               "res://assets/teams/esp29_eibar.png",
+	"CD Eldense":             "res://assets/teams/esp30_eldense.png",
+	"FC Andorra":             "res://assets/teams/esp31_andorra.png",
+	"Girona FC":              "res://assets/teams/esp32_girona.png",
+	"Granada CF":             "res://assets/teams/esp33_granda.png",
+	"UD Las Palmas":          "res://assets/teams/esp34_laspalmas.png",
+	"CD Leganés":             "res://assets/teams/esp35_leganes.png",
+	"RCD Mallorca":           "res://assets/teams/esp36_mallorca.png",
+	"Real Oviedo":            "res://assets/teams/esp37_oviedo.png",
+	"Real Sociedad B":        "res://assets/teams/esp38_realsociedadb.png",
+	"Real Valladolid CF":     "res://assets/teams/esp39_realvalladolid.png",
+	"CE Sabadell FC":         "res://assets/teams/esp40_sabadell.png",
+	"Real Sporting":          "res://assets/teams/esp41_sporting.png",
+	"CD Tenerife":            "res://assets/teams/esp42_tenerife.png",
+	"AD Mérida":              "res://assets/teams/esp43_merida.png",
+	"Arenas Club":            "res://assets/teams/esp44_arenas.png",
+	"Barakaldo CF":           "res://assets/teams/esp45_barakaldo.png",
+	"CD Coria":               "res://assets/teams/esp46_coria.png",
+	"CD Extremadura":         "res://assets/teams/esp47_extremadura.png",
+	"CD Lugo":                "res://assets/teams/esp48_lugo.png",
+	"CP Cacereño":            "res://assets/teams/esp49_cacereño.png",
+	"Cultural y Deportiva Leonesa": "res://assets/teams/esp50_cultural.png",
+	"CD Mirandés":            "res://assets/teams/esp51_mirandes.png",
+	"SD Ponferradina":        "res://assets/teams/esp52_ponferradina.png",
+	"Pontevedra CF":          "res://assets/teams/esp53_pontevedra.png",
+	"Racing Club Ferrol":     "res://assets/teams/esp54_ferrol.png",
+	"Real Avilés Industrial": "res://assets/teams/esp55_aviles.png",
+	"Real Unión":             "res://assets/teams/esp56_union.png",
+	"UD Logroñés":            "res://assets/teams/esp57_logroñes.png",
+	"UD Ourense":             "res://assets/teams/esp58_ourense.png",
+	"Unionistas de Salamanca CF": "res://assets/teams/esp59_ourense.png",
+	"Zamora CF":              "res://assets/teams/esp60_zamora.png",
+	"AD Alcorcón":            "res://assets/teams/esp61_alcorcon.png",
+	"Algeciras CF":           "res://assets/teams/esp62_algeciras.png",
+	"Antequera CF":           "res://assets/teams/esp63_antequera.png",
+	"CD Teruel":              "res://assets/teams/esp64_teruel.png",
+	"CE Europa":              "res://assets/teams/esp65_europa.png",
+	"Hércules":               "res://assets/teams/esp66_logroñes.png",
 }
+
+
+const SECOND_DIVISION_REPLACEMENT_POOL: Array[Dictionary] = [
+	{"name": "AD Mérida", "short_name": "MER", "city": "Mérida", "reputation": 54, "stadium_name": "Estadio Romano José Fouto", "stadium_capacity": 14_600, "crest": "res://assets/teams/esp43_merida.png"},
+	{"name": "Arenas Club", "short_name": "ARE", "city": "Getxo", "reputation": 52, "stadium_name": "Campo Municipal de Gobela", "stadium_capacity": 2_000, "crest": "res://assets/teams/esp44_arenas.png"},
+	{"name": "Barakaldo CF", "short_name": "BAR", "city": "Barakaldo", "reputation": 54, "stadium_name": "Polideportivo de Lasesarre", "stadium_capacity": 8_000, "crest": "res://assets/teams/esp45_barakaldo.png"},
+	{"name": "CD Coria", "short_name": "COR", "city": "Coria", "reputation": 50, "stadium_name": "Estadio La Isla", "stadium_capacity": 5_000, "crest": "res://assets/teams/esp46_coria.png"},
+	{"name": "CD Extremadura", "short_name": "EXT", "city": "Almendralejo", "reputation": 53, "stadium_name": "Estadio Francisco de la Hera", "stadium_capacity": 11_500, "crest": "res://assets/teams/esp47_extremadura.png"},
+	{"name": "CD Lugo", "short_name": "LUG", "city": "Lugo", "reputation": 57, "stadium_name": "Estadio Ángel Carro", "stadium_capacity": 7_000, "crest": "res://assets/teams/esp48_lugo.png"},
+	{"name": "CP Cacereño", "short_name": "CAC", "city": "Cáceres", "reputation": 51, "stadium_name": "Estadio Príncipe Felipe", "stadium_capacity": 7_000, "crest": "res://assets/teams/esp49_cacereño.png"},
+	{"name": "Cultural y Deportiva Leonesa", "short_name": "CUL", "city": "León", "reputation": 56, "stadium_name": "Estadio Reino de León", "stadium_capacity": 13_300, "crest": "res://assets/teams/esp50_cultural.png"},
+	{"name": "CD Mirandés", "short_name": "MIR", "city": "Miranda de Ebro", "reputation": 58, "stadium_name": "Estadio Municipal de Anduva", "stadium_capacity": 5_800, "crest": "res://assets/teams/esp51_mirandes.png"},
+	{"name": "SD Ponferradina", "short_name": "PON", "city": "Ponferrada", "reputation": 56, "stadium_name": "Estadio El Toralín", "stadium_capacity": 8_800, "crest": "res://assets/teams/esp52_ponferradina.png"},
+	{"name": "Pontevedra CF", "short_name": "PON", "city": "Pontevedra", "reputation": 53, "stadium_name": "Estadio Municipal de Pasarón", "stadium_capacity": 12_000, "crest": "res://assets/teams/esp53_pontevedra.png"},
+	{"name": "Racing Club Ferrol", "short_name": "FER", "city": "Ferrol", "reputation": 57, "stadium_name": "Estadio Municipal de A Malata", "stadium_capacity": 12_000, "crest": "res://assets/teams/esp54_ferrol.png"},
+	{"name": "Real Avilés Industrial", "short_name": "AVI", "city": "Avilés", "reputation": 51, "stadium_name": "Estadio Román Suárez Puerta", "stadium_capacity": 5_400, "crest": "res://assets/teams/esp55_aviles.png"},
+	{"name": "Real Unión", "short_name": "RUN", "city": "Irún", "reputation": 52, "stadium_name": "Stadium Gal", "stadium_capacity": 6_000, "crest": "res://assets/teams/esp56_union.png"},
+	{"name": "UD Logroñés", "short_name": "LOG", "city": "Logroño", "reputation": 55, "stadium_name": "Estadio Municipal Las Gaunas", "stadium_capacity": 16_000, "crest": "res://assets/teams/esp57_logroñes.png"},
+	{"name": "UD Ourense", "short_name": "OUR", "city": "Ourense", "reputation": 52, "stadium_name": "Estadio de O Couto", "stadium_capacity": 5_600, "crest": "res://assets/teams/esp58_ourense.png"},
+	{"name": "Unionistas de Salamanca CF", "short_name": "UNI", "city": "Salamanca", "reputation": 53, "stadium_name": "Estadio Municipal Reina Sofía", "stadium_capacity": 4_900, "crest": "res://assets/teams/esp59_ourense.png"},
+	{"name": "Zamora CF", "short_name": "ZAM", "city": "Zamora", "reputation": 53, "stadium_name": "Estadio Ruta de la Plata", "stadium_capacity": 7_800, "crest": "res://assets/teams/esp60_zamora.png"},
+	{"name": "AD Alcorcón", "short_name": "ALC", "city": "Alcorcón", "reputation": 56, "stadium_name": "Estadio Municipal Santo Domingo", "stadium_capacity": 5_100, "crest": "res://assets/teams/esp61_alcorcon.png"},
+	{"name": "Algeciras CF", "short_name": "ALG", "city": "Algeciras", "reputation": 53, "stadium_name": "Estadio Nuevo Mirador", "stadium_capacity": 7_200, "crest": "res://assets/teams/esp62_algeciras.png"},
+	{"name": "Antequera CF", "short_name": "ANT", "city": "Antequera", "reputation": 52, "stadium_name": "Estadio Nuevo El Maulí", "stadium_capacity": 4_500, "crest": "res://assets/teams/esp63_antequera.png"},
+	{"name": "CD Teruel", "short_name": "TER", "city": "Teruel", "reputation": 51, "stadium_name": "Estadio de Pinilla", "stadium_capacity": 5_000, "crest": "res://assets/teams/esp64_teruel.png"},
+	{"name": "CE Europa", "short_name": "EUR", "city": "Barcelona", "reputation": 52, "stadium_name": "Nou Sardenya", "stadium_capacity": 4_000, "crest": "res://assets/teams/esp65_europa.png"},
+	{"name": "Hércules", "short_name": "HER", "city": "Alicante", "reputation": 57, "stadium_name": "Estadio José Rico Pérez", "stadium_capacity": 29_500, "crest": "res://assets/teams/esp66_logroñes.png"},
+]
 
 const TEAM_STADIUMS: Dictionary = {
 	"Real Madrid":            "res://assets/stadiums/esp18_estadio.jpg",
@@ -160,15 +234,38 @@ const LEAGUE_DEFINITIONS: Array = [
 			["Racing de Santander",     "RAC", "Santander",     47, "El Sardinero",            22_000, "res://assets/teams/esp7_santander.png"],
 		]
 	},
+	{
+		"name":    "Segunda División",
+		"short":   "LaLiga Hypermotion",
+		"country": "España",
+		"flag":    "ES",
+		"level":   2,
+		"teams": [
+			["Albacete Balompié",  "ALB", "Albacete",      64, "Estadio Carlos Belmonte",                    17_500, "res://assets/teams/esp21_albacete.png"],
+			["UD Almería",         "ALM", "Almería",       66, "Estadio de los Juegos Mediterráneos",       21_300, "res://assets/teams/esp22_almeria.png"],
+			["Burgos CF",          "BUR", "Burgos",        62, "Estadio Municipal de El Plantío",            12_200, "res://assets/teams/esp23_burgos.png"],
+			["CD Castellón",       "CAS", "Castellón",     60, "Estadio Municipal de Castalia",              15_500, "res://assets/teams/esp24_castellon.png"],
+			["RC Celta Fortuna",   "CEF", "Vigo",          55, "Estadio de Balaídos",                         30_000, "res://assets/teams/esp25_celtaFortuna.png", true, "RC Celta"],
+			["AD Ceuta FC",        "CEU", "Ceuta",         56, "Estadio Municipal Alfonso Murube",            6_500, "res://assets/teams/esp26_ceuta.png"],
+			["Cádiz CF",           "CAD", "Cádiz",         65, "Estadio Nuevo Mirandilla",                    20_700, "res://assets/teams/esp27_cadiz.png"],
+			["Córdoba CF",         "COR", "Córdoba",       61, "Estadio Nuevo Arcángel",                      21_800, "res://assets/teams/esp28_cordoba.png"],
+			["SD Eibar",           "EIB", "Eibar",         67, "Estadio Municipal de Ipurúa",                  8_100, "res://assets/teams/esp29_eibar.png"],
+			["CD Eldense",         "ELD", "Elda",          57, "Estadio Municipal Nuevo Pepico Amat",         5_800, "res://assets/teams/esp30_eldense.png"],
+			["FC Andorra",         "AND", "Andorra",       58, "Estadio Nacional de Andorra",                  3_300, "res://assets/teams/esp31_andorra.png"],
+			["Girona FC",          "GIR", "Girona",        70, "Estadio Municipal de Montilivi",              14_600, "res://assets/teams/esp32_girona.png"],
+			["Granada CF",         "GRA", "Granada",       68, "Estadio Nuevo Los Cármenes",                  22_500, "res://assets/teams/esp33_granda.png"],
+			["UD Las Palmas",      "LPA", "Las Palmas",    67, "Estadio de Gran Canaria",                     32_400, "res://assets/teams/esp34_laspalmas.png"],
+			["CD Leganés",         "LEG", "Leganés",       66, "Estadio Municipal de Butarque",               12_400, "res://assets/teams/esp35_leganes.png"],
+			["RCD Mallorca",       "MLL", "Palma",         69, "Estadio de Son Moix",                         23_100, "res://assets/teams/esp36_mallorca.png"],
+			["Real Oviedo",        "OVI", "Oviedo",        63, "Estadio Carlos Tartiere",                     30_500, "res://assets/teams/esp37_oviedo.png"],
+			["Real Sociedad B",    "RSB", "San Sebastián", 56, "Instalaciones de Zubieta",                     2_500, "res://assets/teams/esp38_realsociedadb.png", true, "Real Sociedad"],
+			["Real Valladolid CF", "VLL", "Valladolid",    67, "Estadio José Zorrilla",                       26_500, "res://assets/teams/esp39_realvalladolid.png"],
+			["CE Sabadell FC",     "SAB", "Sabadell",      57, "Estadio de la Nova Creu Alta",                11_900, "res://assets/teams/esp40_sabadell.png"],
+			["Real Sporting",      "SPO", "Gijón",         66, "Estadio El Molinón",                          29_000, "res://assets/teams/esp41_sporting.png"],
+			["CD Tenerife",        "TEN", "Santa Cruz",    64, "Estadio Heliodoro Rodríguez López",          22_900, "res://assets/teams/esp42_tenerife.png"],
+		]
+	},
 	## ── Futuras ligas (descomentar y completar según necesidad) ──────────────
-	# {
-	# 	"name":    "Segunda División",
-	# 	"short":   "LaLiga2",
-	# 	"country": "España",
-	# 	"flag":    "ES",
-	# 	"level":   2,
-	# 	"teams": [ ... ]
-	# },
 	# {
 	# 	"name":    "Premier League",
 	# 	"short":   "PL",
@@ -186,6 +283,7 @@ func generate_all() -> void:
 	_generated_full_names.clear()
 	for def: Dictionary in LEAGUE_DEFINITIONS:
 		_generate_league(def)
+	GameManager.configure_reserve_replacement_pool("España", SECOND_DIVISION_REPLACEMENT_POOL)
 	# Poblar la cartera de entrenadores libres
 	GameManager.free_coaches.assign(FREE_COACHES.duplicate())
 
@@ -246,7 +344,9 @@ func _generate_from_external_root(root: Dictionary) -> bool:
 
 			var league := League.new()
 			league.name = str(ldef.get("f1_name", "Liga"))
+			league.short_name = str(ldef.get("f2_short", league.name))
 			league.country = country_name
+			league.level = int(ldef.get("f2_level", 1))
 			league.season = GameManager.season
 			GameManager.register_league(league)
 			created_leagues += 1
@@ -257,6 +357,8 @@ func _generate_from_external_root(root: Dictionary) -> bool:
 				team.short_name = _short_code_from_name(team.name)
 				team.city = _city_from_team_name(team.name)
 				team.league_id = league.id
+				team.is_reserve_team = bool(tdef.get("f10_isReserve", false))
+				team.parent_club_name = str(tdef.get("f11_parentClub", ""))
 				team.formation = str(tdef.get("f03_tactic", "4-4-2"))
 				team.stadium_name = ""
 				team.stadium_capacity = int(tdef.get("f04_stadiumCapacity", 20_000))
@@ -327,7 +429,9 @@ func _generate_from_external_root(root: Dictionary) -> bool:
 func _generate_league(def: Dictionary) -> void:
 	var league := League.new()
 	league.name    = def["name"]
+	league.short_name = str(def.get("short", def["name"]))
 	league.country = def["country"]
+	league.level   = int(def.get("level", 1))
 	league.season  = GameManager.season
 	GameManager.register_league(league)
 
@@ -346,6 +450,8 @@ func _generate_league(def: Dictionary) -> void:
 		t.weekly_wage_budget = td[3] * 5_000
 		t.club_cash        = td[3] * 300_000
 		t.league_id        = league.id
+		t.is_reserve_team  = bool(td[7]) if td.size() > 7 else false
+		t.parent_club_name = str(td[8]) if td.size() > 8 else ""
 		GameManager.register_team(t)
 		league.team_ids.append(t.id)
 		_fill_squad(t)
@@ -555,6 +661,28 @@ func _city_from_team_name(name: String) -> String:
 			"Elche CF": "Elche",
 			"Levante UD": "Valencia",
 			"Racing de Santander": "Santander",
+			"Albacete Balompié": "Albacete",
+			"UD Almería": "Almería",
+			"Burgos CF": "Burgos",
+			"CD Castellón": "Castellón",
+			"RC Celta Fortuna": "Vigo",
+			"AD Ceuta FC": "Ceuta",
+			"Cádiz CF": "Cádiz",
+			"Córdoba CF": "Córdoba",
+			"SD Eibar": "Eibar",
+			"CD Eldense": "Elda",
+			"FC Andorra": "Andorra",
+			"Girona FC": "Girona",
+			"Granada CF": "Granada",
+			"UD Las Palmas": "Las Palmas",
+			"CD Leganés": "Leganés",
+			"RCD Mallorca": "Palma",
+			"Real Oviedo": "Oviedo",
+			"Real Sociedad B": "San Sebastián",
+			"Real Valladolid CF": "Valladolid",
+			"CE Sabadell FC": "Sabadell",
+			"Real Sporting": "Gijón",
+			"CD Tenerife": "Santa Cruz",
 		}
 		return known.get(name, name)
 	return name

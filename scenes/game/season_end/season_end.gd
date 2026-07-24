@@ -2,6 +2,7 @@ extends Control
 
 ## Cuántos equipos ascienden / descienden por liga
 const PROMOTION_SPOTS  := 2   ## Top N → liga superior (futuro)
+const PLAYOFF_SPOTS    := 6
 const RELEGATION_SPOTS := 3   ## Bottom N → segunda (futuro)
 
 ## Colores de zonas
@@ -41,31 +42,23 @@ func _build_content() -> void:
 		for i in range(total):
 			var team: Team = standings[i]
 			var is_player: bool = (team.id == GameManager.player_team_id)
-			content.add_child(_make_standing_row(team, i + 1, total, is_player, player_team))
+			content.add_child(_make_standing_row(team, i + 1, total, league, is_player, player_team))
 
 		# Resultado del equipo del jugador si está en esta liga
 		if player_team != null and league.team_ids.has(player_team.id):
-			content.add_child(_make_player_result(player_team, standings))
+			content.add_child(_make_player_result(player_team, standings, league))
 
 		var sep := HSeparator.new()
 		content.add_child(sep)
 
 
-func _make_standing_row(team: Team, pos: int, total: int, is_player: bool, _pt: Team) -> Control:
+func _make_standing_row(team: Team, pos: int, total: int, league: League, is_player: bool, _pt: Team) -> Control:
 	var panel := PanelContainer.new()
 	var style := StyleBoxFlat.new()
 	style.set_corner_radius_all(4)
 
 	# Color de zona
-	var zone_color: Color
-	if pos == 1:
-		zone_color = COLOR_CHAMPION
-	elif pos <= PROMOTION_SPOTS:
-		zone_color = COLOR_PROMOTION
-	elif pos > total - RELEGATION_SPOTS:
-		zone_color = COLOR_RELEGATION
-	else:
-		zone_color = Color(0.1, 0.12, 0.18, 1)
+	var zone_color := _zone_color_for_position(league, pos, total)
 
 	if is_player:
 		style.bg_color = Color(zone_color.r, zone_color.g, zone_color.b, 0.35)
@@ -116,7 +109,7 @@ func _make_standing_row(team: Team, pos: int, total: int, is_player: bool, _pt: 
 	return panel
 
 
-func _make_player_result(team: Team, standings: Array) -> Control:
+func _make_player_result(team: Team, standings: Array, league: League) -> Control:
 	var pos: int = 1
 	for i in range(standings.size()):
 		if standings[i].id == team.id:
@@ -131,15 +124,29 @@ func _make_player_result(team: Team, standings: Array) -> Control:
 	var result_text: String
 	var result_color: Color
 
-	if pos == 1:
-		result_text = "¡CAMPEÓN DE LIGA! Temporada histórica, %s." % GameManager.manager_name
-		result_color = COLOR_CHAMPION
-	elif pos <= PROMOTION_SPOTS:
-		result_text = "Clasificado para competición europea. ¡Gran temporada!"
-		result_color = COLOR_PROMOTION
-	elif pos > total - RELEGATION_SPOTS:
-		result_text = "DESCENSO. El equipo baja de categoría."
-		result_color = COLOR_RELEGATION
+	if league.level == 1:
+		if pos == 1:
+			result_text = "¡CAMPEÓN DE LIGA! Temporada histórica, %s." % GameManager.manager_name
+			result_color = COLOR_CHAMPION
+		elif pos <= 6:
+			result_text = "Clasificado para puestos europeos. ¡Gran temporada!"
+			result_color = COLOR_PROMOTION
+		elif pos > total - RELEGATION_SPOTS:
+			result_text = "DESCENSO. El equipo baja a Segunda División."
+			result_color = COLOR_RELEGATION
+		else:
+			result_text = "Temporada finalizada en %dª posición." % pos
+			result_color = COLOR_NORMAL
+	elif league.level == 2:
+		if pos <= PROMOTION_SPOTS:
+			result_text = "Ascenso directo logrado. ¡A Primera División!"
+			result_color = COLOR_CHAMPION
+		elif pos <= PLAYOFF_SPOTS:
+			result_text = "Clasificado para playoff de ascenso."
+			result_color = COLOR_PROMOTION
+		else:
+			result_text = "Temporada finalizada en %dª posición en Segunda." % pos
+			result_color = COLOR_NORMAL
 	else:
 		result_text = "Temporada finalizada en %dª posición." % pos
 		result_color = COLOR_NORMAL
@@ -168,6 +175,9 @@ func _on_next_season() -> void:
 
 
 func _start_new_season() -> void:
+	var transition := GameManager.process_end_of_season_spanish_leagues()
+	GameManager.apply_end_of_season_prizes(transition)
+
 	GameManager.season += 1
 	GameManager.current_week = 1
 	GameManager.current_date = {"day": 1, "month": 8, "year": GameManager.season}
@@ -191,4 +201,25 @@ func _start_new_season() -> void:
 		LeagueManager.generate_fixtures(league)
 
 	NewsManager.news_feed.clear()
+	NewsManager.add_season_transition_news(transition)
 	SaveManager.save_game()
+
+
+func _zone_color_for_position(league: League, pos: int, total: int) -> Color:
+	if league.level == 1:
+		if pos == 1:
+			return COLOR_CHAMPION
+		if pos <= 6:
+			return COLOR_PROMOTION
+		if pos > total - RELEGATION_SPOTS:
+			return COLOR_RELEGATION
+		return Color(0.1, 0.12, 0.18, 1)
+
+	if league.level == 2:
+		if pos <= PROMOTION_SPOTS:
+			return COLOR_CHAMPION
+		if pos <= PLAYOFF_SPOTS:
+			return COLOR_PROMOTION
+		return Color(0.1, 0.12, 0.18, 1)
+
+	return Color(0.1, 0.12, 0.18, 1)

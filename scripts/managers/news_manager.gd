@@ -954,6 +954,45 @@ func add_transfer_done_news(player: Player, from_team: Team, to_team: Team, fee:
 	_push_news(_make_news(Category.FICHAJES, headline, body))
 
 
+func add_season_transition_news(transition: Dictionary) -> void:
+	if transition.is_empty():
+		return
+
+	var asc_primera: Array = transition.get("promoted", [])
+	var desc_primera: Array = transition.get("relegated", [])
+	var desc_segunda: Array = transition.get("second_relegated", [])
+	var asc_segunda: Array = transition.get("second_promoted_from_pool", [])
+	var blocked: Array = transition.get("blocked_reserves", [])
+
+	var headline := "Movimientos oficiales entre Primera y Segunda"
+	var body := "La RFEF ha confirmado los movimientos de cierre de temporada.\n\n"
+	body += "Ascensos a Primera: %s.\n" % _team_list_short(asc_primera)
+	body += "Descensos a Segunda: %s.\n\n" % _team_list_short(desc_primera)
+	body += "Descensos desde Segunda: %s.\n" % _team_list_short(desc_segunda)
+	body += "Nuevos equipos en Segunda: %s." % _team_list_short(asc_segunda)
+
+	if not blocked.is_empty():
+		body += "\n\nFiliales sin derecho de ascenso este año: %s." % ", ".join(blocked)
+
+	var admin: Array = transition.get("reserve_dropped", [])
+	if not admin.is_empty():
+		body += "\nDescenso administrativo aplicado: %s." % _team_list_short(admin)
+
+	_push_news(_make_news(Category.CLASIFICACION, headline, body))
+
+
+func _team_list_short(teams_arr: Array) -> String:
+	if teams_arr.is_empty():
+		return "ninguno"
+	var names: Array[String] = []
+	for t: Team in teams_arr:
+		if t != null:
+			names.append(t.name)
+	if names.is_empty():
+		return "ninguno"
+	return ", ".join(names)
+
+
 func _push_news(item: Dictionary) -> void:
 	item["week"] = GameManager.current_week
 	news_feed.push_front(item)

@@ -3,7 +3,9 @@ extends Resource
 
 @export var id: int = 0
 @export var name: String = ""
+@export var short_name: String = ""
 @export var country: String = "España"
+@export var level: int = 1
 @export var season: int = 2026
 
 @export var team_ids: Array[int] = []

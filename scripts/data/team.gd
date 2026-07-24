@@ -6,6 +6,8 @@ extends Resource
 @export var short_name: String = ""
 @export var city: String = ""
 @export var league_id: int = 0
+@export var is_reserve_team: bool = false
+@export var parent_club_name: String = ""
 
 # Finanzas
 @export var budget: int = 1_000_000          ## Presupuesto de traspasos en €
