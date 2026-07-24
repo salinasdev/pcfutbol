@@ -26,6 +26,8 @@ const C_GF_FG    := Color(0.475, 0.553, 0.631, 1)  # #798da1
 const C_GC_BG    := Color(0.831, 0.749, 0.667, 1)  # #d4bfaa
 const C_GC_FG    := Color(0.682, 0.522, 0.365, 1)  # #ae855d
 
+var _league_list: Array[League] = []
+
 
 func _ready() -> void:
 	%BtnBack.icon = ICON_BACK
@@ -34,19 +36,31 @@ func _ready() -> void:
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	_build_league_picker()
 	%LeaguePicker.item_selected.connect(func(idx: int): _load_league(idx))
-	if not GameManager.leagues.is_empty():
-		_load_league(0)
+	if not _league_list.is_empty():
+		var default_idx := 0
+		var player_team: Team = GameManager.get_player_team()
+		if player_team != null:
+			for i: int in range(_league_list.size()):
+				if _league_list[i].id == player_team.league_id:
+					default_idx = i
+					break
+		%LeaguePicker.select(default_idx)
+		_load_league(default_idx)
 
 
 func _build_league_picker() -> void:
 	var picker: OptionButton = %LeaguePicker
 	picker.clear()
+	_league_list.clear()
 	for league: League in GameManager.leagues.values():
+		_league_list.append(league)
 		picker.add_item(league.name)
 
 
 func _load_league(idx: int) -> void:
-	var league: League = GameManager.leagues.values()[idx] as League
+	if idx < 0 or idx >= _league_list.size():
+		return
+	var league: League = _league_list[idx]
 	if league == null:
 		return
 	%TitleLabel.text = league.name
