@@ -36,6 +36,15 @@ func save_game() -> void:
 		"bonus_title":        GameManager.bonus_title,
 		"bonus_history":      GameManager.bonus_history,
 		"reserve_replacement_pool": GameManager.reserve_replacement_pool,
+		"manager_matches": GameManager.manager_matches,
+		"manager_wins": GameManager.manager_wins,
+		"manager_draws": GameManager.manager_draws,
+		"manager_losses": GameManager.manager_losses,
+		"manager_clubs_managed": GameManager.manager_clubs_managed,
+		"manager_offers_received": GameManager.manager_offers_received,
+		"manager_offers_accepted": GameManager.manager_offers_accepted,
+		"manager_job_offers": GameManager.manager_job_offers,
+		"_next_manager_offer_id": GameManager._next_manager_offer_id,
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -93,6 +102,15 @@ func load_game() -> bool:
 	GameManager.bonus_title       = data.get("bonus_title",       0)
 	GameManager.bonus_history.assign(data.get("bonus_history", []))
 	GameManager.reserve_replacement_pool = data.get("reserve_replacement_pool", {"España": []})
+	GameManager.manager_matches = data.get("manager_matches", 0)
+	GameManager.manager_wins = data.get("manager_wins", 0)
+	GameManager.manager_draws = data.get("manager_draws", 0)
+	GameManager.manager_losses = data.get("manager_losses", 0)
+	GameManager.manager_clubs_managed.assign(data.get("manager_clubs_managed", []))
+	GameManager.manager_offers_received = data.get("manager_offers_received", 0)
+	GameManager.manager_offers_accepted = data.get("manager_offers_accepted", 0)
+	GameManager.manager_job_offers.assign(data.get("manager_job_offers", []))
+	GameManager._next_manager_offer_id = data.get("_next_manager_offer_id", 1)
 
 	return true
 

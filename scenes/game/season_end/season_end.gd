@@ -144,6 +144,9 @@ func _make_player_result(team: Team, standings: Array, league: League) -> Contro
 		elif pos <= PLAYOFF_SPOTS:
 			result_text = "Clasificado para playoff de ascenso."
 			result_color = COLOR_PROMOTION
+		elif pos > total - 4:
+			result_text = "DESCENSO desde Segunda. La directiva prescindirá del mánager."
+			result_color = COLOR_RELEGATION
 		else:
 			result_text = "Temporada finalizada en %dª posición en Segunda." % pos
 			result_color = COLOR_NORMAL

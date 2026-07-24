@@ -954,6 +954,50 @@ func add_transfer_done_news(player: Player, from_team: Team, to_team: Team, fee:
 	_push_news(_make_news(Category.FICHAJES, headline, body))
 
 
+func add_manager_job_offer_news(team: Team, salary: int) -> void:
+	if team == null:
+		return
+	var headline := "Oferta para %s: %s quiere ficharte como entrenador" % [
+		GameManager.manager_name,
+		team.short_name,
+	]
+	var body := "El %s ha contactado con tu agente para ofrecerte su banquillo.\n\n" % team.name
+	body += "Salario propuesto: %s €/temporada.\n" % _fmt(salary)
+	body += "Consulta el apartado Decisiones > Manager para aceptar o rechazar la oferta."
+	_push_news(_make_news(Category.ENTRENADORES, headline, body))
+
+
+func add_manager_job_switch_news(old_team: Team, new_team: Team) -> void:
+	if new_team == null:
+		return
+	var old_name := old_team.name if old_team != null else "su club anterior"
+	var headline := "%s cambia de banquillo: nuevo técnico del %s" % [
+		GameManager.manager_name,
+		new_team.short_name,
+	]
+	var body := "%s deja el %s y firma por el %s para iniciar un nuevo proyecto deportivo." % [
+		GameManager.manager_name,
+		old_name,
+		new_team.name,
+	]
+	_push_news(_make_news(Category.ENTRENADORES, headline, body))
+
+
+func add_manager_sacked_news(team: Team) -> void:
+	if team == null:
+		return
+	var headline := "%s destituido tras el descenso del %s" % [
+		GameManager.manager_name,
+		team.short_name,
+	]
+	var body := "El %s ha decidido prescindir de %s después del descenso a categoría no profesional.\n\n" % [
+		team.name,
+		GameManager.manager_name,
+	]
+	body += "El técnico queda sin equipo y estudiará nuevas ofertas desde este mismo verano."
+	_push_news(_make_news(Category.ENTRENADORES, headline, body))
+
+
 func add_season_transition_news(transition: Dictionary) -> void:
 	if transition.is_empty():
 		return

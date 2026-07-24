@@ -5,6 +5,7 @@ const ICON_BOARD := preload("res://assets/ui/icons/goal.png")
 const ICON_TV := preload("res://assets/ui/icons/tv.png")
 const ICON_STORE := preload("res://assets/ui/icons/store.png")
 const ICON_HANDSHAKE := preload("res://assets/ui/icons/handshake.png")
+const ICON_MANAGER := preload("res://assets/ui/icons/briefcase.png")
 
 func _ready() -> void:
 	_build_ui()
@@ -53,6 +54,9 @@ func _build_ui() -> void:
 	margin.add_child(vbox)
 
 	var items: Array[Dictionary] = [
+		{"label": "Manager",          "desc": "Estadísticas de tu carrera y ofertas para dirigir otros clubes.",
+		 "icon": ICON_MANAGER,
+		 "scene": "res://scenes/game/decisions/manager.tscn",            "color": Color(0.18, 0.32, 0.56)},
 		{"label": "Junta Directiva",  "desc": "Objetivos de temporada, confianza de la junta y bonus de rendimiento.",
 		 "icon": ICON_BOARD,
 		 "scene": "res://scenes/game/decisions/board.tscn",              "color": Color(0.20, 0.35, 0.55)},

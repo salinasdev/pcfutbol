@@ -23,6 +23,7 @@ var leagues: Dictionary = {}   ## int -> League
 var _next_player_id: int = 1
 var _next_team_id: int = 1
 var _next_league_id: int = 1
+var _next_manager_offer_id: int = 1
 
 ## Bolsa de entrenadores sin equipo actualmente.
 var free_coaches: Array[String] = []
@@ -46,6 +47,16 @@ var tactics_badge_active: bool = false
 ## Nombre del derbi activo (vacío si el siguiente partido no es un derbi)
 var active_derby_name: String = ""
 
+## Carrera del mánager
+var manager_matches: int = 0
+var manager_wins: int = 0
+var manager_draws: int = 0
+var manager_losses: int = 0
+var manager_clubs_managed: Array[int] = []
+var manager_offers_received: int = 0
+var manager_offers_accepted: int = 0
+var manager_job_offers: Array[Dictionary] = []
+
 # ---------------------------------------------------------------------------
 
 ## Paso 1: Resetea el estado y genera todas las ligas/equipos.
@@ -59,6 +70,8 @@ func prepare_new_game() -> void:
 func start_game(p_manager_name: String, team_id: int) -> void:
 	manager_name   = p_manager_name
 	player_team_id = team_id
+	if not manager_clubs_managed.has(team_id):
+		manager_clubs_managed.append(team_id)
 	emit_signal("season_started", season)
 	emit_signal("new_game_created")
 
@@ -125,6 +138,7 @@ func advance_week() -> void:
 	TransferManager.process_weekly_offers()
 	TransferManager.generate_incoming_offers()
 	_check_coach_sackings()
+	_process_manager_job_market()
 	NewsManager.generate_weekly_news()
 
 	# Efectos del personal del club
@@ -175,6 +189,14 @@ func advance_week() -> void:
 # Junta Directiva — métricas y primas
 
 func update_board_metrics(goals_for: int, goals_against: int) -> void:
+	manager_matches += 1
+	if goals_for > goals_against:
+		manager_wins += 1
+	elif goals_for < goals_against:
+		manager_losses += 1
+	else:
+		manager_draws += 1
+
 	# Los derbis amplifican el impacto en las métricas de la junta
 	var derby_mult: float = 1.8 if active_derby_name != "" else 1.0
 	if goals_for > goals_against:
@@ -511,6 +533,133 @@ func _get_last_results(league: League, team_id: int, n: int) -> Array[String]:
 	return results
 
 
+func _process_manager_job_market() -> void:
+	# Limpiar ofertas caducadas o ya resueltas
+	manager_job_offers = manager_job_offers.filter(func(of: Dictionary) -> bool:
+		return of.get("status", "pending") == "pending" and int(of.get("deadline_week", 0)) >= current_week
+	)
+
+	if manager_job_offers.size() >= 3:
+		return
+	_generate_manager_job_offer(false)
+
+
+func _generate_manager_job_offer(force: bool) -> void:
+	if manager_job_offers.size() >= 3:
+		return
+
+	var form_factor: float = float(manager_wins + 1) / float(manager_losses + 1)
+	var strength := clampf((manager_rating + board_confidence + public_confidence) / 30.0, 0.20, 0.95)
+	var chance := clampf(0.08 + strength * 0.18 + form_factor * 0.03, 0.08, 0.45)
+	if get_player_team() == null:
+		chance = clampf(chance + 0.20, 0.20, 0.70)
+	if not force and randf() > chance:
+		return
+
+	var current_team: Team = get_player_team()
+
+	var candidates: Array[Team] = []
+	for t: Team in teams.values():
+		if t == null:
+			continue
+		if current_team != null and t.id == current_team.id:
+			continue
+		if current_team == null:
+			if t.league_id > 0:
+				candidates.append(t)
+		elif abs(t.reputation - current_team.reputation) <= 15 or t.reputation > current_team.reputation:
+			candidates.append(t)
+
+	if candidates.is_empty():
+		return
+
+	var target: Team = candidates[randi() % candidates.size()]
+	for of: Dictionary in manager_job_offers:
+		if int(of.get("team_id", -1)) == target.id and of.get("status", "") == "pending":
+			return
+
+	var offer_salary: int = int(target.reputation * 12_000 + randf_range(60_000, 220_000))
+	var offer: Dictionary = {
+		"id": _next_manager_offer_id,
+		"team_id": target.id,
+		"salary": offer_salary,
+		"league_id": target.league_id,
+		"deadline_week": current_week + randi_range(2, 5),
+		"status": "pending",
+		"week_created": current_week,
+	}
+	_next_manager_offer_id += 1
+	manager_job_offers.append(offer)
+	manager_offers_received += 1
+	NewsManager.add_manager_job_offer_news(target, offer_salary)
+
+
+func _handle_player_manager_relegation(transition: Dictionary) -> void:
+	var current_team: Team = get_player_team()
+	if current_team == null:
+		return
+	for relegated: Team in transition.get("second_relegated", []):
+		if relegated != null and relegated.id == current_team.id:
+			player_team_id = -1
+			active_fixture = {}
+			active_derby_name = ""
+			NewsManager.add_manager_sacked_news(current_team)
+			_generate_manager_job_offer(true)
+			_generate_manager_job_offer(true)
+			break
+
+
+func accept_manager_job_offer(offer_id: int) -> String:
+	for of: Dictionary in manager_job_offers:
+		if int(of.get("id", -1)) != offer_id:
+			continue
+		if of.get("status", "pending") != "pending":
+			return "La oferta ya no está disponible."
+		if int(of.get("deadline_week", 0)) < current_week:
+			of["status"] = "expired"
+			return "La oferta ha caducado."
+
+		var old_team: Team = get_player_team()
+		var new_team: Team = get_team(int(of.get("team_id", -1)))
+		if new_team == null:
+			of["status"] = "invalid"
+			return "El club ofertante ya no está disponible."
+
+		if old_team != null and old_team.id != new_team.id:
+			if old_team.coach_name == manager_name:
+				old_team.coach_name = ""
+
+		player_team_id = new_team.id
+		new_team.coach_name = manager_name
+		if not manager_clubs_managed.has(new_team.id):
+			manager_clubs_managed.append(new_team.id)
+
+		manager_offers_accepted += 1
+		of["status"] = "accepted"
+		active_fixture = {}
+		active_derby_name = ""
+		NewsManager.add_manager_job_switch_news(old_team, new_team)
+		return "Has firmado por %s." % new_team.name
+
+	return "No se encontró la oferta indicada."
+
+
+func reject_manager_job_offer(offer_id: int) -> String:
+	for of: Dictionary in manager_job_offers:
+		if int(of.get("id", -1)) == offer_id:
+			if of.get("status", "pending") != "pending":
+				return "La oferta ya no está activa."
+			of["status"] = "rejected"
+			return "Oferta rechazada."
+	return "No se encontró la oferta indicada."
+
+
+func get_manager_win_rate() -> float:
+	if manager_matches <= 0:
+		return 0.0
+	return float(manager_wins) * 100.0 / float(manager_matches)
+
+
 func _finish_stadium_construction(t: Team) -> void:
 	var item: String = t.construction_item
 	if item.begins_with("stands_"):
@@ -590,10 +739,19 @@ func _reset_state() -> void:
 	bonus_win         = 0
 	bonus_title       = 0
 	bonus_history.clear()
+	manager_matches = 0
+	manager_wins = 0
+	manager_draws = 0
+	manager_losses = 0
+	manager_clubs_managed.clear()
+	manager_offers_received = 0
+	manager_offers_accepted = 0
+	manager_job_offers.clear()
 	_last_spanish_transition.clear()
 	_next_player_id = 1
 	_next_team_id = 1
 	_next_league_id = 1
+	_next_manager_offer_id = 1
 
 
 func _advance_date(days: int) -> void:
@@ -691,6 +849,7 @@ func process_end_of_season_spanish_leagues() -> Dictionary:
 		"blocked_reserves": blocked_reserves,
 		"reserve_dropped": reserve_dropped,
 	}
+	_handle_player_manager_relegation(_last_spanish_transition)
 	return _last_spanish_transition
 
 
