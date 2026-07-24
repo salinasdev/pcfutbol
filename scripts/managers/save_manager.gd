@@ -44,6 +44,10 @@ func save_game() -> void:
 		"manager_offers_received": GameManager.manager_offers_received,
 		"manager_offers_accepted": GameManager.manager_offers_accepted,
 		"manager_job_offers": GameManager.manager_job_offers,
+		"manager_global_reputation": GameManager.manager_global_reputation,
+		"manager_honours": GameManager.manager_honours,
+		"manager_career_history": GameManager.manager_career_history,
+		"manager_preferences": GameManager.manager_preferences,
 		"_next_manager_offer_id": GameManager._next_manager_offer_id,
 	}
 
@@ -110,6 +114,14 @@ func load_game() -> bool:
 	GameManager.manager_offers_received = data.get("manager_offers_received", 0)
 	GameManager.manager_offers_accepted = data.get("manager_offers_accepted", 0)
 	GameManager.manager_job_offers.assign(data.get("manager_job_offers", []))
+	GameManager.manager_global_reputation = data.get("manager_global_reputation", 50.0)
+	GameManager.manager_honours.assign(data.get("manager_honours", []))
+	GameManager.manager_career_history.assign(data.get("manager_career_history", []))
+	GameManager.manager_preferences = data.get("manager_preferences", {
+		"preferred_level": 0,
+		"project_type": 0,
+		"min_reputation": 45,
+	})
 	GameManager._next_manager_offer_id = data.get("_next_manager_offer_id", 1)
 
 	return true

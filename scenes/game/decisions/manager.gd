@@ -7,6 +7,9 @@ const ICON_CLIPBOARD := preload("res://assets/ui/icons/chart.png")
 const ICON_SIZE_NAV := 28
 
 var _stats_box: VBoxContainer
+var _prefs_box: VBoxContainer
+var _honours_box: VBoxContainer
+var _history_box: VBoxContainer
 var _offers_box: VBoxContainer
 
 
@@ -17,6 +20,9 @@ func _ready() -> void:
 
 func _refresh() -> void:
 	_refresh_stats()
+	_refresh_preferences()
+	_refresh_honours()
+	_refresh_history()
 	_refresh_offers()
 
 
@@ -30,6 +36,7 @@ func _refresh_stats() -> void:
 
 	_stats_box.add_child(_kv_row("Mánager", GameManager.manager_name))
 	_stats_box.add_child(_kv_row("Club actual", team_name))
+	_stats_box.add_child(_kv_row("Reputación global", "%.1f / 100" % GameManager.manager_global_reputation))
 	_stats_box.add_child(_kv_row("Partidos dirigidos", str(GameManager.manager_matches)))
 	_stats_box.add_child(_kv_row("Balance", "%dV · %dE · %dD" % [
 		GameManager.manager_wins,
@@ -42,6 +49,63 @@ func _refresh_stats() -> void:
 	_stats_box.add_child(_kv_row("Confianza pública", "%.1f / 10" % GameManager.public_confidence))
 	_stats_box.add_child(_kv_row("Ofertas recibidas", str(GameManager.manager_offers_received)))
 	_stats_box.add_child(_kv_row("Ofertas aceptadas", str(GameManager.manager_offers_accepted)))
+
+
+func _refresh_preferences() -> void:
+	for c in _prefs_box.get_children():
+		c.queue_free()
+
+	_prefs_box.add_child(_pref_row("División objetivo", "preferred_level"))
+	_prefs_box.add_child(_pref_row("Tipo de proyecto", "project_type"))
+	_prefs_box.add_child(_pref_row("Reputación mínima", "min_reputation"))
+
+
+func _refresh_honours() -> void:
+	for c in _honours_box.get_children():
+		c.queue_free()
+
+	if GameManager.manager_honours.is_empty():
+		var empty := Label.new()
+		empty.text = "Aún no has ganado títulos ni ascensos."
+		empty.add_theme_font_size_override("font_size", 15)
+		empty.add_theme_color_override("font_color", Color(0.60, 0.65, 0.72, 1))
+		_honours_box.add_child(empty)
+		return
+
+	for i: int in range(GameManager.manager_honours.size() - 1, -1, -1):
+		var honour: Dictionary = GameManager.manager_honours[i]
+		_honours_box.add_child(_kv_row(
+			"%d/%s" % [int(honour.get("season", GameManager.season)), str(int(honour.get("season", GameManager.season)) + 1).right(2)],
+			"%s · %s" % [str(honour.get("title", "Logro")), str(honour.get("team_name", "Club"))]
+		))
+
+
+func _refresh_history() -> void:
+	for c in _history_box.get_children():
+		c.queue_free()
+
+	if GameManager.manager_career_history.is_empty():
+		var empty := Label.new()
+		empty.text = "Sin historial de clubes todavía."
+		empty.add_theme_font_size_override("font_size", 15)
+		empty.add_theme_color_override("font_color", Color(0.60, 0.65, 0.72, 1))
+		_history_box.add_child(empty)
+		return
+
+	for i: int in range(GameManager.manager_career_history.size() - 1, -1, -1):
+		var entry: Dictionary = GameManager.manager_career_history[i]
+		var start_season := int(entry.get("start_season", GameManager.season))
+		var end_season := int(entry.get("end_season", 0))
+		var period := "%d-%s" % [start_season, str(start_season + 1).right(2)]
+		if end_season > 0 and end_season != start_season:
+			period = "%s → %d-%s" % [period, end_season, str(end_season + 1).right(2)]
+		elif end_season == 0:
+			period += " · actual"
+		var reason := str(entry.get("exit_reason", ""))
+		var text := "%s · %s" % [str(entry.get("team_name", "Club")), period]
+		if not reason.is_empty():
+			text += " · %s" % reason
+		_history_box.add_child(_simple_line(text))
 
 
 func _refresh_offers() -> void:
@@ -216,6 +280,36 @@ func _build_ui() -> void:
 	_stats_box.add_theme_constant_override("separation", 6)
 	content.add_child(_wrap_panel(_stats_box, Color(0.20, 0.35, 0.55, 1)))
 
+	var prefs_title := Label.new()
+	prefs_title.text = "Preferencias de clubs"
+	prefs_title.add_theme_font_size_override("font_size", 20)
+	prefs_title.add_theme_color_override("font_color", Color(0.85, 0.90, 0.98, 1))
+	content.add_child(prefs_title)
+
+	_prefs_box = VBoxContainer.new()
+	_prefs_box.add_theme_constant_override("separation", 8)
+	content.add_child(_wrap_panel(_prefs_box, Color(0.60, 0.45, 0.18, 1)))
+
+	var honours_title := Label.new()
+	honours_title.text = "Palmarés"
+	honours_title.add_theme_font_size_override("font_size", 20)
+	honours_title.add_theme_color_override("font_color", Color(0.85, 0.90, 0.98, 1))
+	content.add_child(honours_title)
+
+	_honours_box = VBoxContainer.new()
+	_honours_box.add_theme_constant_override("separation", 6)
+	content.add_child(_wrap_panel(_honours_box, Color(0.78, 0.66, 0.22, 1)))
+
+	var history_title := Label.new()
+	history_title.text = "Historial de clubes"
+	history_title.add_theme_font_size_override("font_size", 20)
+	history_title.add_theme_color_override("font_color", Color(0.85, 0.90, 0.98, 1))
+	content.add_child(history_title)
+
+	_history_box = VBoxContainer.new()
+	_history_box.add_theme_constant_override("separation", 6)
+	content.add_child(_wrap_panel(_history_box, Color(0.38, 0.56, 0.28, 1)))
+
 	var offers_title := Label.new()
 	offers_title.text = "Ofertas de otros clubes"
 	offers_title.add_theme_font_size_override("font_size", 20)
@@ -254,6 +348,54 @@ func _kv_row(k: String, v: String) -> HBoxContainer:
 	lv.add_theme_color_override("font_color", Color(0.90, 0.93, 0.98, 1))
 	row.add_child(lv)
 	return row
+
+
+func _pref_row(label_text: String, key: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	var lbl := Label.new()
+	lbl.text = label_text
+	lbl.custom_minimum_size = Vector2(230, 0)
+	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_color_override("font_color", Color(0.90, 0.93, 0.98, 1))
+	row.add_child(lbl)
+
+	var value := Label.new()
+	value.text = GameManager.get_manager_preference_label(key)
+	value.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value.add_theme_font_size_override("font_size", 15)
+	value.add_theme_color_override("font_color", Color(0.95, 0.82, 0.35, 1))
+	row.add_child(value)
+
+	var btn_prev := Button.new()
+	btn_prev.text = "◀"
+	btn_prev.custom_minimum_size = Vector2(44, 32)
+	btn_prev.pressed.connect(func():
+		GameManager.cycle_manager_preference(key, -1)
+		_refresh_preferences()
+	)
+	row.add_child(btn_prev)
+
+	var btn_next := Button.new()
+	btn_next.text = "▶"
+	btn_next.custom_minimum_size = Vector2(44, 32)
+	btn_next.pressed.connect(func():
+		GameManager.cycle_manager_preference(key, 1)
+		_refresh_preferences()
+	)
+	row.add_child(btn_next)
+
+	return row
+
+
+func _simple_line(text: String) -> Label:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.add_theme_font_size_override("font_size", 15)
+	lbl.add_theme_color_override("font_color", Color(0.90, 0.93, 0.98, 1))
+	return lbl
 
 
 func _show_message(msg: String) -> void:

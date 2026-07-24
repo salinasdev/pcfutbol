@@ -56,6 +56,14 @@ var manager_clubs_managed: Array[int] = []
 var manager_offers_received: int = 0
 var manager_offers_accepted: int = 0
 var manager_job_offers: Array[Dictionary] = []
+var manager_global_reputation: float = 50.0
+var manager_honours: Array[Dictionary] = []
+var manager_career_history: Array[Dictionary] = []
+var manager_preferences: Dictionary = {
+	"preferred_level": 0,
+	"project_type": 0,
+	"min_reputation": 45,
+}
 
 # ---------------------------------------------------------------------------
 
@@ -72,6 +80,7 @@ func start_game(p_manager_name: String, team_id: int) -> void:
 	player_team_id = team_id
 	if not manager_clubs_managed.has(team_id):
 		manager_clubs_managed.append(team_id)
+	_open_manager_career_entry(get_team(team_id))
 	emit_signal("season_started", season)
 	emit_signal("new_game_created")
 
@@ -192,10 +201,13 @@ func update_board_metrics(goals_for: int, goals_against: int) -> void:
 	manager_matches += 1
 	if goals_for > goals_against:
 		manager_wins += 1
+		manager_global_reputation = clampf(manager_global_reputation + 0.20, 1.0, 100.0)
 	elif goals_for < goals_against:
 		manager_losses += 1
+		manager_global_reputation = clampf(manager_global_reputation - 0.15, 1.0, 100.0)
 	else:
 		manager_draws += 1
+		manager_global_reputation = clampf(manager_global_reputation + 0.02, 1.0, 100.0)
 
 	# Los derbis amplifican el impacto en las métricas de la junta
 	var derby_mult: float = 1.8 if active_derby_name != "" else 1.0
@@ -550,6 +562,7 @@ func _generate_manager_job_offer(force: bool) -> void:
 
 	var form_factor: float = float(manager_wins + 1) / float(manager_losses + 1)
 	var strength := clampf((manager_rating + board_confidence + public_confidence) / 30.0, 0.20, 0.95)
+	strength = clampf(strength * 0.65 + (manager_global_reputation / 100.0) * 0.35, 0.20, 0.98)
 	var chance := clampf(0.08 + strength * 0.18 + form_factor * 0.03, 0.08, 0.45)
 	if get_player_team() == null:
 		chance = clampf(chance + 0.20, 0.20, 0.70)
@@ -563,6 +576,8 @@ func _generate_manager_job_offer(force: bool) -> void:
 		if t == null:
 			continue
 		if current_team != null and t.id == current_team.id:
+			continue
+		if not _manager_prefers_club(t, current_team):
 			continue
 		if current_team == null:
 			if t.league_id > 0:
@@ -600,6 +615,7 @@ func _handle_player_manager_relegation(transition: Dictionary) -> void:
 		return
 	for relegated: Team in transition.get("second_relegated", []):
 		if relegated != null and relegated.id == current_team.id:
+			_close_current_manager_career_entry("destituido por descenso")
 			player_team_id = -1
 			active_fixture = {}
 			active_derby_name = ""
@@ -628,13 +644,16 @@ func accept_manager_job_offer(offer_id: int) -> String:
 		if old_team != null and old_team.id != new_team.id:
 			if old_team.coach_name == manager_name:
 				old_team.coach_name = ""
+			_close_current_manager_career_entry("cambio de club")
 
 		player_team_id = new_team.id
 		new_team.coach_name = manager_name
 		if not manager_clubs_managed.has(new_team.id):
 			manager_clubs_managed.append(new_team.id)
+		_open_manager_career_entry(new_team)
 
 		manager_offers_accepted += 1
+		manager_global_reputation = clampf(manager_global_reputation + 2.5, 1.0, 100.0)
 		of["status"] = "accepted"
 		active_fixture = {}
 		active_derby_name = ""
@@ -658,6 +677,150 @@ func get_manager_win_rate() -> float:
 	if manager_matches <= 0:
 		return 0.0
 	return float(manager_wins) * 100.0 / float(manager_matches)
+
+
+func cycle_manager_preference(key: String, direction: int = 1) -> void:
+	match key:
+		"preferred_level":
+			var current_level := int(manager_preferences.get(key, 0))
+			manager_preferences[key] = posmod(current_level + direction, 3)
+		"project_type":
+			var current_type := int(manager_preferences.get(key, 0))
+			manager_preferences[key] = posmod(current_type + direction, 4)
+		"min_reputation":
+			var rep := int(manager_preferences.get(key, 45)) + direction * 5
+			if rep > 80:
+				rep = 35
+			elif rep < 35:
+				rep = 80
+			manager_preferences[key] = rep
+
+
+func get_manager_preference_label(key: String) -> String:
+	match key:
+		"preferred_level":
+			match int(manager_preferences.get(key, 0)):
+				1:
+					return "Primera"
+				2:
+					return "Segunda"
+				_:
+					return "Cualquiera"
+		"project_type":
+			match int(manager_preferences.get(key, 0)):
+				1:
+					return "Ambicioso"
+				2:
+					return "Estable"
+				3:
+					return "Reconstrucción"
+				_:
+					return "Cualquiera"
+		"min_reputation":
+			return "%d+" % int(manager_preferences.get(key, 45))
+	return "—"
+
+
+func _manager_prefers_club(candidate: Team, current_team: Team) -> bool:
+	if candidate == null or candidate.league_id <= 0:
+		return false
+	if candidate.reputation < int(manager_preferences.get("min_reputation", 45)):
+		return false
+
+	var preferred_level := int(manager_preferences.get("preferred_level", 0))
+	if preferred_level > 0:
+		var league := get_league(candidate.league_id)
+		if league == null or league.level != preferred_level:
+			return false
+
+	var project_type := int(manager_preferences.get("project_type", 0))
+	if project_type == 0:
+		return true
+
+	var baseline_rep := current_team.reputation if current_team != null else int(round(manager_global_reputation))
+	match project_type:
+		1:
+			return candidate.reputation >= baseline_rep
+		2:
+			return abs(candidate.reputation - baseline_rep) <= 7
+		3:
+			return candidate.reputation <= baseline_rep
+	return true
+
+
+func _open_manager_career_entry(team: Team) -> void:
+	if team == null:
+		return
+	if not manager_career_history.is_empty():
+		var last: Dictionary = manager_career_history[manager_career_history.size() - 1]
+		if int(last.get("team_id", -1)) == team.id and int(last.get("end_season", 0)) == 0:
+			return
+	manager_career_history.append({
+		"team_id": team.id,
+		"team_name": team.name,
+		"start_season": season,
+		"end_season": 0,
+		"exit_reason": "",
+	})
+
+
+func _close_current_manager_career_entry(reason: String) -> void:
+	for i: int in range(manager_career_history.size() - 1, -1, -1):
+		var entry: Dictionary = manager_career_history[i]
+		if int(entry.get("end_season", 0)) == 0:
+			entry["end_season"] = season
+			entry["exit_reason"] = reason
+			manager_career_history[i] = entry
+			return
+
+
+func _register_manager_honour(title: String, team: Team) -> void:
+	if team == null:
+		return
+	manager_honours.append({
+		"season": season,
+		"title": title,
+		"team_id": team.id,
+		"team_name": team.name,
+	})
+
+
+func _team_position_in_standings(standings: Array, team_id: int) -> int:
+	for i: int in range(standings.size()):
+		var t: Team = standings[i] as Team
+		if t != null and t.id == team_id:
+			return i + 1
+	return 0
+
+
+func _update_manager_end_of_season_records(primera_standings: Array, segunda_standings: Array, transition: Dictionary) -> void:
+	var team := get_player_team()
+	if team == null:
+		return
+
+	var primera_pos := _team_position_in_standings(primera_standings, team.id)
+	var segunda_pos := _team_position_in_standings(segunda_standings, team.id)
+	if primera_pos == 1:
+		_register_manager_honour("Campeón de Primera División", team)
+		manager_global_reputation = clampf(manager_global_reputation + 12.0, 1.0, 100.0)
+	elif primera_pos > 0 and primera_pos <= 4:
+		manager_global_reputation = clampf(manager_global_reputation + 4.0, 1.0, 100.0)
+	elif primera_pos > 0 and primera_pos <= 6:
+		manager_global_reputation = clampf(manager_global_reputation + 2.0, 1.0, 100.0)
+	elif primera_pos > primera_standings.size() - 3 and primera_standings.size() > 0:
+		manager_global_reputation = clampf(manager_global_reputation - 5.0, 1.0, 100.0)
+
+	if segunda_pos == 1:
+		_register_manager_honour("Campeón de Segunda División", team)
+		manager_global_reputation = clampf(manager_global_reputation + 6.0, 1.0, 100.0)
+	if team in transition.get("promoted", []):
+		var honour := "Ascenso a Primera División"
+		if transition.get("playoff_winner", null) == team:
+			honour = "Ascenso a Primera División (playoff)"
+		_register_manager_honour(honour, team)
+		manager_global_reputation = clampf(manager_global_reputation + 8.0, 1.0, 100.0)
+	if team in transition.get("second_relegated", []):
+		manager_global_reputation = clampf(manager_global_reputation - 8.0, 1.0, 100.0)
 
 
 func _finish_stadium_construction(t: Team) -> void:
@@ -747,6 +910,14 @@ func _reset_state() -> void:
 	manager_offers_received = 0
 	manager_offers_accepted = 0
 	manager_job_offers.clear()
+	manager_global_reputation = 50.0
+	manager_honours.clear()
+	manager_career_history.clear()
+	manager_preferences = {
+		"preferred_level": 0,
+		"project_type": 0,
+		"min_reputation": 45,
+	}
 	_last_spanish_transition.clear()
 	_next_player_id = 1
 	_next_team_id = 1
@@ -782,6 +953,7 @@ func process_end_of_season_spanish_leagues() -> Dictionary:
 	if primera_standings.size() < 3 or segunda_standings.size() < 6:
 		_last_spanish_transition = {}
 		return _last_spanish_transition
+	var player_team_before: Team = get_player_team()
 
 	var relegated: Array[Team] = []
 	for i: int in range(primera_standings.size() - 3, primera_standings.size()):
@@ -849,6 +1021,8 @@ func process_end_of_season_spanish_leagues() -> Dictionary:
 		"blocked_reserves": blocked_reserves,
 		"reserve_dropped": reserve_dropped,
 	}
+	if player_team_before != null:
+		_update_manager_end_of_season_records(primera_standings, segunda_standings, _last_spanish_transition)
 	_handle_player_manager_relegation(_last_spanish_transition)
 	return _last_spanish_transition
 
