@@ -4,6 +4,7 @@ class_name ManagerScreen
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
 const ICON_MANAGER := preload("res://assets/ui/icons/briefcase.png")
 const ICON_CLIPBOARD := preload("res://assets/ui/icons/chart.png")
+const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
 const ICON_SIZE_NAV := 28
 
 var _stats_box: VBoxContainer
@@ -369,7 +370,9 @@ func _pref_row(label_text: String, key: String) -> HBoxContainer:
 	row.add_child(value)
 
 	var btn_prev := Button.new()
-	btn_prev.text = "◀"
+	btn_prev.text = ""
+	btn_prev.icon = ICON_BACK
+	btn_prev.add_theme_constant_override("icon_max_width", 18)
 	btn_prev.custom_minimum_size = Vector2(44, 32)
 	btn_prev.pressed.connect(func():
 		GameManager.cycle_manager_preference(key, -1)
@@ -378,7 +381,9 @@ func _pref_row(label_text: String, key: String) -> HBoxContainer:
 	row.add_child(btn_prev)
 
 	var btn_next := Button.new()
-	btn_next.text = "▶"
+	btn_next.text = ""
+	btn_next.icon = ICON_ADVANCE
+	btn_next.add_theme_constant_override("icon_max_width", 18)
 	btn_next.custom_minimum_size = Vector2(44, 32)
 	btn_next.pressed.connect(func():
 		GameManager.cycle_manager_preference(key, 1)

@@ -1,5 +1,7 @@
 extends Control
 
+const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
+
 ## Cuántos equipos ascienden / descienden por liga
 const PROMOTION_SPOTS  := 2   ## Top N → liga superior (futuro)
 const PLAYOFF_SPOTS    := 6
@@ -17,6 +19,8 @@ func _ready() -> void:
 		GameManager.season,
 		str(GameManager.season + 1).right(2)
 	]
+	%BtnNextSeason.icon = ICON_ADVANCE
+	%BtnNextSeason.add_theme_constant_override("icon_max_width", 24)
 	%BtnNextSeason.pressed.connect(_on_next_season)
 	_build_content()
 

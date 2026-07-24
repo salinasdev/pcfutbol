@@ -110,7 +110,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 44)
 theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.2, 1.0, 0.4, 1)
-text = "▶  ¡JUGAR PARTIDO!"
+text = "¡JUGAR PARTIDO!"
 visible = false
 
 [node name="AwayVBox" type="VBoxContainer" parent="RootVBox/MatchHeader/MatchHeaderContent/MatchHBox"]
@@ -477,4 +477,4 @@ layout_mode = 2
 custom_minimum_size = Vector2(140, 0)
 theme_override_font_sizes/font_size = 17
 theme_override_colors/font_color = Color(0.25, 1.0, 0.5, 1)
-text = "Seguir  ▶"
+text = "Seguir"

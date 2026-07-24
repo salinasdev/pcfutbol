@@ -131,19 +131,19 @@ theme_override_constants/separation = 16
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(140, 72)
-text = "▶ Jugar"
+text = "Jugar"
 theme_override_font_sizes/font_size = 22
 
 [node name="BtnFast" type="Button" parent="VBoxContainer/ControlBar"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(130, 72)
-text = "⏩ Rápido"
+text = "Rápido"
 theme_override_font_sizes/font_size = 20
 
 [node name="BtnSkip" type="Button" parent="VBoxContainer/ControlBar"]
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(130, 72)
-text = "⏭ Simular"
+text = "Simular"
 theme_override_font_sizes/font_size = 20

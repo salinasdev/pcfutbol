@@ -67,4 +67,4 @@ unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 80)
 theme_override_font_sizes/font_size = 22
-text = "▶ Iniciar Nueva Temporada"
+text = "Iniciar Nueva Temporada"

@@ -6,6 +6,7 @@ const ICON_TV := preload("res://assets/ui/icons/tv.png")
 const ICON_STORE := preload("res://assets/ui/icons/store.png")
 const ICON_HANDSHAKE := preload("res://assets/ui/icons/handshake.png")
 const ICON_MANAGER := preload("res://assets/ui/icons/briefcase.png")
+const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
 
 func _ready() -> void:
 	_build_ui()
@@ -144,7 +145,9 @@ func _make_card(label: String, desc: String, scene: String, accent: Color, icon_
 	texts.add_child(desc_lbl)
 
 	var btn := Button.new()
-	btn.text = "Entrar →"
+	btn.text = "Entrar"
+	btn.icon = ICON_ADVANCE
+	btn.add_theme_constant_override("icon_max_width", 18)
 	btn.custom_minimum_size = Vector2(120, 0)
 	var mpad := MarginContainer.new()
 	mpad.add_theme_constant_override("margin_right", 16)

@@ -9,6 +9,7 @@ const ICON_RED := preload("res://assets/ui/icons/red-card.png")
 const ICON_SPEED_FAST := preload("res://assets/ui/icons/speed-fast.png")
 const ICON_SPEED_NORMAL := preload("res://assets/ui/icons/speed-normal.png")
 const ICON_FIRE := preload("res://assets/ui/icons/fire.png")
+const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
 
 ## Fixture que se está jugando (pasado desde el calendario via GameManager)
 var fixture: Dictionary = {}
@@ -61,6 +62,8 @@ func _ready() -> void:
 	%BtnSkip.pressed.connect(_on_skip)
 	%BtnFast.icon = ICON_SPEED_FAST
 	%BtnFast.add_theme_constant_override("icon_max_width", 20)
+	%BtnPlayPause.icon = ICON_ADVANCE
+	%BtnPlayPause.add_theme_constant_override("icon_max_width", 20)
 
 	_refresh_scoreboard()
 
@@ -75,12 +78,14 @@ func _on_play_pause() -> void:
 	_playing = not _playing
 	if _playing:
 		%BtnPlayPause.text = "Pausa"
+		%BtnPlayPause.icon = null
 		_fast = false
 		%BtnFast.text = "Rápido"
 		%BtnFast.icon = ICON_SPEED_FAST
 		_tick()
 	else:
 		%BtnPlayPause.text = "Jugar"
+		%BtnPlayPause.icon = ICON_ADVANCE
 		_timer.stop()
 
 
@@ -92,7 +97,8 @@ func _on_fast() -> void:
 	%BtnFast.icon = ICON_SPEED_FAST if not _fast else ICON_SPEED_NORMAL
 	if not _playing:
 		_playing = true
-		%BtnPlayPause.text = "⏸ Pausa"
+		%BtnPlayPause.text = "Pausa"
+		%BtnPlayPause.icon = null
 		_tick()
 
 
