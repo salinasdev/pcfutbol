@@ -16,6 +16,12 @@ func _ready() -> void:
 
 
 func _get_first_league() -> League:
+	var player_team: Team = GameManager.get_player_team()
+	if player_team != null:
+		var player_league: League = GameManager.get_league(player_team.league_id)
+		if player_league != null:
+			return player_league
+
 	if GameManager.leagues.is_empty():
 		return null
 	return GameManager.leagues.values()[0] as League
@@ -149,6 +155,8 @@ func _make_fixture_row(f: Dictionary) -> Control:
 
 
 func _get_next_fixture() -> Dictionary:
+	if _league == null:
+		return {}
 	var pid := GameManager.player_team_id
 	for f: Dictionary in _league.fixtures:
 		if (f["home_id"] == pid or f["away_id"] == pid) and not f["played"]:

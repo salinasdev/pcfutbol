@@ -31,6 +31,12 @@ func _ready() -> void:
 
 
 func _get_first_league() -> League:
+	var player_team: Team = GameManager.get_player_team()
+	if player_team != null:
+		var player_league: League = GameManager.get_league(player_team.league_id)
+		if player_league != null:
+			return player_league
+
 	if GameManager.leagues.is_empty():
 		return null
 	return GameManager.leagues.values()[0] as League
