@@ -7,15 +7,16 @@ const ICON_GOAL := preload("res://assets/ui/icons/goal.png")
 const ICON_TROPHY := preload("res://assets/ui/icons/trophy.png")
 const ICON_MANAGER := preload("res://assets/ui/icons/briefcase.png")
 const ICON_CLIPBOARD := preload("res://assets/ui/icons/chart.png")
+const ICON_STAR := preload("res://assets/ui/icons/star.png")
 const ICON_SIZE_NAV := 28
 
 ## Pantalla "Junta Directiva": métricas del mánager y propuesta de primas.
 
 # ── Refs a controles actualizables ──────────────────────────────────────────
 var _lbl_name:        Label
-var _lbl_rating:      Label
-var _lbl_board:       Label
-var _lbl_public:      Label
+var _lbl_rating:      HBoxContainer
+var _lbl_board:       HBoxContainer
+var _lbl_public:      HBoxContainer
 var _spin_win:        SpinBox
 var _spin_title:      SpinBox
 var _lbl_result:      Label
@@ -40,16 +41,30 @@ func _refresh() -> void:
 	_rebuild_bonus_table()
 
 
-func _update_metric(lbl: Label, val: float) -> void:
+func _update_metric(row: HBoxContainer, val: float) -> void:
+	for child in row.get_children():
+		child.queue_free()
+
 	var filled := int(round(val))
-	var bar := "█".repeat(filled) + "░".repeat(10 - filled)
-	lbl.text = "%s  %.1f / 10" % [bar, val]
+	for i in range(10):
+		var icon := TextureRect.new()
+		icon.texture = ICON_STAR
+		icon.custom_minimum_size = Vector2(16, 16)
+		icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.modulate = Color(1.0, 0.84, 0.2, 1) if i < filled else Color(0.40, 0.43, 0.48, 0.60)
+		row.add_child(icon)
+
+	var val_lbl := Label.new()
+	val_lbl.text = "  %.1f / 10" % val
+	val_lbl.add_theme_font_size_override("font_size", 17)
 	if val >= 7.0:
-		lbl.add_theme_color_override("font_color", Color(0.25, 0.90, 0.40, 1))
+		val_lbl.add_theme_color_override("font_color", Color(0.25, 0.90, 0.40, 1))
 	elif val >= 4.0:
-		lbl.add_theme_color_override("font_color", Color(0.95, 0.75, 0.15, 1))
+		val_lbl.add_theme_color_override("font_color", Color(0.95, 0.75, 0.15, 1))
 	else:
-		lbl.add_theme_color_override("font_color", Color(0.90, 0.25, 0.20, 1))
+		val_lbl.add_theme_color_override("font_color", Color(0.90, 0.25, 0.20, 1))
+	row.add_child(val_lbl)
 
 
 func _rebuild_bonus_table() -> void:
@@ -216,18 +231,18 @@ func _build_ui() -> void:
 
 	# Métricas
 	left.add_child(_sublabel("Evaluación como mánager"))
-	_lbl_rating = Label.new()
-	_lbl_rating.add_theme_font_size_override("font_size", 17)
+	_lbl_rating = HBoxContainer.new()
+	_lbl_rating.add_theme_constant_override("separation", 4)
 	left.add_child(_lbl_rating)
 
 	left.add_child(_sublabel("Confianza de la Directiva"))
-	_lbl_board = Label.new()
-	_lbl_board.add_theme_font_size_override("font_size", 17)
+	_lbl_board = HBoxContainer.new()
+	_lbl_board.add_theme_constant_override("separation", 4)
 	left.add_child(_lbl_board)
 
 	left.add_child(_sublabel("Confianza del Público"))
-	_lbl_public = Label.new()
-	_lbl_public.add_theme_font_size_override("font_size", 17)
+	_lbl_public = HBoxContainer.new()
+	_lbl_public.add_theme_constant_override("separation", 4)
 	left.add_child(_lbl_public)
 
 	left.add_child(HSeparator.new())

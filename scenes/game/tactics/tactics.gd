@@ -1,7 +1,13 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_MEDICAL := preload("res://assets/ui/icons/medical.png")
+const ICON_RED_CARD := preload("res://assets/ui/icons/red-card.png")
+const ICON_BAN := preload("res://assets/ui/icons/ban.png")
+const ICON_PEOPLE := preload("res://assets/ui/icons/people.png")
+const ICON_TRAINING := preload("res://assets/ui/icons/training.png")
 const ICON_SIZE_NAV := 28
+const ICON_SIZE_ACTION := 22
 
 ## Posiciones normalizadas (0–1) en el campo para cada formación.
 ## Orden: POR, DEF×n, MED×n, DEL×n  (de abajo arriba en portrait)
@@ -43,6 +49,11 @@ func _ready() -> void:
 	%BtnBack.icon = ICON_BACK
 	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
+	%BtnAutoLineup.icon = ICON_PEOPLE
+	%BtnAutoLineup.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
+	%BtnTeamTactics.icon = ICON_TRAINING
+	%BtnTeamTactics.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
+	%NoConvocadosTitleIcon.texture = ICON_BAN
 	GameManager.tactics_badge_active = false
 	if _team:
 		_formation = _team.formation
@@ -205,6 +216,18 @@ func _make_bench_row(p: Player) -> Control:
 
 
 func _make_no_convocado_row(p: Player) -> Control:
+	var row := HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0, 44)
+	row.add_theme_constant_override("separation", 8)
+
+	var icon := TextureRect.new()
+	icon.texture = ICON_MEDICAL if p.injured else ICON_RED_CARD
+	icon.custom_minimum_size = Vector2(18, 18)
+	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.modulate = Color(0.95, 0.35, 0.35, 1)
+	row.add_child(icon)
+
 	var lbl := Label.new()
 	var reason: String
 	if p.injured:
@@ -218,7 +241,9 @@ func _make_no_convocado_row(p: Player) -> Control:
 	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", Color(0.95, 0.3, 0.3, 1))
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	return lbl
+	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(lbl)
+	return row
 
 
 func _on_bench_player_pressed(pid: int) -> void:
@@ -263,6 +288,8 @@ func _auto_lineup() -> void:
 		if p != null and not p.suspended and not p.injured:
 			available.append(p)
 	available.sort_custom(func(a: Player, b: Player) -> bool:
+		if not is_equal_approx(a.get_lineup_score(), b.get_lineup_score()):
+			return a.get_lineup_score() > b.get_lineup_score()
 		return a.get_overall() > b.get_overall())
 
 	# Determinar cuántos slots hay por posición según la formación

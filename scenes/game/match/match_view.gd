@@ -235,19 +235,15 @@ func _on_match_finished() -> void:
 
 	GameManager.active_fixture = {}
 
-	# Drenar energía de los titulares del equipo del jugador
-	# La pérdida depende del rendimiento físico: más physical = aguanta más
-	# Base: 10–26 puntos, reducida hasta ~7–18 si physical >= 80
+	var match_intensity := randf_range(0.8, 1.15)
 	var pt2: Team = GameManager.get_player_team()
 	if pt2 != null:
-		var match_intensity := randf_range(0.8, 1.2)  # partido más o menos exigente
-		for pid: int in pt2.starting_eleven:
-			var p: Player = GameManager.get_player(pid)
-			if p:
-				var base_drain := randf_range(10.0, 26.0)
-				var phys_factor := 1.0 - (float(p.physical) / 99.0) * 0.35  # 0.65 a 1.0
-				var drain := int(round(base_drain * phys_factor * match_intensity))
-				p.energy = clampi(p.energy - drain, 5, 100)
+		GameManager.apply_post_match_wear(pt2, match_intensity)
+	var rival_team := GameManager.get_team(fixture.get("away_id", -1))
+	if rival_team != null and rival_team.id == GameManager.player_team_id:
+		rival_team = GameManager.get_team(fixture.get("home_id", -1))
+	if rival_team != null:
+		GameManager.apply_post_match_wear(rival_team, match_intensity)
 
 	SaveManager.save_game()
 

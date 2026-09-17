@@ -1,6 +1,9 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_MEDICAL := preload("res://assets/ui/icons/medical.png")
+const ICON_RED_CARD := preload("res://assets/ui/icons/red-card.png")
+const ICON_YELLOW_CARD := preload("res://assets/ui/icons/yellow-card.png")
 const ICON_SIZE_NAV := 28
 
 const POS_COLORS := {
@@ -134,35 +137,34 @@ func _build_list() -> void:
 	if _team == null:
 		return
 
-	%TitleLabel.text = _team.name + " â€” AlineaciÃ³n"
+	%TitleLabel.text = _team.name + " - Alineacion"
 	%CountLabel.text = "%d jugadores" % _team.player_ids.size()
 
 	var list: VBoxContainer = %PlayerList
 	for child in list.get_children():
 		child.queue_free()
 
-	# â€”â€” MEDIA DEL EQUIPO â€”â€”
+	# Media del equipo
 	list.add_child(_make_team_average_bar())
 
-	# â€”â€” 11 INICIAL â€”â€”
-	list.add_child(_make_section_header("âš½  11 INICIAL", Color(0.10, 0.22, 0.10, 1), Color(0.4, 0.95, 0.5, 1)))
+	# 11 inicial
+	list.add_child(_make_section_header("11 INICIAL", Color(0.10, 0.22, 0.10, 1), Color(0.4, 0.95, 0.5, 1)))
 	list.add_child(_make_col_header(true))
 	for i in range(_team.starting_eleven.size()):
 		var p: Player = GameManager.get_player(_team.starting_eleven[i])
 		if p:
 			list.add_child(_make_row(p, SECTION_STARTER, i))
 
-	# â€”â€” SUPLENTES â€”â€”
-	# Mostrar hint de selecciÃ³n en curso en la secciÃ³n Suplentes
-	var bench_hint := "" if _selected_id == -1 else " â€” toca aquÃ­ para intercambiar"
-	list.add_child(_make_section_header("ðŸ”„  SUPLENTES" + bench_hint, Color(0.08, 0.12, 0.24, 1), Color(0.5, 0.72, 1.0, 1)))
+	# Suplentes
+	var bench_hint := "" if _selected_id == -1 else " - toca aqui para intercambiar"
+	list.add_child(_make_section_header("SUPLENTES" + bench_hint, Color(0.08, 0.12, 0.24, 1), Color(0.5, 0.72, 1.0, 1)))
 	list.add_child(_make_col_header(false))
 	for i in range(_team.bench.size()):
 		var p: Player = GameManager.get_player(_team.bench[i])
 		if p:
 			list.add_child(_make_row(p, SECTION_BENCH, i))
 
-	# â€”â€” NO CONVOCADOS â€”â€”
+	# No convocados
 	var out_ids: Array[int] = []
 	for pid: int in _team.player_ids:
 		if not _team.starting_eleven.has(pid) and not _team.bench.has(pid):
@@ -174,8 +176,8 @@ func _build_list() -> void:
 		return int(pa.position) < int(pb.position)
 	)
 	var bench_full := _team.bench.size() >= 5
-	var out_hint := " â€” toca para convocar" if not bench_full else " â€” toca otro para intercambiar"
-	list.add_child(_make_section_header("âŒ  NO CONVOCADOS" + out_hint, Color(0.18, 0.10, 0.10, 1), Color(0.85, 0.45, 0.45, 1)))
+	var out_hint := " - toca para convocar" if not bench_full else " - toca otro para intercambiar"
+	list.add_child(_make_section_header("NO CONVOCADOS" + out_hint, Color(0.18, 0.10, 0.10, 1), Color(0.85, 0.45, 0.45, 1)))
 	list.add_child(_make_col_header(false))
 	for pid: int in out_ids:
 		var p: Player = GameManager.get_player(pid)
@@ -412,23 +414,20 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 	name_hbox.add_child(lbl_name)
 
 	if p.injured:
+		name_hbox.add_child(_make_status_icon(ICON_MEDICAL, Color(0.70, 0.30, 0.10, 1), 16))
 		var b := Label.new()
-		b.text = "ðŸ©¹Ã—%d" % p.injury_weeks
+		b.text = "x%d" % p.injury_weeks
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		b.add_theme_font_size_override("font_size", 12)
 		b.add_theme_color_override("font_color", Color(0.55, 0.22, 0.0, 1))
 		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_hbox.add_child(b)
 	elif p.suspended:
-		var b := Label.new()
-		b.text = "ðŸš«"
-		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		b.add_theme_font_size_override("font_size", 15)
-		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		name_hbox.add_child(b)
+		name_hbox.add_child(_make_status_icon(ICON_RED_CARD, Color(0.85, 0.15, 0.15, 1), 16))
 	elif p.yellow_cards > 0:
+		name_hbox.add_child(_make_status_icon(ICON_YELLOW_CARD, Color(0.78, 0.62, 0.05, 1), 16))
 		var b := Label.new()
-		b.text = "ðŸŸ¨Ã—%d" % p.yellow_cards
+		b.text = "x%d" % p.yellow_cards
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		b.add_theme_font_size_override("font_size", 12)
 		b.add_theme_color_override("font_color",
@@ -466,6 +465,17 @@ func _stat_lbl(val: int, width: int) -> Label:
 		Color(0.60, 0.10, 0.05, 1))
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return lbl
+
+
+func _make_status_icon(texture: Texture2D, color: Color, size: int) -> TextureRect:
+	var icon := TextureRect.new()
+	icon.texture = texture
+	icon.custom_minimum_size = Vector2(size, size)
+	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.modulate = color
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return icon
 
 
 func _vsep(col: Color) -> Control:

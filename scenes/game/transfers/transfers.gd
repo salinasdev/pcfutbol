@@ -1,7 +1,9 @@
 extends Control
 
 const ICON_BACK := preload("res://assets/ui/icons/back-white.png")
+const ICON_MONEY := preload("res://assets/ui/icons/dollar.png")
 const ICON_SIZE_NAV := 28
+const ICON_SIZE_ACTION := 20
 
 const POS_LABELS := ["Todas", "POR", "DEF", "MED", "DEL"]
 const MODE_ALL    := 0
@@ -16,6 +18,8 @@ func _ready() -> void:
 	%BtnBack.icon = ICON_BACK
 	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
+	%BtnOfferStatus.icon = ICON_MONEY
+	%BtnOfferStatus.add_theme_constant_override("icon_max_width", ICON_SIZE_ACTION)
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	TransferManager.acknowledge_active_offers()
 

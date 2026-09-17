@@ -55,7 +55,7 @@ theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 1)
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 54)
-text = "📋 Mis Ofertas"
+text = "Mis Ofertas"
 theme_override_font_sizes/font_size = 15
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer"]

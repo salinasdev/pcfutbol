@@ -65,6 +65,12 @@ func get_me() -> int:
 	return int(round((en_norm + pace + physical + defending + get_ca()) / 5.0))
 
 
+func get_condition_factor() -> float:
+	var energy_factor := clampf(energy / 100.0, 0.35, 1.0)
+	var fitness_factor := clampf(fitness / 100.0, 0.35, 1.0)
+	return clampf(energy_factor * 0.65 + fitness_factor * 0.35, 0.35, 1.0)
+
+
 ## Valoración global por posición, penalizada por baja energía
 func get_overall() -> int:
 	match position:
@@ -79,10 +85,14 @@ func get_overall() -> int:
 	return 50
 
 
+func get_lineup_score() -> float:
+	return float(get_overall()) * get_condition_factor()
+
+
 ## Overall efectivo penalizado por energía (usado en simulación de partidos)
 func get_effective_overall() -> int:
 	var base := get_overall()
-	var factor := clampf(energy / 100.0 * 0.40 + 0.60, 0.60, 1.0)
+	var factor := clampf(0.45 + get_condition_factor() * 0.55, 0.60, 1.0)
 	return maxi(1, int(round(base * factor)))
 
 

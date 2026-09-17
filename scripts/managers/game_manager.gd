@@ -159,21 +159,8 @@ func advance_week() -> void:
 	# Salarios semanales y finanzas del equipo del jugador
 	_process_weekly_finances()
 
-	# Recuperación de energía semanal para el equipo del jugador
-	# Titulares: +6, suplentes: +10, no convocados: +14 (más descanso = más recarga)
-	var energy_team: Team = get_player_team()
-	if energy_team != null:
-		for pid: int in energy_team.player_ids:
-			var p: Player = get_player(pid)
-			if p:
-				var regen: int
-				if energy_team.starting_eleven.has(pid):
-					regen = randi_range(4, 8)
-				elif energy_team.bench.has(pid):
-					regen = randi_range(8, 12)
-				else:
-					regen = randi_range(12, 18)
-				p.energy = clampi(p.energy + regen, 5, 100)
+	# Recuperación semanal de condición para todos los equipos.
+	_recover_all_teams_condition()
 
 	var all_done: bool = true
 	for league: League in leagues.values():
@@ -371,6 +358,8 @@ func _simulate_ai_match(f: Dictionary, home: Team, away: Team) -> void:
 
 	f["played"] = true
 	LeagueManager._apply_result(f)
+	apply_post_match_wear(home, randf_range(0.90, 1.15))
+	apply_post_match_wear(away, randf_range(0.90, 1.15))
 
 	if not ft.is_empty():
 		# Aplicar sanciones (amarillas, rojas, lesiones) a ambos equipos
@@ -387,6 +376,60 @@ func _simulate_ai_match(f: Dictionary, home: Team, away: Team) -> void:
 				var sp: Player = get_player(scorer_id)
 				if sp:
 					sp.season_goals += 1
+
+
+func apply_post_match_wear(team: Team, intensity: float = 1.0) -> void:
+	if team == null:
+		return
+	for pid: int in team.starting_eleven:
+		var p: Player = get_player(pid)
+		if p == null:
+			continue
+		var base_drain := randf_range(7.0, 18.0)
+		var phys_factor := 1.0 - (float(p.physical) / 99.0) * 0.30
+		var drain := int(round(base_drain * phys_factor * intensity))
+		p.energy = clampi(p.energy - drain, 5, 100)
+
+		var fitness_hit := 1
+		if p.energy < 35:
+			fitness_hit = 3
+		elif p.energy < 55:
+			fitness_hit = 2
+		if intensity > 1.05:
+			fitness_hit += 1
+		p.fitness = clampi(p.fitness - fitness_hit, 35, 100)
+
+
+func _recover_all_teams_condition() -> void:
+	for team: Team in teams.values():
+		_recover_team_condition(team)
+
+
+func _recover_team_condition(team: Team) -> void:
+	if team == null:
+		return
+	for pid: int in team.player_ids:
+		var p: Player = get_player(pid)
+		if p == null:
+			continue
+
+		var energy_regen: int
+		var fitness_regen: int
+		if p.injured:
+			energy_regen = randi_range(18, 26)
+			fitness_regen = randi_range(3, 6)
+		elif team.starting_eleven.has(pid):
+			energy_regen = randi_range(8, 14)
+			fitness_regen = randi_range(0, 2)
+		elif team.bench.has(pid):
+			energy_regen = randi_range(12, 18)
+			fitness_regen = randi_range(1, 3)
+		else:
+			energy_regen = randi_range(16, 24)
+			fitness_regen = randi_range(2, 4)
+
+		p.energy = clampi(p.energy + energy_regen, 5, 100)
+		p.fitness = clampi(p.fitness + fitness_regen, 35, 100)
 
 
 func _process_weekly_finances() -> void:
