@@ -414,7 +414,7 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 	name_hbox.add_child(lbl_name)
 
 	if p.injured:
-		name_hbox.add_child(_make_status_icon(ICON_MEDICAL, Color(0.70, 0.30, 0.10, 1), 16))
+		name_hbox.add_child(_make_status_icon(ICON_MEDICAL, 12))
 		var b := Label.new()
 		b.text = "x%d" % p.injury_weeks
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -423,9 +423,9 @@ func _make_row(p: Player, section: String, slot_idx: int) -> Control:
 		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		name_hbox.add_child(b)
 	elif p.suspended:
-		name_hbox.add_child(_make_status_icon(ICON_RED_CARD, Color(0.85, 0.15, 0.15, 1), 16))
+		name_hbox.add_child(_make_status_icon(ICON_RED_CARD, 12))
 	elif p.yellow_cards > 0:
-		name_hbox.add_child(_make_status_icon(ICON_YELLOW_CARD, Color(0.78, 0.62, 0.05, 1), 16))
+		name_hbox.add_child(_make_status_icon(ICON_YELLOW_CARD, 12))
 		var b := Label.new()
 		b.text = "x%d" % p.yellow_cards
 		b.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -467,13 +467,12 @@ func _stat_lbl(val: int, width: int) -> Label:
 	return lbl
 
 
-func _make_status_icon(texture: Texture2D, color: Color, size: int) -> TextureRect:
+func _make_status_icon(texture: Texture2D, size: int) -> TextureRect:
 	var icon := TextureRect.new()
 	icon.texture = texture
 	icon.custom_minimum_size = Vector2(size, size)
 	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = color
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return icon
 
