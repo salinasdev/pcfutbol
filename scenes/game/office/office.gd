@@ -1,7 +1,8 @@
 extends Control
 
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
-const ICON_ATTENTION := preload("res://assets/ui/icons/atencion.gif")
+const ICON_ATTENTION_PATH := "res://assets/ui/icons/atencion.gif"
+const ICON_ATTENTION_FALLBACK := preload("res://assets/ui/icons/warning.png")
 const ICON_SIZE_NAV := 28
 
 @onready var team_name_label: Label = %TeamNameLabel
@@ -180,7 +181,7 @@ func _setup_squad_badge() -> void:
 	# Inyectar un icono de aviso sobre el botón Plantilla
 	var btn: Button = %BtnSquad
 	var badge := TextureRect.new()
-	badge.texture = ICON_ATTENTION
+	badge.texture = _get_attention_icon()
 	badge.custom_minimum_size = Vector2(18, 18)
 	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -207,7 +208,7 @@ func _refresh_squad_badge() -> void:
 func _setup_transfers_badge() -> void:
 	var btn: Button = %BtnTransfers
 	var badge := TextureRect.new()
-	badge.texture = ICON_ATTENTION
+	badge.texture = _get_attention_icon()
 	badge.custom_minimum_size = Vector2(18, 18)
 	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -238,7 +239,7 @@ func _on_offer_response(_offer: Dictionary) -> void:
 func _setup_tactics_badge() -> void:
 	var btn: Button = %BtnTactics
 	var badge := TextureRect.new()
-	badge.texture = ICON_ATTENTION
+	badge.texture = _get_attention_icon()
 	badge.custom_minimum_size = Vector2(18, 18)
 	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -321,3 +322,8 @@ func _fmt_short(amount: int) -> String:
 	elif amount >= 1_000:
 		return "%.0fK€" % (amount / 1_000.0)
 	return "%d€" % amount
+
+
+func _get_attention_icon() -> Texture2D:
+	var tex := load(ICON_ATTENTION_PATH) as Texture2D
+	return tex if tex != null else ICON_ATTENTION_FALLBACK
