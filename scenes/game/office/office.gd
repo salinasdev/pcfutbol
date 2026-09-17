@@ -1,7 +1,7 @@
 extends Control
 
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
-const ICON_ATTENTION := preload("res://assets/ui/icons/warning.png")
+const ICON_ATTENTION := preload("res://assets/ui/icons/alert.png")
 const ICON_SIZE_NAV := 28
 
 @onready var team_name_label: Label = %TeamNameLabel
