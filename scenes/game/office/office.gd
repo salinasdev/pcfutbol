@@ -2,6 +2,7 @@ extends Control
 
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
 const ICON_ATTENTION := preload("res://assets/ui/icons/alert.png")
+const ICON_LEAGUE := preload("res://assets/ui/icons/liga1.png")
 const ICON_SIZE_NAV := 28
 
 @onready var team_name_label: Label = %TeamNameLabel
@@ -15,6 +16,7 @@ const ICON_SIZE_NAV := 28
 @onready var notice_label: Label    = %NoticeLabel
 @onready var home_crest: TextureRect = %HomeCrest
 @onready var away_crest: TextureRect = %AwayCrest
+@onready var competition_logo: TextureRect = %CompetitionLogo
 
 const _TICKER_SPEED: float = 110.0  # px/s
 var _notices: Array[String] = []
@@ -84,6 +86,7 @@ func _refresh_header() -> void:
 		var home: Team = GameManager.get_team(next_f.get("home_id", -1))
 		var away: Team = GameManager.get_team(next_f.get("away_id", -1))
 		var player_is_home := (home != null and home.id == GameManager.player_team_id)
+		_refresh_competition_logo(next_f)
 		team_name_label.text = home.name if home else (team.name if team else "Mi Equipo")
 		away_team_label.text = away.name if away else "—"
 		if player_is_home:
@@ -95,6 +98,7 @@ func _refresh_header() -> void:
 		_set_crest(home_crest, home)
 		_set_crest(away_crest, away)
 	else:
+		_refresh_competition_logo({})
 		team_name_label.text = team.name if team else "Sin equipo"
 		away_team_label.text = "—"
 		home_manager_label.text = GameManager.manager_name
@@ -113,6 +117,20 @@ func _set_crest(rect: TextureRect, team: Team) -> void:
 		rect.texture = null
 
 
+func _refresh_competition_logo(fixture: Dictionary) -> void:
+	if competition_logo == null:
+		return
+	var competition := _get_fixture_competition_key(fixture)
+	competition_logo.texture = ICON_LEAGUE if competition == "league" else null
+	competition_logo.visible = (competition_logo.texture != null)
+
+
+func _get_fixture_competition_key(fixture: Dictionary) -> String:
+	if fixture.is_empty():
+		return ""
+	return str(fixture.get("competition", "league"))
+
+
 func _on_next_week() -> void:
 	# Si hay partido pendiente, jugar en lugar de avanzar
 	if not GameManager.active_fixture.is_empty() and not GameManager.active_fixture.get("played", false):
@@ -127,6 +145,7 @@ func _on_next_week() -> void:
 func _on_player_match_ready(fixture: Dictionary) -> void:
 	var home: Team = GameManager.get_team(fixture.get("home_id", -1))
 	var away: Team = GameManager.get_team(fixture.get("away_id", -1))
+	_refresh_competition_logo(fixture)
 	team_name_label.text = home.name if home else "Mi Equipo"
 	away_team_label.text = away.name if away else "Rival"
 	away_manager_label.text = (away.coach_name if away.coach_name != "" else away.city) if away else ""
