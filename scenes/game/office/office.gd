@@ -1,6 +1,7 @@
 extends Control
 
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
+const ICON_ATTENTION := preload("res://assets/ui/icons/atencion.gif")
 const ICON_SIZE_NAV := 28
 
 @onready var team_name_label: Label = %TeamNameLabel
@@ -18,9 +19,9 @@ const ICON_SIZE_NAV := 28
 const _TICKER_SPEED: float = 110.0  # px/s
 var _notices: Array[String] = []
 var _ticker_x: float = 0.0
-var _squad_badge: Label     = null  # punto rojo sobre Plantilla
-var _transfers_badge: Label = null  # punto rojo sobre Fichajes
-var _tactics_badge: Label   = null  # punto rojo sobre Tácticas
+var _squad_badge: TextureRect     = null  # aviso sobre Plantilla
+var _transfers_badge: TextureRect = null  # aviso sobre Fichajes
+var _tactics_badge: TextureRect   = null  # aviso sobre Tácticas
 
 
 func _ready() -> void:
@@ -176,12 +177,13 @@ func _on_date_advanced(_date: Dictionary) -> void:
 
 
 func _setup_squad_badge() -> void:
-	# Inyectar un punto rojo sobre el botón Plantilla
+	# Inyectar un icono de aviso sobre el botón Plantilla
 	var btn: Button = %BtnSquad
-	var badge := Label.new()
-	badge.text = "\u25cf"
-	badge.add_theme_font_size_override("font_size", 22)
-	badge.add_theme_color_override("font_color", Color(1.0, 0.20, 0.15, 1))
+	var badge := TextureRect.new()
+	badge.texture = ICON_ATTENTION
+	badge.custom_minimum_size = Vector2(18, 18)
+	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	# Posicionar en esquina superior derecha del botón
 	btn.add_child(badge)
@@ -204,10 +206,11 @@ func _refresh_squad_badge() -> void:
 
 func _setup_transfers_badge() -> void:
 	var btn: Button = %BtnTransfers
-	var badge := Label.new()
-	badge.text = "\u25cf"
-	badge.add_theme_font_size_override("font_size", 22)
-	badge.add_theme_color_override("font_color", Color(1.0, 0.20, 0.15, 1))
+	var badge := TextureRect.new()
+	badge.texture = ICON_ATTENTION
+	badge.custom_minimum_size = Vector2(18, 18)
+	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(badge)
 	badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
@@ -234,10 +237,11 @@ func _on_offer_response(_offer: Dictionary) -> void:
 
 func _setup_tactics_badge() -> void:
 	var btn: Button = %BtnTactics
-	var badge := Label.new()
-	badge.text = "\u25cf"
-	badge.add_theme_font_size_override("font_size", 22)
-	badge.add_theme_color_override("font_color", Color(1.0, 0.20, 0.15, 1))
+	var badge := TextureRect.new()
+	badge.texture = ICON_ATTENTION
+	badge.custom_minimum_size = Vector2(18, 18)
+	badge.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	btn.add_child(badge)
 	badge.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)

@@ -222,10 +222,9 @@ func _make_no_convocado_row(p: Player) -> Control:
 
 	var icon := TextureRect.new()
 	icon.texture = ICON_MEDICAL if p.injured else ICON_RED_CARD
-	icon.custom_minimum_size = Vector2(18, 18)
+	icon.custom_minimum_size = Vector2(12, 12)
 	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.modulate = Color(0.95, 0.35, 0.35, 1)
 	row.add_child(icon)
 
 	var lbl := Label.new()
