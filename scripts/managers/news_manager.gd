@@ -301,61 +301,58 @@ const PUPAS_CLOSERS := [
 # Generador semanal
 
 func generate_weekly_news() -> void:
-	var new_items: Array[Dictionary] = []
 	var week := GameManager.current_week
 	var player_team := GameManager.get_player_team()
 	var any_league := GameManager.leagues.values()
 	var league_started := not any_league.is_empty() and (any_league[0] as League).current_matchday >= 1
+	if not _has_news_for_week(week):
+		_push_news(_baseline_weekly_news(player_team))
 
 	# 1. Resultado del partido propio — busca el último jugado, sin depender de active_fixture
 	if player_team != null:
 		var last_f := _get_last_fixture(player_team)
 		if not last_f.is_empty() and last_f.get("matchday", 0) > _last_reported_player_matchday:
-			new_items.append(_news_from_fixture(last_f, player_team))
+			_push_news(_news_from_fixture(last_f, player_team))
 			_last_reported_player_matchday = last_f.get("matchday", 0)
 
 	# 2. Resultado más destacado de la jornada entre equipos rivales
 	var rival := _best_rival_result_news(player_team)
 	if not rival.is_empty():
-		new_items.append(rival)
+		_push_news(rival)
 
 	# 3. Clasificación (cada 2 semanas o si el equipo del jugador acaba de cambiar de zona)
 	if week % 2 == 0 or _zone_changed_this_week(player_team):
 		var cls := _standings_news(player_team)
 		if not cls.is_empty():
-			new_items.append(cls)
+			_push_news(cls)
 
 	# 4. Entrevista de un jugador del equipo del jugador (solo si jugaron recientemente)
 	if player_team != null and _team_played_recently(player_team):
-		new_items.append(_interview_news(player_team))
+		_push_news(_interview_news(player_team))
 		if randf() < 0.45:
-			new_items.append(_rival_coach_news(player_team))
+			var rival_coach := _rival_coach_news(player_team)
+			if not rival_coach.is_empty():
+				_push_news(rival_coach)
 
 	# 4b. Ambiente y voces de la semana
 	if player_team != null and randf() < 0.55:
-		new_items.append(_fan_voice_news(player_team))
+		var fan_voice := _fan_voice_news(player_team)
+		if not fan_voice.is_empty():
+			_push_news(fan_voice)
 	if player_team != null and randf() < 0.35:
-		new_items.append(_locker_room_news(player_team))
+		var locker_room := _locker_room_news(player_team)
+		if not locker_room.is_empty():
+			_push_news(locker_room)
 
 	# 5. El Pupas — crítica semanal SIEMPRE (solo si la liga ha empezado)
 	if league_started:
-		new_items.append(_tabloid_news(player_team))
+		_push_news(_tabloid_news(player_team))
 
 	# 6. Rumor de fichaje (40 % de probabilidad, solo si hay jornadas jugadas)
 	if league_started and randf() < 0.40:
 		var rumor := _transfer_rumor_news(player_team)
 		if not rumor.is_empty():
-			new_items.append(rumor)
-
-	if new_items.is_empty():
-		new_items.append(_placeholder_news())
-
-	for item: Dictionary in new_items:
-		if not item.is_empty():
-			item["week"] = week
-			news_feed.push_front(item)
-	while news_feed.size() > 40:
-		news_feed.pop_back()
+			_push_news(rumor)
 
 
 # ---------------------------------------------------------------------------
@@ -865,6 +862,27 @@ func _placeholder_news() -> Dictionary:
 	return _make_news(Category.VESTUARIO,
 		"Semana de trabajo en los entrenamientos",
 		"El cuerpo técnico ha intensificado la preparación de cara a los próximos compromisos.")
+
+
+func _baseline_weekly_news(player_team: Team) -> Dictionary:
+	if player_team == null:
+		return _placeholder_news()
+	var headline := "Boletín semanal del %s" % player_team.short_name
+	var body := "Resumen base de la semana %d.\n\n" % GameManager.current_week
+	body += "El %s sigue preparando sus próximos compromisos con normalidad." % player_team.name
+	var next_fixture := GameManager.get_next_player_fixture()
+	if not next_fixture.is_empty():
+		var rival_id := int(next_fixture.get("away_id", -1)) if int(next_fixture.get("home_id", -1)) == player_team.id else int(next_fixture.get("home_id", -1))
+		var rival := GameManager.get_team(rival_id)
+		body += "\n\nPróximo rival: %s en %s." % [rival.name if rival != null else "por confirmar", GameManager.get_fixture_competition_name(next_fixture)]
+	return _make_news(Category.VESTUARIO, headline, body)
+
+
+func _has_news_for_week(week: int) -> bool:
+	for item: Dictionary in news_feed:
+		if int(item.get("week", -1)) == week:
+			return true
+	return false
 
 
 func add_cup_draw_news(round_name: String, fixtures: Array) -> void:
