@@ -355,6 +355,12 @@ func generate_weekly_news() -> void:
 			_push_news(rumor)
 
 
+func ensure_weekly_news() -> void:
+	if not news_feed.is_empty():
+		return
+	_push_news(_baseline_weekly_news(GameManager.get_player_team()))
+
+
 # ---------------------------------------------------------------------------
 # Constructores de noticias
 

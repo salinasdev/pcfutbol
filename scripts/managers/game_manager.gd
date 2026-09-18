@@ -177,6 +177,7 @@ func advance_week() -> void:
 	_process_manager_job_market()
 	if active_fixture.is_empty() or active_fixture.get("played", false):
 		NewsManager.generate_weekly_news()
+		NewsManager.ensure_weekly_news()
 
 	# Efectos del personal del club
 	var staff_team: Team = get_player_team()

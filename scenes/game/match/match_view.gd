@@ -250,6 +250,7 @@ func _on_match_finished() -> void:
 		GameManager.apply_post_match_wear(rival_team, match_intensity)
 
 	NewsManager.generate_weekly_news()
+	NewsManager.ensure_weekly_news()
 
 	SaveManager.save_game()
 

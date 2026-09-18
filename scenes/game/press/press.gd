@@ -14,6 +14,7 @@ func _ready() -> void:
 	%WeekLabel.text = "Semana %d" % GameManager.current_week
 	if NewsManager.news_feed.is_empty() and GameManager.current_week > 1:
 		NewsManager.generate_weekly_news()
+	NewsManager.ensure_weekly_news()
 
 	%FilterAll.pressed.connect(func(): _set_filter(-1))
 	%FilterResults.pressed.connect(func(): _set_filter(NewsManager.Category.RESULTADO))
