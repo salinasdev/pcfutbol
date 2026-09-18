@@ -1,7 +1,7 @@
 extends Node
 
 ## Simula un partido entre dos equipos y devuelve el resultado
-func simulate_match(home: Team, away: Team) -> Dictionary:
+func simulate_match(home: Team, away: Team, options: Dictionary = {}) -> Dictionary:
 	if home == null or away == null:
 		return {"home_goals": 0, "away_goals": 0}
 
@@ -25,10 +25,39 @@ func simulate_match(home: Team, away: Team) -> Dictionary:
 	home_xg *= am[1]  # la defensa rival mitiga mi ataque
 	away_xg *= hm[1]
 
-	return {
+	var result := {
 		"home_goals": _poisson_sample(home_xg),
-		"away_goals": _poisson_sample(away_xg)
+		"away_goals": _poisson_sample(away_xg),
+		"winner_id": -1,
+		"decided_by": "normal_time",
 	}
+
+	var needs_tiebreaker := false
+	if bool(options.get("knockout_single_leg", false)):
+		needs_tiebreaker = result["home_goals"] == result["away_goals"]
+	elif bool(options.get("knockout_on_aggregate_tie", false)):
+		var aggregate_home := int(options.get("aggregate_home_start", 0)) + int(result["home_goals"])
+		var aggregate_away := int(options.get("aggregate_away_start", 0)) + int(result["away_goals"])
+		needs_tiebreaker = aggregate_home == aggregate_away
+
+	if needs_tiebreaker:
+		var extra_time := _simulate_extra_time(home_xg, away_xg)
+		result["home_goals"] = int(result["home_goals"]) + int(extra_time.get("home_goals", 0))
+		result["away_goals"] = int(result["away_goals"]) + int(extra_time.get("away_goals", 0))
+		result["after_extra_time"] = true
+		if int(result["home_goals"]) == int(result["away_goals"]):
+			var penalties := _simulate_penalties(home, away)
+			result["penalties_home"] = penalties.get("penalties_home", 0)
+			result["penalties_away"] = penalties.get("penalties_away", 0)
+			result["winner_id"] = penalties.get("winner_id", -1)
+			result["decided_by"] = "penalties"
+		else:
+			result["winner_id"] = home.id if int(result["home_goals"]) > int(result["away_goals"]) else away.id
+			result["decided_by"] = "extra_time"
+	else:
+		result["winner_id"] = home.id if int(result["home_goals"]) > int(result["away_goals"]) else away.id if int(result["away_goals"]) > int(result["home_goals"]) else -1
+
+	return result
 
 
 ## Devuelve [xg_attack_factor, xg_concede_factor] para un equipo frente a su rival.
@@ -112,6 +141,34 @@ func simulate_match_detailed(home: Team, away: Team) -> Dictionary:
 		"home_possession": randi_range(35, 65)
 	}
 
+
+func _simulate_extra_time(home_xg: float, away_xg: float) -> Dictionary:
+	var extra_factor := 0.28
+	return {
+		"home_goals": _poisson_sample(home_xg * extra_factor),
+		"away_goals": _poisson_sample(away_xg * extra_factor)
+	}
+
+
+func _simulate_penalties(home: Team, away: Team) -> Dictionary:
+	var home_score := 0
+	var away_score := 0
+	for _shot: int in range(5):
+		if randf() < _penalty_conversion(home):
+			home_score += 1
+		if randf() < _penalty_conversion(away):
+			away_score += 1
+	while home_score == away_score:
+		if randf() < _penalty_conversion(home):
+			home_score += 1
+		if randf() < _penalty_conversion(away):
+			away_score += 1
+	return {
+		"penalties_home": home_score,
+		"penalties_away": away_score,
+		"winner_id": home.id if home_score > away_score else away.id,
+	}
+
 # ---------------------------------------------------------------------------
 
 func _get_team_strength(team: Team) -> float:
@@ -131,6 +188,10 @@ func _get_team_strength(team: Team) -> float:
 	if team.id == GameManager.player_team_id:
 		base *= GameManager.get_bonus_strength_factor()
 	return base
+
+
+func _penalty_conversion(team: Team) -> float:
+	return clampf(_get_team_strength(team) / 100.0 * 0.28 + 0.58, 0.58, 0.88)
 
 
 ## Algoritmo de Knuth para muestrear distribución de Poisson

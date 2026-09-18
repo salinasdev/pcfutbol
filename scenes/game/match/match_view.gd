@@ -49,7 +49,7 @@ func _ready() -> void:
 		_add_derby_banner(_derby_name)
 
 	# Generar todos los eventos
-	_events = MatchEngine.generate_events(_home, _away)
+	_events = MatchEngine.generate_events(_home, _away, GameManager.get_fixture_match_options(fixture))
 
 	# Timer que avanza un evento por tick
 	_timer = Timer.new()
@@ -161,7 +161,10 @@ func _process_event(ev: Dictionary) -> void:
 	var min: int = ev["minute"]
 
 	%MinuteLabel.text = "Descanso" if t == MatchEngine.EventType.HALF_TIME else \
-						("Final" if t == MatchEngine.EventType.FULL_TIME else "Minuto %d'" % min)
+						("Prórroga" if t == MatchEngine.EventType.EXTRA_TIME_START else \
+						("Descanso prórroga" if t == MatchEngine.EventType.EXTRA_TIME_HALF else \
+						("Penaltis" if t == MatchEngine.EventType.PENALTY_SHOOTOUT else \
+						("Final" if t == MatchEngine.EventType.FULL_TIME else "Minuto %d'" % min))))
 
 	if t == MatchEngine.EventType.GOAL:
 		if ev["team_id"] == _home.id:
@@ -188,6 +191,13 @@ func _on_match_finished() -> void:
 		var ft: Dictionary = _events[_events.size() - 1]
 		fixture["home_goals"] = ft.get("home_goals", _home_goals)
 		fixture["away_goals"] = ft.get("away_goals", _away_goals)
+		fixture["winner_id"] = ft.get("winner_id", -1)
+		fixture["decided_by"] = ft.get("decided_by", "normal_time")
+		if ft.has("after_extra_time"):
+			fixture["after_extra_time"] = ft.get("after_extra_time", false)
+		if ft.has("penalties_home"):
+			fixture["penalties_home"] = ft.get("penalties_home", 0)
+			fixture["penalties_away"] = ft.get("penalties_away", 0)
 		fixture["played"]     = true
 		GameManager.resolve_competition_fixture(fixture)
 		# Actualizar métricas de la Junta Directiva

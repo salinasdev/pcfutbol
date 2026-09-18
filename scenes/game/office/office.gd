@@ -143,8 +143,103 @@ func _on_next_week() -> void:
 		return
 	%BtnNextWeek.disabled = true
 	GameManager.advance_week()
+	if GameManager.has_pending_cup_draw_presentations():
+		await _show_pending_cup_draw_presentations()
 	SaveManager.save_game()
 	%BtnNextWeek.disabled = false
+
+
+func _show_pending_cup_draw_presentations() -> void:
+	while GameManager.has_pending_cup_draw_presentations():
+		var draw_data := GameManager.pop_next_cup_draw_presentation()
+		if draw_data.is_empty():
+			continue
+		await _show_cup_draw_popup(draw_data)
+
+
+func _show_cup_draw_popup(draw_data: Dictionary) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "%s · %s" % [str(draw_data.get("competition_name", "Copa")), str(draw_data.get("round_name", "Sorteo"))]
+	dialog.size = Vector2i(820, 560)
+	dialog.dialog_hide_on_ok = true
+	add_child(dialog)
+
+	var root := VBoxContainer.new()
+	root.custom_minimum_size = Vector2(740, 420)
+	root.add_theme_constant_override("separation", 12)
+	dialog.add_child(root)
+
+	var intro := Label.new()
+	intro.text = "Sorteo del %s · %s" % [str(draw_data.get("round_name", "Sorteo")), _fmt_draw_date(draw_data.get("draw_date", {}))]
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro.add_theme_font_size_override("font_size", 18)
+	intro.add_theme_color_override("font_color", Color(0.86, 0.92, 1.0, 1))
+	root.add_child(intro)
+
+	var reveal := RichTextLabel.new()
+	reveal.bbcode_enabled = false
+	reveal.scroll_active = true
+	reveal.fit_content = false
+	reveal.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	reveal.custom_minimum_size = Vector2(0, 340)
+	reveal.add_theme_font_size_override("normal_font_size", 17)
+	root.add_child(reveal)
+
+	var hint := Label.new()
+	hint.text = "El cuadro se irá completando automáticamente."
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.66, 0.77, 0.92, 1))
+	root.add_child(hint)
+
+	var ok_button := dialog.get_ok_button()
+	ok_button.text = "Continuar"
+	ok_button.disabled = true
+	dialog.popup_centered_ratio(0.64)
+
+	var pair_lines := _build_draw_reveal_lines(draw_data.get("fixtures", []))
+	for line: String in pair_lines:
+		reveal.append_text(line + "\n")
+		reveal.scroll_to_line(reveal.get_line_count())
+		await get_tree().create_timer(0.22).timeout
+
+	hint.text = "Sorteo completado."
+	ok_button.disabled = false
+	while dialog.visible:
+		await dialog.visibility_changed
+	dialog.queue_free()
+
+
+func _build_draw_reveal_lines(fixtures: Array) -> Array[String]:
+	var lines: Array[String] = []
+	var seen_pairs: Dictionary = {}
+	for fixture: Dictionary in fixtures:
+		var pair_id := str(fixture.get("pair_id", ""))
+		if seen_pairs.has(pair_id):
+			continue
+		seen_pairs[pair_id] = true
+		var home := GameManager.get_team(int(fixture.get("home_id", -1)))
+		var away := GameManager.get_team(int(fixture.get("away_id", -1)))
+		if bool(fixture.get("two_legs", false)):
+			lines.append("• %s vs %s · ida en %s, vuelta en %s" % [
+				home.name if home != null else "???",
+				away.name if away != null else "???",
+				home.stadium_name if home != null else "casa del local",
+				away.stadium_name if away != null else "casa del visitante",
+			])
+		else:
+			var venue := "sede neutral" if fixture.get("neutral_venue", false) else (home.stadium_name if home != null and home.stadium_name != "" else "campo del local")
+			lines.append("• %s vs %s · en %s" % [
+				home.name if home != null else "???",
+				away.name if away != null else "???",
+				venue,
+			])
+	return lines
+
+
+func _fmt_draw_date(date: Dictionary) -> String:
+	if date.is_empty():
+		return "--/--/----"
+	return "%02d/%02d/%d" % [int(date.get("day", 1)), int(date.get("month", 1)), int(date.get("year", GameManager.season))]
 
 
 func _on_player_match_ready(fixture: Dictionary) -> void:

@@ -170,6 +170,52 @@ const HEADLINES_TRANSFER_DONE := [
 	"{team} anuncia el fichaje de {player}: llega de {team2} por {fee} €",
 	"Cerrado el traspaso: {player} deja {team2} y firma por {team} por {fee} €",
 ]
+const CUP_DRAW_HEADLINES := [
+	"Sorteada la {round}: ya hay cruces en la Copa del Rey",
+	"La Copa del Rey define su {round}: bombos, ilusión y duelos calientes",
+	"Ya se conocen los emparejamientos de la {round} copera",
+	"La {round} de Copa deja un cuadro cargado de historias",
+]
+const CUP_GIANT_KILL_HEADLINES := [
+	"La magia de la Copa: {small} se cita con el gigante {big}",
+	"Sueño copero para {small}: enfrentamiento histórico ante {big}",
+	"Un estadio pequeño para una noche grande: {small} recibirá a {big}",
+]
+const FAN_HEADLINES := [
+	"La afición toma la palabra antes de otra semana clave",
+	"Las gradas opinan: ilusión, nervios y exigencia alrededor del {team}",
+	"Pulso de la afición: así se vive el momento del {team}",
+]
+const FAN_QUOTES := [
+	"Si este equipo compite como el otro día, nos vamos a divertir mucho.",
+	"Lo único que pedimos es ver al equipo dejarse el alma.",
+	"En esta ciudad se habla del partido desde el lunes.",
+	"La gente está enchufada; se nota en cada entrenamiento abierto.",
+	"Nos da igual el rival: queremos ver valentía y carácter.",
+]
+const FAN_PROFILES := ["un abonado de Gol Norte", "una peñista veterana", "un grupo de aficionados a la salida del estadio", "la grada joven", "una peña desplazada"]
+const RIVAL_COACH_HEADLINES := [
+	"El técnico rival calienta el próximo duelo ante {team}",
+	"Mensaje del banquillo contrario: respeto al {team}, cero miedo",
+	"El rival toma la palabra antes de medirse al {team}",
+]
+const RIVAL_COACH_QUOTES := [
+	"Sabemos que enfrente hay nivel, pero también vemos espacios para hacerles daño.",
+	"Será un partido de detalles y no podemos regalar ni una sola transición.",
+	"Nos van a exigir mucho, justo el tipo de reto que motiva al vestuario.",
+	"Respetamos su momento, aunque venimos convencidos de que podemos competir allí.",
+]
+const LOCKER_ROOM_HEADLINES := [
+	"Así respira el vestuario del {team} en plena semana competitiva",
+	"Puertas adentro: el ambiente del {team} mezcla tensión e ilusión",
+	"El vestuario del {team} se activa para un tramo decisivo",
+]
+const LOCKER_ROOM_LINES := [
+	"Las sesiones de esta semana han tenido más intensidad de lo habitual y el grupo ha respondido bien.",
+	"Se percibe concentración en los pesos pesados del vestuario y hambre entre los más jóvenes.",
+	"El cuerpo técnico ha insistido en corregir detalles sin tocar la confianza del bloque.",
+	"Los capitanes están empujando para mantener al grupo metido en cada entrenamiento.",
+]
 
 # ---------------------------------------------------------------------------
 # EL PUPAS — diario sensacionalista que critica al equipo del jugador SIEMPRE
@@ -282,6 +328,14 @@ func generate_weekly_news() -> void:
 	# 4. Entrevista de un jugador del equipo del jugador (solo si jugaron recientemente)
 	if player_team != null and _team_played_recently(player_team):
 		new_items.append(_interview_news(player_team))
+		if randf() < 0.45:
+			new_items.append(_rival_coach_news(player_team))
+
+	# 4b. Ambiente y voces de la semana
+	if player_team != null and randf() < 0.55:
+		new_items.append(_fan_voice_news(player_team))
+	if player_team != null and randf() < 0.35:
+		new_items.append(_locker_room_news(player_team))
 
 	# 5. El Pupas — crítica semanal SIEMPRE (solo si la liga ha empezado)
 	if league_started:
@@ -520,6 +574,55 @@ func _interview_news(player_team: Team) -> Dictionary:
 	return _make_news(Category.ENTREVISTA, headline, body)
 
 
+func _fan_voice_news(player_team: Team) -> Dictionary:
+	if player_team == null:
+		return {}
+	var headline := FAN_HEADLINES.pick_random().replace("{team}", player_team.short_name)
+	var profile := str(FAN_PROFILES.pick_random())
+	var body := "La calle ya habla del momento del %s.\n\n" % player_team.name
+	body += "Recogimos la impresión de %s: «%s»\n\n" % [profile, FAN_QUOTES.pick_random()]
+	var next_fixture := GameManager.get_next_player_fixture()
+	if not next_fixture.is_empty():
+		var rival_id: int = next_fixture.get("away_id", -1) if int(next_fixture.get("home_id", -1)) == player_team.id else int(next_fixture.get("home_id", -1))
+		var rival: Team = GameManager.get_team(rival_id)
+		var comp := GameManager.get_fixture_competition_name(next_fixture)
+		body += "La conversación gira en torno al próximo compromiso ante %s en %s." % [rival.name if rival != null else "el rival", comp]
+	else:
+		body += "La sensación general es que el equipo debe aprovechar la dinámica para seguir creciendo."
+	return _make_news(Category.ENTREVISTA, headline, body)
+
+
+func _rival_coach_news(player_team: Team) -> Dictionary:
+	if player_team == null:
+		return {}
+	var next_fixture := GameManager.get_next_player_fixture()
+	if next_fixture.is_empty():
+		return {}
+	var rival_id: int = next_fixture.get("away_id", -1) if int(next_fixture.get("home_id", -1)) == player_team.id else int(next_fixture.get("home_id", -1))
+	var rival: Team = GameManager.get_team(rival_id)
+	if rival == null:
+		return {}
+	var coach_name := rival.coach_name if rival.coach_name != "" else "El técnico visitante"
+	var headline := RIVAL_COACH_HEADLINES.pick_random().replace("{team}", player_team.short_name)
+	var body := "%s compareció ante los medios antes del próximo partido.\n\n" % coach_name
+	body += "«%s»\n\n" % RIVAL_COACH_QUOTES.pick_random()
+	body += "En el club rival creen que el choque ante %s puede marcar la tendencia inmediata del equipo." % player_team.name
+	return _make_news(Category.ENTRENADORES, headline, body)
+
+
+func _locker_room_news(player_team: Team) -> Dictionary:
+	if player_team == null:
+		return {}
+	var headline := LOCKER_ROOM_HEADLINES.pick_random().replace("{team}", player_team.short_name)
+	var body := "Crónica de vestuario del %s.\n\n" % player_team.name
+	body += LOCKER_ROOM_LINES.pick_random()
+	if _team_played_recently(player_team):
+		body += " El grupo sigue comentando el último partido y la plantilla quiere trasladar esas sensaciones al siguiente compromiso."
+	else:
+		body += " La semana ha sido de carga, vídeo y ajustes tácticos pensando en el siguiente reto."
+	return _make_news(Category.VESTUARIO, headline, body)
+
+
 func _transfer_rumor_news(player_team: Team) -> Dictionary:
 	var candidates: Array = []
 	for p: Player in GameManager.players.values():
@@ -574,24 +677,18 @@ func _transfer_rumor_news(player_team: Team) -> Dictionary:
 ## Devuelve array de resultados ('W','D','L') de los últimos n partidos del equipo
 func _get_team_form(team: Team, n: int) -> Array:
 	var results: Array = []
-	for league: League in GameManager.leagues.values():
-		for md in range(league.current_matchday, 0, -1):
-			for f: Dictionary in league.get_fixtures_for_matchday(md):
-				if not f["played"]:
-					continue
-				if f["home_id"] != team.id and f["away_id"] != team.id:
-					continue
-				var is_home: bool = f["home_id"] == team.id
-				var my_g: int = f["home_goals"] if is_home else f["away_goals"]
-				var op_g: int = f["away_goals"] if is_home else f["home_goals"]
-				if my_g > op_g:
-					results.append("W")
-				elif my_g < op_g:
-					results.append("L")
-				else:
-					results.append("D")
-				if results.size() >= n:
-					return results
+	for f: Dictionary in _get_all_played_team_fixtures(team):
+		var is_home: bool = f["home_id"] == team.id
+		var my_g: int = f["home_goals"] if is_home else f["away_goals"]
+		var op_g: int = f["away_goals"] if is_home else f["home_goals"]
+		if my_g > op_g:
+			results.append("W")
+		elif my_g < op_g:
+			results.append("L")
+		else:
+			results.append("D")
+		if results.size() >= n:
+			return results
 	return results
 
 
@@ -616,19 +713,7 @@ func _count_without_win(form: Array) -> int:
 
 
 func _team_played_recently(team: Team) -> bool:
-	for league: League in GameManager.leagues.values():
-		var md := league.current_matchday
-		if md < 1:
-			continue
-		for f: Dictionary in league.get_fixtures_for_matchday(md):
-			if f["played"] and (f["home_id"] == team.id or f["away_id"] == team.id):
-				return true
-		# Buscar también en md-1 por si la jornada del jugador va desfasada
-		if md >= 2:
-			for f: Dictionary in league.get_fixtures_for_matchday(md - 1):
-				if f["played"] and (f["home_id"] == team.id or f["away_id"] == team.id):
-					return true
-	return false
+	return not _get_all_played_team_fixtures(team).is_empty()
 
 
 func _zone_changed_this_week(team: Team) -> bool:
@@ -727,18 +812,8 @@ func _tabloid_news(player_team: Team) -> Dictionary:
 
 
 func _get_last_fixture(team: Team) -> Dictionary:
-	var best: Dictionary = {}
-	var best_md: int = -1
-	for league: League in GameManager.leagues.values():
-		for f: Dictionary in league.fixtures:
-			if not f["played"]:
-				continue
-			if f["home_id"] != team.id and f["away_id"] != team.id:
-				continue
-			if f["matchday"] > best_md:
-				best_md = f["matchday"]
-				best = f
-	return best
+	var fixtures := _get_all_played_team_fixtures(team)
+	return fixtures[0] if not fixtures.is_empty() else {}
 
 
 func _quote_for_result(diff: int) -> String:
@@ -787,6 +862,70 @@ func _placeholder_news() -> Dictionary:
 	return _make_news(Category.VESTUARIO,
 		"Semana de trabajo en los entrenamientos",
 		"El cuerpo técnico ha intensificado la preparación de cara a los próximos compromisos.")
+
+
+func add_cup_draw_news(round_name: String, fixtures: Array) -> void:
+	if fixtures.is_empty():
+		return
+	var headline := CUP_DRAW_HEADLINES.pick_random().replace("{round}", round_name.to_lower())
+	var body := "Sorteo de la %s de la Copa del Rey.\n\n" % round_name
+	var pair_lines: Array[String] = []
+	var seen_pairs: Dictionary = {}
+	var giant_killing_fixture: Dictionary = {}
+	for fixture: Dictionary in fixtures:
+		var pair_id := str(fixture.get("pair_id", ""))
+		if seen_pairs.has(pair_id):
+			continue
+		seen_pairs[pair_id] = true
+		var home: Team = GameManager.get_team(int(fixture.get("home_id", -1)))
+		var away: Team = GameManager.get_team(int(fixture.get("away_id", -1)))
+		if home == null or away == null:
+			continue
+		pair_lines.append("• %s vs %s" % [home.name, away.name])
+		if giant_killing_fixture.is_empty() and abs(home.reputation - away.reputation) >= 14:
+			giant_killing_fixture = fixture
+	body += "\n".join(pair_lines.slice(0, mini(8, pair_lines.size())))
+	if pair_lines.size() > 8:
+		body += "\n..."
+	if not giant_killing_fixture.is_empty():
+		var small := _underdog_team(giant_killing_fixture)
+		var big := _favorite_team(giant_killing_fixture)
+		if small != null and big != null:
+			body += "\n\nLa gran historia del sorteo la firma %s, que recibirá a %s con todo un pueblo soñando con la sorpresa." % [small.name, big.name]
+	_push_news(_make_news(Category.RESULTADO, headline, body))
+	if not giant_killing_fixture.is_empty():
+		var small := _underdog_team(giant_killing_fixture)
+		var big := _favorite_team(giant_killing_fixture)
+		if small != null and big != null:
+			var upset_headline := CUP_GIANT_KILL_HEADLINES.pick_random().replace("{small}", small.short_name).replace("{big}", big.short_name)
+			var upset_body := "El cruce entre %s y %s ha disparado la ilusión en la Copa del Rey.\n\n" % [small.name, big.name]
+			upset_body += "El duelo se jugará en %s, donde ya se espera una de esas noches que cambian la historia de un club modesto." % [small.stadium_name if small.stadium_name != "" else "el estadio local"]
+			_push_news(_make_news(Category.ENTREVISTA, upset_headline, upset_body))
+
+
+func add_cup_result_news(fixture: Dictionary) -> void:
+	var home: Team = GameManager.get_team(int(fixture.get("home_id", -1)))
+	var away: Team = GameManager.get_team(int(fixture.get("away_id", -1)))
+	if home == null or away == null:
+		return
+	var round_name := str(fixture.get("round_name", "Copa del Rey"))
+	var headline := "%s: %s %d-%d %s" % [round_name, home.short_name, int(fixture.get("home_goals", 0)), int(fixture.get("away_goals", 0)), away.short_name]
+	var body := "%s %d-%d %s\n\n" % [home.name, int(fixture.get("home_goals", 0)), int(fixture.get("away_goals", 0)), away.name]
+	if bool(fixture.get("two_legs", false)) and int(fixture.get("leg", 1)) == 1:
+		body += "Se cerró el primer asalto de la eliminatoria. Todo queda pendiente para la vuelta."
+	else:
+		var winner := GameManager.get_team(int(fixture.get("winner_id", -1)))
+		if fixture.has("penalties_home"):
+			body += "La eliminatoria se resolvió en penaltis (%d-%d) y el billete fue para %s." % [int(fixture.get("penalties_home", 0)), int(fixture.get("penalties_away", 0)), winner.name if winner != null else "el ganador"]
+		elif fixture.get("decided_by", "") == "extra_time":
+			body += "%s selló el pase tras una prórroga agónica." % [winner.name if winner != null else "El ganador"]
+		else:
+			body += "%s consiguió el pase en los 90 minutos." % [winner.name if winner != null else "El ganador"]
+		var small := _underdog_team(fixture)
+		var big := _favorite_team(fixture)
+		if winner != null and small != null and big != null and winner.id == small.id and small.reputation + 10 <= big.reputation:
+			body += "\n\nSaltó la sorpresa: %s derribó a %s y se regala una noche histórica de Copa." % [small.name, big.name]
+	_push_news(_make_news(Category.RESULTADO, headline, body))
 
 
 
@@ -1060,6 +1199,48 @@ func _last_name(pid: int) -> String:
 		return "el jugador"
 	var parts := p.full_name.split(" ")
 	return parts[parts.size() - 1]
+
+
+func _get_all_played_team_fixtures(team: Team) -> Array[Dictionary]:
+	if team == null:
+		return []
+	var fixtures: Array[Dictionary] = []
+	for league: League in GameManager.leagues.values():
+		for f: Dictionary in league.fixtures:
+			if f.get("played", false) and (f.get("home_id", -1) == team.id or f.get("away_id", -1) == team.id):
+				fixtures.append(f)
+	for f: Dictionary in GameManager.get_cup_fixtures_for_team(team.id):
+		if f.get("played", false):
+			fixtures.append(f)
+	fixtures.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var ak := _fixture_news_sort_key(a)
+		var bk := _fixture_news_sort_key(b)
+		return ak > bk
+	)
+	return fixtures
+
+
+func _fixture_news_sort_key(fixture: Dictionary) -> int:
+	var date: Dictionary = fixture.get("scheduled_date", {})
+	if not date.is_empty():
+		return int(date.get("year", GameManager.season)) * 10_000 + int(date.get("month", 1)) * 100 + int(date.get("day", 1))
+	return int(fixture.get("matchday", 0))
+
+
+func _underdog_team(fixture: Dictionary) -> Team:
+	var home: Team = GameManager.get_team(int(fixture.get("home_id", -1)))
+	var away: Team = GameManager.get_team(int(fixture.get("away_id", -1)))
+	if home == null or away == null:
+		return null
+	return home if home.reputation <= away.reputation else away
+
+
+func _favorite_team(fixture: Dictionary) -> Team:
+	var home: Team = GameManager.get_team(int(fixture.get("home_id", -1)))
+	var away: Team = GameManager.get_team(int(fixture.get("away_id", -1)))
+	if home == null or away == null:
+		return null
+	return home if home.reputation >= away.reputation else away
 
 
 func _get_team_standing_pos(team: Team) -> int:

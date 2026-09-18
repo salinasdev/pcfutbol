@@ -23,6 +23,9 @@ func save_game() -> void:
 		"teams":   _serialize_teams(),
 		"leagues": _serialize_leagues(),
 		"cup_competitions": GameManager.cup_competitions,
+		"pending_cup_draw_presentations": GameManager.pending_cup_draw_presentations,
+		"week_in_progress": GameManager.week_in_progress,
+		"current_week_had_cup_fixture": GameManager.current_week_had_cup_fixture,
 		"news_feed": NewsManager.news_feed,
 		"active_offers":    TransferManager.active_offers,
 		"_next_offer_id":   TransferManager._next_offer_id,
@@ -94,6 +97,9 @@ func load_game() -> bool:
 	_deserialize_teams(data.get("teams", {}))
 	_deserialize_leagues(data.get("leagues", {}))
 	GameManager.cup_competitions = data.get("cup_competitions", {})
+	GameManager.pending_cup_draw_presentations.assign(data.get("pending_cup_draw_presentations", []))
+	GameManager.week_in_progress = data.get("week_in_progress", false)
+	GameManager.current_week_had_cup_fixture = data.get("current_week_had_cup_fixture", false)
 	if GameManager.cup_competitions.is_empty():
 		GameManager.setup_season_competitions()
 	NewsManager.news_feed.assign(data.get("news_feed", []))

@@ -20,6 +20,9 @@ var players: Dictionary = {}   ## int -> Player
 var teams: Dictionary = {}     ## int -> Team
 var leagues: Dictionary = {}   ## int -> League
 var cup_competitions: Dictionary = {}
+var pending_cup_draw_presentations: Array[Dictionary] = []
+var week_in_progress: bool = false
+var current_week_had_cup_fixture: bool = false
 
 var _next_player_id: int = 1
 var _next_team_id: int = 1
@@ -106,6 +109,10 @@ func start_game(p_manager_name: String, team_id: int) -> void:
 ## - Si el jugador tiene partido, emite player_match_ready.
 ## - Si no, cierra la jornada y emite matchday_done.
 func advance_week() -> void:
+	if week_in_progress and _continue_current_week_if_needed():
+		return
+	week_in_progress = true
+	current_week_had_cup_fixture = false
 	current_week += 1
 	_advance_date(7)
 	emit_signal("date_advanced", current_date)
@@ -120,6 +127,7 @@ func advance_week() -> void:
 
 	var cup_fixture := _process_due_cup_matches()
 	if not cup_fixture.is_empty():
+		current_week_had_cup_fixture = true
 		active_fixture = cup_fixture
 		var cup_derby: String = NewsManager.get_derby_name_by_id(
 			cup_fixture.get("home_id", -1), cup_fixture.get("away_id", -1))
@@ -162,48 +170,7 @@ func advance_week() -> void:
 					break
 		return
 
-	# Buscar siguiente jornada pendiente en todas las ligas
-	for league: League in leagues.values():
-		var next_md: int = league.current_matchday + 1
-		if next_md > league.get_total_matchdays():
-			continue
-		var fixtures: Array[Dictionary] = league.get_fixtures_for_matchday(next_md)
-		if fixtures.is_empty():
-			continue
-
-		var player_fixture: Dictionary = {}
-		for f: Dictionary in fixtures:
-			if f["played"]:
-				continue
-			if f["home_id"] == player_team_id or f["away_id"] == player_team_id:
-				player_fixture = f
-			else:
-				var ht: Team = get_team(f["home_id"])
-				var at: Team = get_team(f["away_id"])
-				_simulate_ai_match(f, ht, at)
-
-		if not player_fixture.is_empty():
-			active_fixture = player_fixture
-			# Detectar si es un derbi y preparar el ambiente especial
-			var _derby: String = NewsManager.get_derby_name_by_id(
-				player_fixture.get("home_id", -1), player_fixture.get("away_id", -1))
-			active_derby_name = _derby
-			if _derby != "":
-				var _dh: Team = get_team(player_fixture.get("home_id", -1))
-				var _da: Team = get_team(player_fixture.get("away_id", -1))
-				if _dh != null and _da != null:
-					# Boost de moral para todos los jugadores del equipo del jugador
-					var _derby_team: Team = get_player_team()
-					if _derby_team != null:
-						for _dp_id: int in _derby_team.player_ids:
-							var _dp: Player = get_player(_dp_id)
-							if _dp != null:
-								_dp.morale = clampi(_dp.morale + 10, 0, 100)
-					NewsManager.add_derby_preview_news(_dh, _da, _derby)
-			emit_signal("player_match_ready", player_fixture)
-		else:
-			league.current_matchday = next_md
-			emit_signal("matchday_done", next_md)
+	_process_current_week_league_round()
 
 	TransferManager.process_weekly_offers()
 	TransferManager.generate_incoming_offers()
@@ -234,6 +201,9 @@ func advance_week() -> void:
 			if bp != null and (bp.injured or bp.suspended):
 				tactics_badge_active = true
 				break
+	if active_fixture.is_empty() or active_fixture.get("played", false):
+		week_in_progress = false
+		current_week_had_cup_fixture = false
 
 # ---------------------------------------------------------------------------
 
@@ -892,6 +862,18 @@ func get_cup_competition(key: String = CUP_DEL_REY_KEY) -> Dictionary:
 	return cup_competitions.get(key, {})
 
 
+func has_pending_cup_draw_presentations() -> bool:
+	return not pending_cup_draw_presentations.is_empty()
+
+
+func pop_next_cup_draw_presentation() -> Dictionary:
+	if pending_cup_draw_presentations.is_empty():
+		return {}
+	var next_draw := pending_cup_draw_presentations[0]
+	pending_cup_draw_presentations.remove_at(0)
+	return next_draw
+
+
 func get_fixture_competition_name(fixture: Dictionary) -> String:
 	var key := str(fixture.get("competition", "league"))
 	if key == CUP_DEL_REY_KEY:
@@ -939,6 +921,84 @@ func get_cup_fixtures_for_team(team_id: int) -> Array[Dictionary]:
 		return _fixture_sort_key(a) < _fixture_sort_key(b)
 	)
 	return fixtures
+
+
+func get_fixture_match_options(fixture: Dictionary) -> Dictionary:
+	if fixture.is_empty() or str(fixture.get("competition", "league")) != CUP_DEL_REY_KEY:
+		return {}
+	if not bool(fixture.get("two_legs", false)):
+		return {"knockout_single_leg": true}
+	if int(fixture.get("leg", 1)) == 2:
+		var aggregate := _get_second_leg_starting_aggregate(fixture)
+		return {
+			"knockout_on_aggregate_tie": true,
+			"aggregate_home_start": int(aggregate.get("home", 0)),
+			"aggregate_away_start": int(aggregate.get("away", 0)),
+		}
+	return {}
+
+
+func _continue_current_week_if_needed() -> bool:
+	if not active_fixture.is_empty() and not active_fixture.get("played", false):
+		return true
+	if not current_week_had_cup_fixture:
+		week_in_progress = false
+		return false
+	var player_fixture := _process_current_week_league_round()
+	if not player_fixture.is_empty():
+		return true
+	week_in_progress = false
+	current_week_had_cup_fixture = false
+	return false
+
+
+func _process_current_week_league_round() -> Dictionary:
+	for league: League in leagues.values():
+		var next_md: int = league.current_matchday + 1
+		if next_md > league.get_total_matchdays():
+			continue
+		var fixtures: Array[Dictionary] = league.get_fixtures_for_matchday(next_md)
+		if fixtures.is_empty():
+			continue
+
+		var player_fixture: Dictionary = {}
+		for f: Dictionary in fixtures:
+			if f["played"]:
+				continue
+			if f["home_id"] == player_team_id or f["away_id"] == player_team_id:
+				player_fixture = f
+			else:
+				var ht: Team = get_team(f["home_id"])
+				var at: Team = get_team(f["away_id"])
+				_simulate_ai_match(f, ht, at)
+
+		if not player_fixture.is_empty():
+			active_fixture = player_fixture
+			_prepare_derby_for_fixture(player_fixture)
+			emit_signal("player_match_ready", player_fixture)
+			return player_fixture
+		league.current_matchday = next_md
+		emit_signal("matchday_done", next_md)
+	return {}
+
+
+func _prepare_derby_for_fixture(fixture: Dictionary) -> void:
+	var derby_name: String = NewsManager.get_derby_name_by_id(
+		fixture.get("home_id", -1), fixture.get("away_id", -1))
+	active_derby_name = derby_name
+	if derby_name == "":
+		return
+	var home_team: Team = get_team(fixture.get("home_id", -1))
+	var away_team: Team = get_team(fixture.get("away_id", -1))
+	if home_team == null or away_team == null:
+		return
+	var derby_team: Team = get_player_team()
+	if derby_team != null:
+		for derby_player_id: int in derby_team.player_ids:
+			var derby_player: Player = get_player(derby_player_id)
+			if derby_player != null:
+				derby_player.morale = clampi(derby_player.morale + 10, 0, 100)
+	NewsManager.add_derby_preview_news(home_team, away_team, derby_name)
 
 
 func _team_position_in_standings(standings: Array, team_id: int) -> int:
@@ -1061,9 +1121,12 @@ func _reset_state() -> void:
 	teams.clear()
 	leagues.clear()
 	cup_competitions.clear()
+	pending_cup_draw_presentations.clear()
 	active_fixture = {}
 	active_derby_name = ""
 	tactics_badge_active = false
+	week_in_progress = false
+	current_week_had_cup_fixture = false
 	free_coaches.clear()
 	manager_rating    = 5.0
 	board_confidence  = 5.0
@@ -1292,6 +1355,13 @@ func _maybe_draw_due_cup_rounds() -> void:
 			entrants.assign(rounds[round_index - 1].get("winners", []))
 		round["fixtures"] = _draw_cup_round(round, entrants)
 		round["drawn"] = true
+		NewsManager.add_cup_draw_news(str(round.get("name", "Ronda")), round.get("fixtures", []))
+		pending_cup_draw_presentations.append({
+			"competition_name": cup.get("name", CUP_DEL_REY_NAME),
+			"round_name": round.get("name", "Ronda"),
+			"draw_date": round.get("draw_date", {}).duplicate(true),
+			"fixtures": round.get("fixtures", []).duplicate(true),
+		})
 		rounds[round_index] = round
 		cup["rounds"] = rounds
 		cup_competitions[CUP_DEL_REY_KEY] = cup
@@ -1345,6 +1415,7 @@ func _build_cup_fixture(round: Dictionary, pair_number: int, leg: int, home_id: 
 		"matchday": int(round.get("order", 0)),
 		"pair_id": "%s_%d" % [str(round.get("key", "round")), pair_number],
 		"leg": leg,
+		"week_slot": "midweek" if str(round.get("key", "")) != "final" else "weekend",
 		"two_legs": bool(round.get("two_legs", false)),
 		"home_id": home_id,
 		"away_id": away_id,
@@ -1393,9 +1464,16 @@ func _simulate_ai_cup_match(fixture: Dictionary) -> void:
 	var away_team: Team = get_team(fixture.get("away_id", -1))
 	if home_team == null or away_team == null:
 		return
-	var result: Dictionary = MatchSimulator.simulate_match(home_team, away_team)
+	var result: Dictionary = MatchSimulator.simulate_match(home_team, away_team, get_fixture_match_options(fixture))
 	fixture["home_goals"] = result.get("home_goals", 0)
 	fixture["away_goals"] = result.get("away_goals", 0)
+	fixture["winner_id"] = result.get("winner_id", -1)
+	fixture["decided_by"] = result.get("decided_by", "normal_time")
+	if result.has("after_extra_time"):
+		fixture["after_extra_time"] = result.get("after_extra_time", false)
+	if result.has("penalties_home"):
+		fixture["penalties_home"] = result.get("penalties_home", 0)
+		fixture["penalties_away"] = result.get("penalties_away", 0)
 	fixture["played"] = true
 	_resolve_cup_fixture(fixture)
 
@@ -1422,10 +1500,13 @@ func _resolve_cup_fixture(fixture: Dictionary) -> void:
 	rounds[round_index] = round
 	cup["rounds"] = rounds
 	cup_competitions[CUP_DEL_REY_KEY] = cup
+	NewsManager.add_cup_result_news(fixture)
 	_finalize_cup_round_if_ready(round_index)
 
 
 func _resolve_single_leg_winner(fixture: Dictionary) -> int:
+	if int(fixture.get("winner_id", -1)) != -1:
+		return int(fixture.get("winner_id", -1))
 	var home_goals := int(fixture.get("home_goals", 0))
 	var away_goals := int(fixture.get("away_goals", 0))
 	if home_goals > away_goals:
@@ -1455,7 +1536,30 @@ func _resolve_two_leg_winner(fixtures: Array, pair_id: String) -> int:
 		return team_a
 	if agg_b > agg_a:
 		return team_b
+	if int(second_leg.get("winner_id", -1)) != -1:
+		return int(second_leg.get("winner_id", -1))
 	return team_a if randf() < 0.5 else team_b
+
+
+func _get_second_leg_starting_aggregate(fixture: Dictionary) -> Dictionary:
+	var cup := get_cup_competition()
+	if cup.is_empty():
+		return {"home": 0, "away": 0}
+	var round_index := _get_cup_round_index(str(fixture.get("round_key", "")))
+	if round_index == -1:
+		return {"home": 0, "away": 0}
+	var rounds: Array = cup.get("rounds", [])
+	var round: Dictionary = rounds[round_index]
+	for candidate: Dictionary in round.get("fixtures", []):
+		if candidate.get("pair_id", "") != fixture.get("pair_id", ""):
+			continue
+		if int(candidate.get("leg", 1)) != 1:
+			continue
+		return {
+			"home": int(candidate.get("away_goals", 0)),
+			"away": int(candidate.get("home_goals", 0)),
+		}
+	return {"home": 0, "away": 0}
 
 
 func _finalize_cup_round_if_ready(round_index: int) -> void:

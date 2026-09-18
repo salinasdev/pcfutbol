@@ -188,6 +188,10 @@ func _fixture_result_text(fixture: Dictionary) -> String:
 		var venue_note := " · Neutral" if fixture.get("neutral_venue", false) else ""
 		return "%s%s" % [date_text, venue_note]
 	var score_text := "%d-%d" % [int(fixture.get("home_goals", 0)), int(fixture.get("away_goals", 0))]
+	if fixture.has("penalties_home"):
+		score_text += " (%d-%d pen.)" % [int(fixture.get("penalties_home", 0)), int(fixture.get("penalties_away", 0))]
+	elif fixture.get("decided_by", "") == "extra_time":
+		score_text += " (prórroga)"
 	var winner_id := int(fixture.get("winner_id", -1))
 	if winner_id == -1:
 		return score_text

@@ -5,7 +5,8 @@ extends Node
 
 enum EventType {
 	KICKOFF, GOAL, SHOT_SAVED, SHOT_OFF_TARGET, YELLOW_CARD,
-	RED_CARD, INJURY, FOUL, CORNER, HALF_TIME, FULL_TIME
+	RED_CARD, INJURY, FOUL, CORNER, HALF_TIME, EXTRA_TIME_START,
+	EXTRA_TIME_HALF, PENALTY_SHOOTOUT, FULL_TIME
 }
 
 ## Genera todos los eventos de un partido.
@@ -15,7 +16,7 @@ enum EventType {
 ##   home_goals(int), away_goals(int),
 ##   red_card_ids(Array[int]),     ← expulsados (roja directa o 2ª amarilla)
 ##   yellow_ids(Array[int])        ← amonestados (su contador +1 al aplicar)
-func generate_events(home: Team, away: Team) -> Array[Dictionary]:
+func generate_events(home: Team, away: Team, options: Dictionary = {}) -> Array[Dictionary]:
 	var events: Array[Dictionary] = []
 	if home == null or away == null:
 		return events
@@ -135,13 +136,54 @@ func generate_events(home: Team, away: Team) -> Array[Dictionary]:
 					injured_ids[pid] = weeks
 					events.append(injury_data)
 
-	var ft := _make_event(90, EventType.FULL_TIME, -1, -1,
-		"🏁 Final — %s %d-%d %s" % [home.short_name, home_goals, away_goals, away.short_name])
+	var needs_tiebreaker := false
+	if bool(options.get("knockout_single_leg", false)):
+		needs_tiebreaker = home_goals == away_goals
+	elif bool(options.get("knockout_on_aggregate_tie", false)):
+		var aggregate_home := int(options.get("aggregate_home_start", 0)) + home_goals
+		var aggregate_away := int(options.get("aggregate_away_start", 0)) + away_goals
+		needs_tiebreaker = aggregate_home == aggregate_away
+
+	var penalties_home := -1
+	var penalties_away := -1
+	var winner_id := -1
+	var decided_by := "normal_time"
+	if needs_tiebreaker:
+		events.append(_make_event(90, EventType.EXTRA_TIME_START, -1, -1,
+			"⏱️ Empate en la eliminatoria. Nos vamos a la prórroga."))
+		var extra := _simulate_extra_time_events(home, away, home_str, away_str, home_goals, away_goals)
+		home_goals = int(extra.get("home_goals", home_goals))
+		away_goals = int(extra.get("away_goals", away_goals))
+		for ev: Dictionary in extra.get("events", []):
+			events.append(ev)
+		if home_goals == away_goals:
+			var penalties := _simulate_penalty_shootout(home, away)
+			penalties_home = int(penalties.get("penalties_home", 0))
+			penalties_away = int(penalties.get("penalties_away", 0))
+			winner_id = int(penalties.get("winner_id", -1))
+			decided_by = "penalties"
+			events.append(_make_event(121, EventType.PENALTY_SHOOTOUT, winner_id, -1,
+				"🎯 Penaltis: %s %d-%d %s. Pasa %s." % [home.short_name, penalties_home, penalties_away, away.short_name, _team_short_name(winner_id)]))
+		else:
+			winner_id = home.id if home_goals > away_goals else away.id
+			decided_by = "extra_time"
+	else:
+		winner_id = home.id if home_goals > away_goals else away.id if away_goals > home_goals else -1
+
+	var ft := _make_event(121 if decided_by == "penalties" else 120 if needs_tiebreaker else 90, EventType.FULL_TIME, -1, -1,
+		_final_text(home, away, home_goals, away_goals, winner_id, decided_by, penalties_home, penalties_away))
 	ft["home_goals"]    = home_goals
 	ft["away_goals"]    = away_goals
 	ft["red_card_ids"]  = red_card_ids
 	ft["yellow_ids"]    = yellow_ids
 	ft["injured_ids"]   = injured_ids
+	ft["winner_id"]     = winner_id
+	ft["decided_by"]    = decided_by
+	if penalties_home >= 0 and penalties_away >= 0:
+		ft["penalties_home"] = penalties_home
+		ft["penalties_away"] = penalties_away
+	if needs_tiebreaker:
+		ft["after_extra_time"] = true
 	events.append(ft)
 
 	return events
@@ -157,6 +199,75 @@ func _make_event(minute: int, type: EventType, team_id: int, player_id: int, tex
 		"player_id": player_id,
 		"text":      text
 	}
+
+
+func _simulate_extra_time_events(home: Team, away: Team, home_str: float, away_str: float, home_goals: int, away_goals: int) -> Dictionary:
+	var events: Array[Dictionary] = []
+	var current_home_goals := home_goals
+	var current_away_goals := away_goals
+	var total_strength := maxf(home_str + away_str, 1.0)
+	var home_xg := 2.8 * (home_str / total_strength)
+	var away_xg := 2.8 * (away_str / total_strength)
+	for minute: int in range(91, 121):
+		if minute == 105:
+			events.append(_make_event(105, EventType.EXTRA_TIME_HALF, -1, -1,
+				"🔁 Descanso de la prórroga — %s %d-%d %s" % [home.short_name, current_home_goals, current_away_goals, away.short_name]))
+		if randf() < home_xg / 30.0:
+			var scorer_id: int = _pick_scorer(home)
+			var shot_type := _shot_outcome(home_str, away_str)
+			if shot_type == EventType.GOAL:
+				current_home_goals += 1
+				events.append(_make_event(minute, EventType.GOAL, home.id, scorer_id,
+					"⚽ GOL en la prórroga! %s (%s) %d-%d" % [_player_name(scorer_id), home.short_name, current_home_goals, current_away_goals]))
+		if randf() < away_xg / 30.0:
+			var away_scorer_id: int = _pick_scorer(away)
+			var away_shot_type := _shot_outcome(away_str, home_str)
+			if away_shot_type == EventType.GOAL:
+				current_away_goals += 1
+				events.append(_make_event(minute, EventType.GOAL, away.id, away_scorer_id,
+					"⚽ GOL en la prórroga! %s (%s) %d-%d" % [_player_name(away_scorer_id), away.short_name, current_home_goals, current_away_goals]))
+	return {
+		"events": events,
+		"home_goals": current_home_goals,
+		"away_goals": current_away_goals,
+	}
+
+
+func _simulate_penalty_shootout(home: Team, away: Team) -> Dictionary:
+	var home_score := 0
+	var away_score := 0
+	for _shot: int in range(5):
+		if randf() < _penalty_conversion(home):
+			home_score += 1
+		if randf() < _penalty_conversion(away):
+			away_score += 1
+	while home_score == away_score:
+		if randf() < _penalty_conversion(home):
+			home_score += 1
+		if randf() < _penalty_conversion(away):
+			away_score += 1
+	return {
+		"penalties_home": home_score,
+		"penalties_away": away_score,
+		"winner_id": home.id if home_score > away_score else away.id,
+	}
+
+
+func _penalty_conversion(team: Team) -> float:
+	return clampf(_strength(team) / 100.0 * 0.28 + 0.58, 0.58, 0.88)
+
+
+func _team_short_name(team_id: int) -> String:
+	var team: Team = GameManager.get_team(team_id)
+	return team.short_name if team != null else "Equipo"
+
+
+func _final_text(home: Team, away: Team, home_goals: int, away_goals: int, winner_id: int, decided_by: String, penalties_home: int, penalties_away: int) -> String:
+	if decided_by == "penalties":
+		return "🏁 Final — %s %d-%d %s. Penaltis %d-%d, pasa %s" % [home.short_name, home_goals, away_goals, away.short_name, penalties_home, penalties_away, _team_short_name(winner_id)]
+	if decided_by == "extra_time":
+		return "🏁 Final tras prórroga — %s %d-%d %s" % [home.short_name, home_goals, away_goals, away.short_name]
+	return "🏁 Final — %s %d-%d %s" % [home.short_name, home_goals, away_goals, away.short_name]
 
 
 func _strength(team: Team) -> float:
