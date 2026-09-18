@@ -148,7 +148,6 @@ func advance_week() -> void:
 		TransferManager.generate_incoming_offers()
 		_check_coach_sackings()
 		_process_manager_job_market()
-		NewsManager.generate_weekly_news()
 
 		var cup_staff_team: Team = get_player_team()
 		if cup_staff_team != null:
@@ -176,7 +175,8 @@ func advance_week() -> void:
 	TransferManager.generate_incoming_offers()
 	_check_coach_sackings()
 	_process_manager_job_market()
-	NewsManager.generate_weekly_news()
+	if active_fixture.is_empty() or active_fixture.get("played", false):
+		NewsManager.generate_weekly_news()
 
 	# Efectos del personal del club
 	var staff_team: Team = get_player_team()
