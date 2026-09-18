@@ -347,6 +347,9 @@ func generate_weekly_news() -> void:
 		if not rumor.is_empty():
 			new_items.append(rumor)
 
+	if new_items.is_empty():
+		new_items.append(_placeholder_news())
+
 	for item: Dictionary in new_items:
 		if not item.is_empty():
 			item["week"] = week
@@ -884,7 +887,11 @@ func add_cup_draw_news(round_name: String, fixtures: Array) -> void:
 		pair_lines.append("• %s vs %s" % [home.name, away.name])
 		if giant_killing_fixture.is_empty() and abs(home.reputation - away.reputation) >= 14:
 			giant_killing_fixture = fixture
-	body += "\n".join(pair_lines.slice(0, mini(8, pair_lines.size())))
+	var max_lines := mini(8, pair_lines.size())
+	for i: int in range(max_lines):
+		body += pair_lines[i]
+		if i < max_lines - 1:
+			body += "\n"
 	if pair_lines.size() > 8:
 		body += "\n..."
 	if not giant_killing_fixture.is_empty():
