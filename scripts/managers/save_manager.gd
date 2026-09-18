@@ -133,6 +133,8 @@ func load_game() -> bool:
 		"min_reputation": 45,
 	})
 	GameManager._next_manager_offer_id = data.get("_next_manager_offer_id", 1)
+	if NewsManager.news_feed.is_empty():
+		NewsManager.rebuild_news_feed()
 
 	return true
 

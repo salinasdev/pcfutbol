@@ -91,6 +91,7 @@ func prepare_new_game() -> void:
 	_reset_state()
 	DataGenerator.generate_all()
 	setup_season_competitions()
+	NewsManager.rebuild_news_feed()
 
 
 ## Paso 2: Fija el equipo y el entrenador del jugador y arranca la partida.

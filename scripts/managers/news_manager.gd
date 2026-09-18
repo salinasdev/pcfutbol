@@ -361,6 +361,17 @@ func ensure_weekly_news() -> void:
 	_push_news(_baseline_weekly_news(GameManager.get_player_team()))
 
 
+func reset_news_feed() -> void:
+	news_feed.clear()
+	_last_reported_player_matchday = 0
+
+
+func rebuild_news_feed() -> void:
+	reset_news_feed()
+	generate_weekly_news()
+	ensure_weekly_news()
+
+
 # ---------------------------------------------------------------------------
 # Constructores de noticias
 

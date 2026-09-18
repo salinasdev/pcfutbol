@@ -12,9 +12,10 @@ func _ready() -> void:
 	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%WeekLabel.text = "Semana %d" % GameManager.current_week
-	if NewsManager.news_feed.is_empty() and GameManager.current_week > 1:
-		NewsManager.generate_weekly_news()
-	NewsManager.ensure_weekly_news()
+	if NewsManager.news_feed.is_empty():
+		NewsManager.rebuild_news_feed()
+	else:
+		NewsManager.ensure_weekly_news()
 
 	%FilterAll.pressed.connect(func(): _set_filter(-1))
 	%FilterResults.pressed.connect(func(): _set_filter(NewsManager.Category.RESULTADO))
