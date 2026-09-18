@@ -60,8 +60,7 @@ func _ready() -> void:
 	_setup_squad_badge()
 	_setup_transfers_badge()
 	_setup_tactics_badge()
-	if NewsManager.news_feed.is_empty():
-		NewsManager.rebuild_news_feed()
+	NewsManager.rebuild_news_feed()
 
 	set_process(false)
 
