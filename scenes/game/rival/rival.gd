@@ -41,23 +41,7 @@ func _ready() -> void:
 # Fixture del próximo partido del jugador
 
 func _get_next_fixture() -> Dictionary:
-	# Si ya hay uno activo pendiente de jugar, devolverlo
-	if not GameManager.active_fixture.is_empty() and not GameManager.active_fixture.get("played", true):
-		return GameManager.active_fixture
-	# Buscar en el calendario el siguiente sin jugar que involucre al jugador
-	var pid: int = GameManager.player_team_id
-	for league: League in GameManager.leagues.values():
-		var best: Dictionary = {}
-		for f: Dictionary in league.fixtures:
-			if f["played"]:
-				continue
-			if f["home_id"] != pid and f["away_id"] != pid:
-				continue
-			if best.is_empty() or f["matchday"] < best["matchday"]:
-				best = f
-		if not best.is_empty():
-			return best
-	return {}
+	return GameManager.get_next_player_fixture()
 
 
 # ---------------------------------------------------------------------------
@@ -66,7 +50,12 @@ func _get_next_fixture() -> Dictionary:
 func _fill_header(rival: Team, fixture: Dictionary, is_home: bool) -> void:
 	%RivalName.text = rival.name
 	var venue := "Partido en casa" if is_home else "Partido fuera"
-	%RivalInfo.text = "%s  •  %s  •  Jornada %d" % [rival.coach_name if rival.coach_name != "" else rival.city, venue, fixture.get("matchday", 0)]
+	if fixture.get("neutral_venue", false):
+		venue = "Sede neutral"
+	var competition_label := GameManager.get_fixture_round_name(fixture)
+	if str(fixture.get("competition", "league")) == "league":
+		competition_label = "Jornada %d" % fixture.get("matchday", 0)
+	%RivalInfo.text = "%s  •  %s  •  %s" % [rival.coach_name if rival.coach_name != "" else rival.city, venue, competition_label]
 
 	var standings_text := _get_standings_text(rival)
 	%RivalStandings.text = standings_text

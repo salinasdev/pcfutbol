@@ -206,6 +206,7 @@ func _start_new_season() -> void:
 		league.season = GameManager.season
 		league.reset_season()
 		LeagueManager.generate_fixtures(league)
+	GameManager.setup_season_competitions()
 
 	NewsManager.news_feed.clear()
 	NewsManager.add_season_transition_news(transition)

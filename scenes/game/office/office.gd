@@ -3,6 +3,7 @@ extends Control
 const ICON_ADVANCE := preload("res://assets/ui/icons/advance-white.png")
 const ICON_ATTENTION := preload("res://assets/ui/icons/alert.png")
 const ICON_LEAGUE := preload("res://assets/ui/icons/liga1.png")
+const ICON_COPA_DEL_REY := preload("res://assets/ui/icons/copa1.png")
 const ICON_SIZE_NAV := 28
 
 @onready var team_name_label: Label = %TeamNameLabel
@@ -42,6 +43,7 @@ func _ready() -> void:
 	%BtnTransfers.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/transfers/transfers.tscn"))
 	%BtnCalendar.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/calendar/player_calendar.tscn"))
 	%BtnResults.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/calendar/calendar.tscn"))
+	%BtnCupDraw.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/cup/cup_draw.tscn"))
 	%BtnStandings.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/standings/standings.tscn"))
 	%BtnPress.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/press/press.tscn"))
 	%BtnSalir.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/main_menu/main_menu.tscn"))
@@ -87,6 +89,8 @@ func _refresh_header() -> void:
 		var away: Team = GameManager.get_team(next_f.get("away_id", -1))
 		var player_is_home := (home != null and home.id == GameManager.player_team_id)
 		_refresh_competition_logo(next_f)
+		var round_label := GameManager.get_fixture_round_name(next_f)
+		match_week_label.text = round_label if _get_fixture_competition_key(next_f) != "league" else "Semana %d" % GameManager.current_week
 		team_name_label.text = home.name if home else (team.name if team else "Mi Equipo")
 		away_team_label.text = away.name if away else "—"
 		if player_is_home:
@@ -103,6 +107,7 @@ func _refresh_header() -> void:
 		away_team_label.text = "—"
 		home_manager_label.text = GameManager.manager_name
 		away_manager_label.text = ""
+		match_week_label.text = "Semana %d" % GameManager.current_week
 		_set_crest(home_crest, team)
 		_set_crest(away_crest, null)
 
@@ -121,7 +126,7 @@ func _refresh_competition_logo(fixture: Dictionary) -> void:
 	if competition_logo == null:
 		return
 	var competition := _get_fixture_competition_key(fixture)
-	competition_logo.texture = ICON_LEAGUE if competition == "league" else null
+	competition_logo.texture = ICON_LEAGUE if competition == "league" else ICON_COPA_DEL_REY if competition == GameManager.CUP_DEL_REY_KEY else null
 	competition_logo.visible = (competition_logo.texture != null)
 
 
@@ -155,6 +160,8 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 	%BtnNextWeek.add_theme_color_override("font_color", Color(0.2, 1.0, 0.4, 1))
 
 	var msgs: Array[String] = []
+	if _get_fixture_competition_key(fixture) == GameManager.CUP_DEL_REY_KEY:
+		msgs.append("%s — %s" % [GameManager.get_fixture_competition_name(fixture), GameManager.get_fixture_round_name(fixture)])
 	# Aviso de derbi
 	var derby_name: String = NewsManager.get_derby_name(
 		home.name if home else "", away.name if away else "")
@@ -162,7 +169,10 @@ func _on_player_match_ready(fixture: Dictionary) -> void:
 		msgs.append("DERBI: %s vs %s. La directiva y la afición exigen la victoria. ¡Los jugadores están motivados!" % [
 			home.short_name if home else "Local",
 			away.short_name if away else "Visitante"])
-	msgs.append("Jornada %d — Los rivales ya han jugado. ¡Te toca!" % fixture.get("matchday", 0))
+	if _get_fixture_competition_key(fixture) == GameManager.CUP_DEL_REY_KEY:
+		msgs.append("El sorteo ya está servido. Partido copero listo para jugar.")
+	else:
+		msgs.append("Jornada %d — Los rivales ya han jugado. ¡Te toca!" % fixture.get("matchday", 0))
 	var suspended_names := _get_suspended_in_lineup()
 	if not suspended_names.is_empty():
 		msgs.append("Sancionados en el once: %s — Ve a Tácticas y cámbialos antes de jugar." % ", ".join(suspended_names))

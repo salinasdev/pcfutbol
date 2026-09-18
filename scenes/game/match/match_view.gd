@@ -189,7 +189,7 @@ func _on_match_finished() -> void:
 		fixture["home_goals"] = ft.get("home_goals", _home_goals)
 		fixture["away_goals"] = ft.get("away_goals", _away_goals)
 		fixture["played"]     = true
-		LeagueManager._apply_result(fixture)
+		GameManager.resolve_competition_fixture(fixture)
 		# Actualizar métricas de la Junta Directiva
 		var _is_home: bool = fixture.get("home_id", -1) == GameManager.player_team_id
 		var _pgf: int = fixture["home_goals"] if _is_home else fixture["away_goals"]
@@ -212,19 +212,13 @@ func _on_match_finished() -> void:
 					var _sp: Player = GameManager.get_player(scorer_id)
 					if _sp:
 						_sp.season_goals += 1
-		var league: League = _get_fixture_league()
-		if league:
-			var md: int = fixture.get("matchday", 1)
-			if md > league.current_matchday:
-				league.current_matchday = md
-
 	%BtnPlayPause.text = "← Volver al Despacho"
 	%BtnFast.disabled  = true
 	%BtnSkip.disabled  = true
 
 	# Ingresos de taquilla cuando el jugador es local
 	var _local: Team = GameManager.get_team(fixture.get("home_id", -1))
-	if _local != null and _local.id == GameManager.player_team_id:
+	if _local != null and _local.id == GameManager.player_team_id and not fixture.get("neutral_venue", false):
 		var _md_income := _local.calculate_matchday_income()
 		_local.club_cash              += _md_income
 		_local.season_matchday_income += _md_income

@@ -42,30 +42,45 @@ func _build_list() -> void:
 	for child in list.get_children():
 		child.queue_free()
 
-	if _league == null:
-		return
-
 	var pid := GameManager.player_team_id
+	var next_fixture := GameManager.get_next_player_fixture()
 
-	# Obtener todos los partidos del equipo del jugador, ordenados por jornada
+	# Obtener todos los partidos de liga del equipo del jugador, ordenados por jornada
 	var player_fixtures: Array[Dictionary] = []
-	for f: Dictionary in _league.fixtures:
-		if f["home_id"] == pid or f["away_id"] == pid:
-			player_fixtures.append(f)
-	player_fixtures.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		return a["matchday"] < b["matchday"]
-	)
+	if _league != null:
+		for f: Dictionary in _league.fixtures:
+			if f["home_id"] == pid or f["away_id"] == pid:
+				player_fixtures.append(f)
+		player_fixtures.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return a["matchday"] < b["matchday"]
+		)
+
+	var cup_fixtures := GameManager.get_cup_fixtures_for_team(pid)
 
 	var next_panel: Control = null
+	var has_rows := false
+
+	if not player_fixtures.is_empty():
+		list.add_child(_section_label("Liga"))
 
 	for f: Dictionary in player_fixtures:
 		var row := _make_fixture_row(f)
 		list.add_child(row)
+		has_rows = true
 		# Marcar el primer partido no jugado como "próximo"
-		if next_panel == null and not f["played"]:
+		if next_panel == null and _is_same_fixture(f, next_fixture):
 			next_panel = row
 
-	if player_fixtures.is_empty():
+	if not cup_fixtures.is_empty():
+		list.add_child(_section_label("Copa del Rey"))
+		for cup_fixture: Dictionary in cup_fixtures:
+			var cup_row := _make_fixture_row(cup_fixture)
+			list.add_child(cup_row)
+			has_rows = true
+			if next_panel == null and _is_same_fixture(cup_fixture, next_fixture):
+				next_panel = cup_row
+
+	if not has_rows:
 		var empty_lbl := Label.new()
 		empty_lbl.text = "No hay partidos en el calendario para tu equipo."
 		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -85,8 +100,9 @@ func _make_fixture_row(f: Dictionary) -> Control:
 	var opponent_id: int = f["away_id"] if is_home else f["home_id"]
 	var opponent: Team = GameManager.get_team(opponent_id)
 	var opp_name: String = opponent.name if opponent else "???"
+	var competition := str(f.get("competition", "league"))
 
-	var is_next: bool = (not f["played"] and f == _get_next_fixture())
+	var is_next: bool = (not f["played"] and _is_same_fixture(f, _get_next_fixture()))
 	var is_played: bool = f["played"]
 
 	var panel := PanelContainer.new()
@@ -110,23 +126,23 @@ func _make_fixture_row(f: Dictionary) -> Control:
 
 	# Jornada
 	var lbl_md := Label.new()
-	lbl_md.custom_minimum_size = Vector2(72, 0)
-	lbl_md.text = "J%d" % f["matchday"]
+	lbl_md.custom_minimum_size = Vector2(96, 0)
+	lbl_md.text = GameManager.get_fixture_round_name(f) if competition != "league" else "J%d" % f["matchday"]
 	lbl_md.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_md.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	lbl_md.add_theme_font_size_override("font_size", 15)
-	lbl_md.add_theme_color_override("font_color", Color(0.55, 0.65, 0.80, 1))
+	lbl_md.add_theme_color_override("font_color", Color(0.92, 0.82, 0.36, 1) if competition != "league" else Color(0.55, 0.65, 0.80, 1))
 	hbox.add_child(lbl_md)
 
 	# LOCAL / VISIT
 	var lbl_venue := Label.new()
-	lbl_venue.custom_minimum_size = Vector2(52, 0)
-	lbl_venue.text = "LOCAL" if is_home else "VISIT"
+	lbl_venue.custom_minimum_size = Vector2(72, 0)
+	lbl_venue.text = "NEUTRAL" if f.get("neutral_venue", false) else ("LOCAL" if is_home else "VISIT")
 	lbl_venue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl_venue.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	lbl_venue.add_theme_font_size_override("font_size", 13)
 	lbl_venue.add_theme_color_override("font_color",
-		Color(0.35, 0.85, 0.45, 1) if is_home else Color(0.90, 0.65, 0.25, 1))
+		Color(0.7, 0.78, 0.95, 1) if f.get("neutral_venue", false) else (Color(0.35, 0.85, 0.45, 1) if is_home else Color(0.90, 0.65, 0.25, 1)))
 	hbox.add_child(lbl_venue)
 
 	# Escudo rival
@@ -173,10 +189,22 @@ func _make_fixture_row(f: Dictionary) -> Control:
 
 
 func _get_next_fixture() -> Dictionary:
-	if _league == null:
-		return {}
-	var pid := GameManager.player_team_id
-	for f: Dictionary in _league.fixtures:
-		if (f["home_id"] == pid or f["away_id"] == pid) and not f["played"]:
-			return f
-	return {}
+	return GameManager.get_next_player_fixture()
+
+
+func _section_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_font_size_override("font_size", 20)
+	label.add_theme_color_override("font_color", Color(0.86, 0.92, 1.0, 1))
+	return label
+
+
+func _is_same_fixture(a: Dictionary, b: Dictionary) -> bool:
+	if a.is_empty() or b.is_empty():
+		return false
+	return str(a.get("competition", "league")) == str(b.get("competition", "league")) \
+		and int(a.get("home_id", -1)) == int(b.get("home_id", -1)) \
+		and int(a.get("away_id", -1)) == int(b.get("away_id", -1)) \
+		and int(a.get("matchday", -1)) == int(b.get("matchday", -1)) \
+		and int(a.get("leg", 1)) == int(b.get("leg", 1))
