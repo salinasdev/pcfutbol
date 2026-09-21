@@ -305,10 +305,16 @@ func generate_weekly_news() -> void:
 	var player_team := GameManager.get_player_team()
 	var any_league := GameManager.leagues.values()
 	var league_started := not any_league.is_empty() and (any_league[0] as League).current_matchday >= 1
+	
+	# SIEMPRE garantizar al menos una noticia por semana
 	if not _has_news_for_week(week):
-		_push_news(_baseline_weekly_news(player_team))
+		if player_team != null:
+			_push_news(_baseline_weekly_news(player_team))
+		else:
+			# Fallback si no hay equipo (no debería suceder, pero por seguridad)
+			_push_news(_placeholder_news())
 
-	# Semana 1: generar contenido inicial del equipo
+	# Semana 1: generar contenido especial de presentación
 	if week == 1 and player_team != null:
 		var intro_headline := "Comienza la aventura del %s" % player_team.short_name
 		var intro_body := "El %s ha iniciado la temporada 2026/27 bajo la dirección técnica de %s.\n\n" % [player_team.name, GameManager.manager_name]
@@ -368,9 +374,16 @@ func generate_weekly_news() -> void:
 
 
 func ensure_weekly_news() -> void:
+	# Garantiza que siempre hay al menos 1 noticia
 	if not news_feed.is_empty():
 		return
-	_push_news(_baseline_weekly_news(GameManager.get_player_team()))
+	
+	var player_team := GameManager.get_player_team()
+	if player_team != null:
+		_push_news(_baseline_weekly_news(player_team))
+	else:
+		# Fallback de seguridad
+		_push_news(_placeholder_news())
 
 
 func reset_news_feed() -> void:
@@ -380,6 +393,10 @@ func reset_news_feed() -> void:
 
 func rebuild_news_feed() -> void:
 	# Solo regenera si el feed está vacío o es de una semana anterior
+	# IMPORTANTE: Solo actúa si player_team existe
+	if GameManager.get_player_team() == null:
+		return
+	
 	var should_rebuild := news_feed.is_empty()
 	if not should_rebuild and not news_feed.is_empty():
 		var last_news_week := int(news_feed[0].get("week", -1))

@@ -12,7 +12,6 @@ func _ready() -> void:
 	%BtnBack.text = ""
 	%BtnBack.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/game/office/office.tscn"))
 	%WeekLabel.text = "Semana %d" % GameManager.current_week
-	NewsManager.rebuild_news_feed()
 
 	%FilterAll.pressed.connect(func(): _set_filter(-1))
 	%FilterResults.pressed.connect(func(): _set_filter(NewsManager.Category.RESULTADO))
