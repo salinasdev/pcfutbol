@@ -91,7 +91,6 @@ func prepare_new_game() -> void:
 	_reset_state()
 	DataGenerator.generate_all()
 	setup_season_competitions()
-	NewsManager.rebuild_news_feed()
 
 
 ## Paso 2: Fija el equipo y el entrenador del jugador y arranca la partida.
@@ -101,6 +100,7 @@ func start_game(p_manager_name: String, team_id: int) -> void:
 	if not manager_clubs_managed.has(team_id):
 		manager_clubs_managed.append(team_id)
 	_open_manager_career_entry(get_team(team_id))
+	NewsManager.rebuild_news_feed()
 	emit_signal("season_started", season)
 	emit_signal("new_game_created")
 

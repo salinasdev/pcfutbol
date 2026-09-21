@@ -308,6 +308,18 @@ func generate_weekly_news() -> void:
 	if not _has_news_for_week(week):
 		_push_news(_baseline_weekly_news(player_team))
 
+	# Semana 1: generar contenido inicial del equipo
+	if week == 1 and player_team != null:
+		var intro_headline := "Comienza la aventura del %s" % player_team.short_name
+		var intro_body := "El %s ha iniciado la temporada 2026/27 bajo la dirección técnica de %s.\n\n" % [player_team.name, GameManager.manager_name]
+		intro_body += "El proyecto del %s cuenta con una plantilla de %d jugadores y afronta esta temporada con ambición." % [player_team.short_name, player_team.player_ids.size()]
+		var next_fixture := GameManager.get_next_player_fixture()
+		if not next_fixture.is_empty():
+			var rival_id: int = next_fixture.get("away_id", -1) if int(next_fixture.get("home_id", -1)) == player_team.id else int(next_fixture.get("home_id", -1))
+			var rival: Team = GameManager.get_team(rival_id)
+			intro_body += "\n\nEl equipo prepara su primer encuentro frente a %s." % (rival.name if rival != null else "su rival")
+		_push_news(_make_news(Category.VESTUARIO, intro_headline, intro_body))
+
 	# 1. Resultado del partido propio — busca el último jugado, sin depender de active_fixture
 	if player_team != null:
 		var last_f := _get_last_fixture(player_team)
@@ -367,9 +379,16 @@ func reset_news_feed() -> void:
 
 
 func rebuild_news_feed() -> void:
-	reset_news_feed()
-	generate_weekly_news()
-	ensure_weekly_news()
+	# Solo regenera si el feed está vacío o es de una semana anterior
+	var should_rebuild := news_feed.is_empty()
+	if not should_rebuild and not news_feed.is_empty():
+		var last_news_week := int(news_feed[0].get("week", -1))
+		should_rebuild = (last_news_week != GameManager.current_week)
+	
+	if should_rebuild:
+		reset_news_feed()
+		generate_weekly_news()
+		ensure_weekly_news()
 
 
 # ---------------------------------------------------------------------------

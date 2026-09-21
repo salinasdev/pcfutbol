@@ -11,7 +11,6 @@ var _selected_btn: Button = null
 func _ready() -> void:
 	# Generar todas las ligas y equipos antes de mostrar la pantalla
 	GameManager.prepare_new_game()
-	NewsManager.rebuild_news_feed()
 	%BtnBack.icon = ICON_BACK
 	%BtnBack.add_theme_constant_override("icon_max_width", ICON_SIZE_NAV)
 	%BtnBack.text = ""
