@@ -23,7 +23,7 @@ func _ready() -> void:
 		logo_texture_rect.visible = false
 		logo_label.visible = true
 
-	var logo_node := logo_texture_rect if logo != null else logo_label
+	var logo_node: CanvasItem = logo_texture_rect if logo != null else logo_label
 	var intro_tween := create_tween()
 	intro_tween.set_parallel(true)
 	intro_tween.tween_property(background, "modulate:a", 1.0, 0.22)
