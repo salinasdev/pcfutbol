@@ -630,7 +630,8 @@ func _interview_news(player_team: Team) -> Dictionary:
 func _fan_voice_news(player_team: Team) -> Dictionary:
 	if player_team == null:
 		return {}
-	var headline := FAN_HEADLINES.pick_random().replace("{team}", player_team.short_name)
+	var headline: String = FAN_HEADLINES.pick_random()
+	headline = headline.replace("{team}", player_team.short_name)
 	var profile := str(FAN_PROFILES.pick_random())
 	var body := "La calle ya habla del momento del %s.\n\n" % player_team.name
 	body += "Recogimos la impresión de %s: «%s»\n\n" % [profile, FAN_QUOTES.pick_random()]
@@ -656,7 +657,8 @@ func _rival_coach_news(player_team: Team) -> Dictionary:
 	if rival == null:
 		return {}
 	var coach_name := rival.coach_name if rival.coach_name != "" else "El técnico visitante"
-	var headline := RIVAL_COACH_HEADLINES.pick_random().replace("{team}", player_team.short_name)
+	var headline: String = RIVAL_COACH_HEADLINES.pick_random()
+	headline = headline.replace("{team}", player_team.short_name)
 	var body := "%s compareció ante los medios antes del próximo partido.\n\n" % coach_name
 	body += "«%s»\n\n" % RIVAL_COACH_QUOTES.pick_random()
 	body += "En el club rival creen que el choque ante %s puede marcar la tendencia inmediata del equipo." % player_team.name
@@ -666,7 +668,8 @@ func _rival_coach_news(player_team: Team) -> Dictionary:
 func _locker_room_news(player_team: Team) -> Dictionary:
 	if player_team == null:
 		return {}
-	var headline := LOCKER_ROOM_HEADLINES.pick_random().replace("{team}", player_team.short_name)
+	var headline: String = LOCKER_ROOM_HEADLINES.pick_random()
+	headline = headline.replace("{team}", player_team.short_name)
 	var body := "Crónica de vestuario del %s.\n\n" % player_team.name
 	body += LOCKER_ROOM_LINES.pick_random()
 	if _team_played_recently(player_team):
@@ -941,7 +944,8 @@ func _has_news_for_week(week: int) -> bool:
 func add_cup_draw_news(round_name: String, fixtures: Array) -> void:
 	if fixtures.is_empty():
 		return
-	var headline := CUP_DRAW_HEADLINES.pick_random().replace("{round}", round_name.to_lower())
+	var headline: String = CUP_DRAW_HEADLINES.pick_random()
+	headline = headline.replace("{round}", round_name.to_lower())
 	var body := "Sorteo de la %s de la Copa del Rey.\n\n" % round_name
 	var pair_lines: Array[String] = []
 	var seen_pairs: Dictionary = {}
@@ -975,7 +979,8 @@ func add_cup_draw_news(round_name: String, fixtures: Array) -> void:
 		var small := _underdog_team(giant_killing_fixture)
 		var big := _favorite_team(giant_killing_fixture)
 		if small != null and big != null:
-			var upset_headline := CUP_GIANT_KILL_HEADLINES.pick_random().replace("{small}", small.short_name).replace("{big}", big.short_name)
+			var upset_headline: String = CUP_GIANT_KILL_HEADLINES.pick_random()
+			upset_headline = upset_headline.replace("{small}", small.short_name).replace("{big}", big.short_name)
 			var upset_body := "El cruce entre %s y %s ha disparado la ilusión en la Copa del Rey.\n\n" % [small.name, big.name]
 			upset_body += "El duelo se jugará en %s, donde ya se espera una de esas noches que cambian la historia de un club modesto." % [small.stadium_name if small.stadium_name != "" else "el estadio local"]
 			_push_news(_make_news(Category.ENTREVISTA, upset_headline, upset_body))
