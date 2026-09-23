@@ -1652,8 +1652,8 @@ func _find_league_for_fixture(fixture: Dictionary) -> League:
 
 
 func _fixture_sort_key(fixture: Dictionary) -> int:
-	var scheduled := fixture.get("scheduled_date", {})
-	if not (scheduled as Dictionary).is_empty():
+	var scheduled: Dictionary = fixture.get("scheduled_date", {}) as Dictionary
+	if not scheduled.is_empty():
 		return _date_key(scheduled)
 	return 10_000_000 + int(fixture.get("matchday", 0))
 
