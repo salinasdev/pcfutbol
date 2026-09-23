@@ -6,7 +6,7 @@ const LOGO_PATH := "res://logo_blanco.png"
 @onready var logo_texture_rect: TextureRect = %LogoTextureRect
 @onready var logo_label: Label = %LogoLabel
 @onready var logo_box: VBoxContainer = %VBoxContainer
-@onready var background: Panel = %Background
+@onready var background: Panel = $Background
 
 
 func _ready() -> void:
