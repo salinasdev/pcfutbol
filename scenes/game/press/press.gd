@@ -19,6 +19,7 @@ func _ready() -> void:
 	%FilterInterview.pressed.connect(func(): _set_filter(NewsManager.Category.ENTREVISTA))
 	%FilterTabloid.pressed.connect(func(): _set_filter(NewsManager.Category.TABLOID))
 
+	NewsManager.rebuild_news_feed()
 	_build_feed()
 
 
