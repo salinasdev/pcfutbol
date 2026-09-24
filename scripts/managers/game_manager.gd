@@ -946,11 +946,14 @@ func _continue_current_week_if_needed() -> bool:
 	if not current_week_had_cup_fixture:
 		week_in_progress = false
 		return false
+	# Consumir el flag ahora: solo debemos completar la jornada de liga de ESTA
+	# semana una vez; si no, quedaría atascado repitiendo jornadas futuras
+	# sin avanzar nunca la fecha del calendario.
+	current_week_had_cup_fixture = false
 	var player_fixture := _process_current_week_league_round()
 	if not player_fixture.is_empty():
 		return true
 	week_in_progress = false
-	current_week_had_cup_fixture = false
 	return false
 
 
